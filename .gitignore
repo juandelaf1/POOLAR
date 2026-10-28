@@ -1,0 +1,11 @@
+# Trama Abierta — MVP v0.6 independiente
+__pycache__/
+*.pyc
+*.sqlite
+*.db
+.env
+.venv/
+.pytest_cache/
+*.egg-info/
+dist/
+build/

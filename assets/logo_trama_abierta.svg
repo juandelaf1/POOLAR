@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 240" width="100%" height="100%">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="primary-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#0D9488" />
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7C3AED" />
+      <stop offset="100%" stop-color="#2563EB" />
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#34D399" stop-opacity="0.0" />
+    </linearGradient>
+    <style>
+      .bg { fill: #0F172A; rx: 16px; }
+      .brand-title { font-family: system-ui, -apple-system, sans-serif; font-weight: 800; font-size: 46px; fill: #F8FAFC; letter-spacing: -0.03em; }
+      .brand-subtitle { font-family: system-ui, -apple-system, sans-serif; font-weight: 500; font-size: 16px; fill: #94A3B8; letter-spacing: 0.18em; text-transform: uppercase; }
+      .version-tag { font-family: ui-monospace, SFMono-Regular, monospace; font-weight: 600; font-size: 13px; fill: #38BDF8; }
+      .node { transition: all 0.3s ease; }
+      .node:hover { transform: scale(1.1); }
+    </style>
+  </defs>
+
+  <!-- Background Card -->
+  <rect class="bg" width="800" height="240" />
+
+  <!-- Isotype / Symbol (Left Side) -->
+  <g transform="translate(45, 20)">
+    <!-- Subtle Background Glow -->
+    <circle cx="100" cy="100" r="75" fill="url(#glow)" />
+    
+    <!-- Connected Network Lines (Trama) -->
+    <path d="M 60 70 L 100 45 L 140 70 L 140 130 L 100 155 L 60 130 Z" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="4 4" />
+    <path d="M 100 45 L 100 155" fill="none" stroke="url(#primary-grad)" stroke-width="3" stroke-linecap="round" />
+    <path d="M 60 70 L 140 130" fill="none" stroke="url(#accent-grad)" stroke-width="3" stroke-linecap="round" />
+    <path d="M 140 70 L 60 130" fill="none" stroke="url(#primary-grad)" stroke-width="3" stroke-linecap="round" />
+    
+    <!-- Outer Interlocking Weave (Abierta) -->
+    <path d="M 40 100 C 40 60, 60 40, 100 40 C 140 40, 160 60, 160 100" fill="none" stroke="url(#primary-grad)" stroke-width="5" stroke-linecap="round" />
+    <path d="M 160 100 C 160 140, 140 160, 100 160 C 60 160, 40 140, 40 100" fill="none" stroke="url(#accent-grad)" stroke-width="5" stroke-linecap="round" stroke-dasharray="90 30" />
+
+    <!-- Nodes (Participantes / Problema Colectivo) -->
+    <!-- Central Node: Problema Colectivo -->
+    <circle cx="100" cy="100" r="10" fill="#F8FAFC" stroke="#2563EB" stroke-width="4" />
+    
+    <!-- Satellite Nodes: Personas / Orgs -->
+    <circle cx="100" cy="45" r="7" fill="#38BDF8" />
+    <circle cx="140" cy="70" r="7" fill="#818CF8" />
+    <circle cx="140" cy="130" r="7" fill="#34D399" />
+    <circle cx="100" cy="155" r="7" fill="#38BDF8" />
+    <circle cx="60" cy="130" r="7" fill="#818CF8" />
+    <circle cx="60" cy="70" r="7" fill="#34D399" />
+  </g>
+
+  <!-- Divider Line -->
+  <line x1="260" y1="50" x2="260" y2="190" stroke="#334155" stroke-width="1.5" stroke-linecap="round" />
+
+  <!-- Typography / Wordmark (Right Side) -->
+  <g transform="translate(295, 0)">
+    <!-- Main Title -->
+    <text x="0" y="112" class="brand-title">Trama Abierta</text>
+    
+    <!-- Subtitle -->
+    <text x="2" y="142" class="brand-subtitle">Infraestructura Participativa</text>
+    
+    <!-- Version Badge -->
+    <rect x="2" y="156" width="76" height="22" rx="6" fill="#1E293B" stroke="#334155" stroke-width="1" />
+    <text x="12" y="171" class="version-tag">v0.6 MVP</text>
+  </g>
+</svg>
