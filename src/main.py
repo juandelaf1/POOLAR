@@ -131,13 +131,29 @@ def _need_dto(need: Necesidad, org_id: int) -> dict:
     }
 
 
-def _problema_visible(problema: ProblemaColectivo, org_id: int) -> bool:
+def _problema_visible(problema: ProblemaColectivo, user_ctx) -> bool:
+    # Soporta contexto de organización (int/org_id) o dict (tipo/organizacion_id/persona_id)
+    tipo = None
+    if isinstance(user_ctx, dict):
+        tipo = user_ctx.get("tipo")
+        if tipo == "individuo":
+            pid = user_ctx.get("persona_id")
+            # Propietario individual o participante derivado
+            if problema.persona_id == pid:
+                return True
+            if any(p.id == pid for p in problema.personas_participantes):
+                return True
+            # Si el problema pertenece a org pero persona derivada por necesidad
+            return False
+        org_id = user_ctx.get("organizacion_id")
+    else:
+        org_id = user_ctx
     if problema.organizacion_id == org_id:
         return True
     return any(org.id == org_id for org in problema.organizaciones_participantes)
 
 
-def _problema_dto(problema: ProblemaColectivo, org_id: int) -> ProblemaColectivoResponse:
+def _problema_dto(problema: ProblemaColectivo, user_ctx) -> ProblemaColectivoResponse:
     visibles = [
         need.id
         for need in problema.necesidades_asociadas
@@ -658,7 +674,7 @@ def create_problema_colectivo(
         origen_datos=payload.origen_datos.value,
         organizacion_id=org_id,
         persona_id=user.get("persona_id") if tipo == "individuo" else None,
-        creado_por_id=user["user_id"],
+        creado_por_id=user.get("user_id") or user.get("persona_id"),
     )
     problema.necesidades_asociadas = necesidades
     problema.personas_participantes = [

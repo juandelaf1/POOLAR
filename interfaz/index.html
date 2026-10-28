@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trama Abierta — Interfaz MVP v0.6</title>
+<style>
+  :root { --bg:#0F172A; --card:#1E293B; --text:#F8FAFC; --muted:#94A3B8; --accent:#2563EB; --ok:#2EA44F; --warn:#D97706; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:1.5rem 2rem; border-bottom:1px solid #334155; }
+  header h1 { margin:0 0 .25rem; font-size:1.6rem; letter-spacing:-.03em; }
+  header .sub { color:var(--muted); font-size:.85rem; text-transform:uppercase; letter-spacing:.1em; }
+  .container { max-width:960px; margin:0 auto; padding:1.5rem 2rem; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  @media(max-width:720px){ .grid { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid #334155; border-radius:12px; padding:1rem; }
+  .card h2 { margin:0 0 .75rem; font-size:1.1rem; color:#38BDF8; }
+  label { display:block; font-size:.8rem; color:var(--muted); margin:.25rem 0 .15rem; }
+  input, textarea, select { width:100%; padding:.45rem .6rem; border-radius:6px; border:1px solid #334155; background:#0F172A; color:var(--text); font-family:inherit; }
+  button { padding:.45rem .9rem; border:0; border-radius:6px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+  button:hover { filter:brightness(1.1); }
+  .badge { display:inline-block; padding:.15rem .5rem; border-radius:999px; font-size:.75rem; font-weight:600; }
+  .badge-ok { background:#2EA44F20; color:var(--ok); border:1px solid #2EA44F40; }
+  .badge-warn { background:#D9770620; color:var(--warn); border:1px solid #D9770640; }
+  .badge-info { background:#2563EB20; color:#60A5FA; border:1px solid #2563EB40; }
+  pre { background:#0F172A; padding:.75rem; border:1px solid #334155; border-radius:6px; overflow:auto; font-size:.8rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Trama Abierta <span style="font-weight:400; color:#94A3B8">v0.6 MVP</span></h1>
+  <p class="sub">Infraestructura Participativa — Interfaz funcional | Datos sintéticos (synthetic_pilot)</p>
+</header>
+
+<main class="container">
+  <div style="display:flex; gap:.5rem; margin-bottom:1rem; flex-wrap:wrap;">
+    <span class="badge badge-ok">Registro individual</span>
+    <span class="badge badge-info">Problema Colectivo</span>
+    <span class="badge badge-warn">Iniciativa (responsable persona)</span>
+    <span class="badge badge-warn">Invitación / Participación</span>
+  </div>
+
+  <div class="grid">
+    <!-- Registro -->
+    <section class="card" aria-label="Registro individual">
+      <h2>1. Registro individual</h2>
+      <form id="formRegistro" onsubmit="registrar(event)">
+        <label>Nombre</label><input id="rNom" required minlength="2" maxlength="200" placeholder="Nombre sintético">
+        <label>Email (normalizado)</label><input id="rEmail" type="email" required placeholder="ejemplo@test.local">
+        <label>Contraseña (min 8)</label><input id="rPass" type="password" required minlength="8">
+        <label>Experiencia</label><input id="rExp" placeholder="logística, etc. (opcional)">
+        <button type="submit">Registrar</button>
+        <p id="msgReg" style="margin:.5rem 0 0; font-size:.85rem;"></p>
+      </form>
+    </section>
+
+    <!-- Login -->
+    <section class="card" aria-label="Autenticación">
+      <h2>2. Acceso (individuo / org)</h2>
+      <form id="formLogin" onsubmit="login(event)">
+        <label>Email</label><input id="lEmail" type="email" required placeholder="email@ejemplo.org">
+        <label>Contraseña</label><input id="lPass" type="password" required>
+        <button type="submit">Iniciar sesión</button>
+        <p id="msgLog" style="margin:.5rem 0 0; font-size:.85rem;"></p>
+      </form>
+      <div id="tokenArea" style="margin-top:.75rem; display:none;">
+        <label>Token (guardar en navegador)</label>
+        <input id="tokenInput" readonly style="background:#1E293B; border-color:#38BDF8;">
+      </div>
+    </section>
+
+    <!-- Problema -->
+    <section class="card" aria-label="Problema colectivo">
+      <h2>3. Crear Problema Colectivo</h2>
+      <form id="formProblema" onsubmit="crearProblema(event)">
+        <label>Descripción (min 10)</label><textarea id="pDesc" rows="2" required minlength="10" placeholder="Problema sintético..."></textarea>
+        <label>Origen datos</label>
+        <select id="pOrigen"><option value="synthetic_pilot">synthetic_pilot</option></select>
+        <button type="submit">Crear problema</button>
+        <p id="msgProb" style="margin:.5rem 0 0; font-size:.85rem;"></p>
+      </form>
+    </section>
+
+    <!-- Iniciativa -->
+    <section class="card" aria-label="Iniciativa">
+      <h2>4. Iniciativa (responsable persona)</h2>
+      <form id="formIniciativa" onsubmit="crearIniciativa(event)">
+        <label>Necesidad ID</label><input id="iNec" type="number" required placeholder="ID de necesidad">
+        <label>Problema ID (opcional)</label><input id="iProb" type="number" placeholder="ID problema colectivo">
+        <label>Título</label><input id="iTit" required placeholder="Título iniciativa">
+        <label>Descripción</label><textarea id="iDesc" rows="2" required></textarea>
+        <label>Criterios (min 5)</label><input id="iCriterios" required minlength="5" placeholder="Criterio sintético mínimo">
+        <label>Responsable ID (tu persona)</label><input id="iResp" type="number" required>
+        <button type="submit">Crear iniciativa</button>
+        <p id="msgIni" style="margin:.5rem 0 0; font-size:.85rem;"></p>
+      </form>
+    </section>
+
+    <!-- Descubrir -->
+    <section class="card" aria-label="Descubrimiento">
+      <h2>6. Invitación / Participación</h2>
+    <form id="formInv" onsubmit="invitar(event)">
+      <label>Problema ID</label><input id="invProb" type="number" required placeholder="Problema colectivo ID">
+      <label>Persona ID (participante)</label><input id="invPersona" type="number" required placeholder="Persona ID">
+      <label>Mensaje (opcional)</label><input id="invMsg" placeholder="Invitación sintética">
+      <button type="submit">Enviar invitación</button>
+      <p id="msgInv" style="margin:.5rem 0 0; font-size:.85rem;"></p>
+    </form>
+    <button onclick="aceptar(event)" style="margin-top:.25rem;">Aceptar participación</button>
+    <pre id="outInv" style="margin-top:.5rem;"></pre>
+      <button onclick="listarProblemas()">Listar problemas accesibles</button>
+      <pre id="outProblemas" style="margin-top:.5rem;"></pre>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:1rem;" aria-label="Estado y trazabilidad">
+    <h2>Estado / Trazabilidad ética (documentado)</h2>
+    <p style="color:var(--muted); font-size:.9rem;">
+      Datos sintéticos obligatorios (<code>synthetic_pilot</code>). No se exponen emails ni hashes.
+      Registro individual: validación de duplicados sin enumeración, mensaje genérico.
+      Invitación: registro de intención sin entrega física verificada (pendiente de consentimiento).
+      Producción: <strong>NO declarada</strong>. Integración con repos auditados bloqueada hasta P0/P1 corregidos.
+    </p>
+    <div style="margin-top:.5rem;">
+      <a href="docs/cierre_iteracion.md" style="color:#38BDF8;">Cierre de iteración →</a> |
+      <a href="docs/modelo_autorizacion.md" style="color:#38BDF8;">Autorización →</a> |
+      <a href="docs/hoja_de_ruta.md" style="color:#38BDF8;">Hoja de ruta →</a>
+    </div>
+  </section>
+</main>
+
+<script>
+let token = '';
+const API = 'http://localhost:8000';
+
+async function post(url, body, auth=true) {
+  const opts = { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) };
+  if (auth && token) opts.headers['Authorization'] = 'Bearer '+token;
+  const r = await fetch(API+url, opts);
+  const txt = await r.text();
+  try { return {ok:r.ok, data: JSON.parse(txt), status:r.status}; } catch { return {ok:r.ok, data:txt, status:r.status}; }
+}
+
+async function get(url, auth=true) {
+  const opts = { headers:{} };
+  if (auth && token) opts.headers['Authorization'] = 'Bearer '+token;
+  const r = await fetch(API+url, opts);
+  const txt = await r.text();
+  try { return {ok:r.ok, data: JSON.parse(txt), status:r.status}; } catch { return {ok:r.ok, data:txt, status:r.status}; }
+}
+
+function setMsg(id, html, ok=true) { document.getElementById(id).innerHTML = html; document.getElementById(id).style.color = ok?'#34D399':'#F87171'; }
+
+async function registrar(e) {
+  e.preventDefault();
+  const r = await post('/personas/registro', {nombre: document.getElementById('rNom').value, email: document.getElementById('rEmail').value, password: document.getElementById('rPass').value, experiencia: document.getElementById('rExp').value||null});
+  setMsg('msgReg', r.ok ? `OK — id=${r.data.id}, rol=${r.data.rol}, nota: ${r.data.nota||''}` : `Error ${r.status}: ${JSON.stringify(r.data)}`);
+}
+
+async function login(e) {
+  e.preventDefault();
+  const r = await post('/auth/token', {email: document.getElementById('lEmail').value, password: document.getElementById('lPass').value}, false);
+  if (r.ok) { token = r.data.access_token; document.getElementById('tokenInput').value = token; document.getElementById('tokenArea').style.display='block'; setMsg('msgLog','OK — token recibido. Usa los formularios de abajo.'); }
+  else setMsg('msgLog', `Error ${r.status}: ${JSON.stringify(r.data)}`);
+}
+
+async function crearProblema(e) {
+  e.preventDefault();
+  if (!token) return setMsg('msgProb','Primero inicia sesión', false);
+  const r = await post('/problemas-colectivos', {descripcion: document.getElementById('pDesc').value, origen_datos: document.getElementById('pOrigen').value, necesidades_asociadas:[]});
+  setMsg('msgProb', r.ok ? `OK — problema id=${r.data.id}` : `Error ${r.status}`);
+}
+
+async function crearIniciativa(e) {
+  e.preventDefault();
+  if (!token) return setMsg('msgIni','Primero inicia sesión', false);
+  const r = await post('/iniciativas', {necesidad_id: +document.getElementById('iNec').value, problema_colectivo_id: document.getElementById('iProb').value?+document.getElementById('iProb').value:null, titulo: document.getElementById('iTit').value, descripcion: document.getElementById('iDesc').value, criterios_decision: document.getElementById('iCriterios').value, responsable_id: +document.getElementById('iResp').value});
+  setMsg('msgIni', r.ok ? `OK — iniciativa id=${r.data.id}, responsable=${r.data.responsable_tipo}` : `Error ${r.status}: ${JSON.stringify(r.data)}`);
+}
+
+async function invitar(e) {
+  e.preventDefault();
+  if (!token) return setMsg('msgInv','Primero inicia sesión', false);
+  const r = await post(`/problemas-colectivos/${document.getElementById('invProb').value}/invitaciones`, {persona_id: +document.getElementById('invPersona').value, mensaje: document.getElementById('invMsg').value||''});
+  setMsg('msgInv', r.ok ? `OK — ${JSON.stringify(r.data)}` : `Error ${r.status}`);
+  document.getElementById('outInv').textContent = JSON.stringify(r.data||{}, null, 2);
+}
+
+async function aceptar(e) {
+  e.preventDefault();
+  if (!token) alert('Primero inicia sesión');
+  document.getElementById('outInv').textContent = 'Función de participación pendiente de contexto de invitación. Documentado en docs/entrega_iteracion.md.';
+}
+
+async function listarProblemas() {
+  const r = await get('/problemas-colectivos');
+  document.getElementById('outProblemas').textContent = JSON.stringify(r.data, null, 2);
+}
+</script>
+</body>
+</html>
