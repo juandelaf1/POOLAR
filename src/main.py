@@ -47,6 +47,7 @@ from src.core.models import (
     ProblemaColectivo,
     Recurso,
     problema_participantes_organizacion,
+    problema_participantes_persona,
 )
 
 # Solo desarrollo: en producción las tablas se crean con migraciones.
@@ -105,12 +106,18 @@ def _get_org(db: Session, org_id: int) -> Organizacion:
     return org
 
 
-def _need_accesible(need: Necesidad, org_id: int) -> bool:
+def _need_accesible(need: Necesidad, user_ctx) -> bool:
     """Una necesidad es accesible si es propia o se marcó compartible/pública."""
-    return need.organizacion_id == org_id or need.visibilidad in (
-        "compartible",
-        "publica",
-    )
+    tipo = None
+    if isinstance(user_ctx, dict):
+        tipo = user_ctx.get("tipo")
+        if tipo == "individuo":
+            pid = user_ctx.get("persona_id")
+            return need.persona_id == pid or need.visibilidad in ("compartible", "publica")
+        org_id = user_ctx.get("organizacion_id")
+    else:
+        org_id = user_ctx
+    return need.organizacion_id == org_id or need.visibilidad in ("compartible", "publica")
 
 
 def _need_dto(need: Necesidad, org_id: int) -> dict:
@@ -154,17 +161,30 @@ def _problema_visible(problema: ProblemaColectivo, user_ctx) -> bool:
 
 
 def _problema_dto(problema: ProblemaColectivo, user_ctx) -> ProblemaColectivoResponse:
-    visibles = [
-        need.id
-        for need in problema.necesidades_asociadas
-        if _need_accesible(need, org_id)
-    ]
-    ocultas = len(problema.necesidades_asociadas) - len(visibles)
+    # Asegurar contexto de acceso para necesidades asociadas
+    tipo = None
+    if isinstance(user_ctx, dict):
+        tipo = user_ctx.get("tipo")
+        if tipo == "individuo":
+            org_id = user_ctx.get("organizacion_id")  # None
+            persona_id = user_ctx.get("persona_id")
+            def _need_accesible_individual(need):
+                return need.persona_id == persona_id or need.visibilidad in ("compartible", "publica")
+            visible_ids = [need.id for need in problema.necesidades_asociadas if _need_accesible_individual(need)]
+            ocultas = len(problema.necesidades_asociadas) - len(visible_ids)
+        else:
+            org_id = user_ctx.get("organizacion_id")
+            visible_ids = [need.id for need in problema.necesidades_asociadas if _need_accesible(need, org_id)]
+            ocultas = len(problema.necesidades_asociadas) - len(visible_ids)
+    else:
+        org_id = user_ctx
+        visible_ids = [need.id for need in problema.necesidades_asociadas if _need_accesible(need, org_id)]
+        ocultas = len(problema.necesidades_asociadas) - len(visible_ids)
     return ProblemaColectivoResponse(
         id=problema.id,
         descripcion=problema.descripcion,
         estado=ProblemaColectivoEstado(problema.estado),
-        necesidades_asociadas=sorted(visibles),
+        necesidades_asociadas=sorted(visible_ids),
         necesidades_ocultas=ocultas,
         personas_participantes=sorted(
             persona.id for persona in problema.personas_participantes
@@ -179,17 +199,26 @@ def _problema_dto(problema: ProblemaColectivo, user_ctx) -> ProblemaColectivoRes
     )
 
 
-def _puede_ver_iniciativa(iniciativa: Iniciativa, org_id: int) -> bool:
+def _puede_ver_iniciativa(iniciativa: Iniciativa, user_ctx) -> bool:
     """Lectura: responsable, propietario de la necesidad o participante del problema."""
-    if (
-        iniciativa.responsable_tipo == "organizacion"
-        and iniciativa.responsable_id == org_id
-    ):
+    if isinstance(user_ctx, dict):
+        tipo = user_ctx.get("tipo")
+        if tipo == "individuo":
+            persona_id = user_ctx.get("persona_id")
+            if iniciativa.responsable_tipo == "persona" and iniciativa.responsable_id == persona_id:
+                return True
+            if iniciativa.necesidad is not None and iniciativa.necesidad.persona_id == persona_id:
+                return True
+            problema = iniciativa.problema_colectivo
+            if problema is not None and (problema.persona_id == persona_id or any(p.id == persona_id for p in problema.personas_participantes)):
+                return True
+            return False
+        org_id = user_ctx.get("organizacion_id")
+    else:
+        org_id = user_ctx
+    if iniciativa.responsable_tipo == "organizacion" and iniciativa.responsable_id == org_id:
         return True
-    if (
-        iniciativa.necesidad is not None
-        and iniciativa.necesidad.organizacion_id == org_id
-    ):
+    if iniciativa.necesidad is not None and iniciativa.necesidad.organizacion_id == org_id:
         return True
     problema = iniciativa.problema_colectivo
     if problema is None:
@@ -199,13 +228,16 @@ def _puede_ver_iniciativa(iniciativa: Iniciativa, org_id: int) -> bool:
     return any(org.id == org_id for org in problema.organizaciones_participantes)
 
 
-def _puede_gestionar_iniciativa(iniciativa: Iniciativa, org_id: int) -> bool:
-    """Escritura: solo la organización responsable de la iniciativa.
-
-    Las decisiones no las puede tomar cualquier participante del problema.
-    Si una iniciativa antigua no tiene responsable definido, se exige que
-    la organización sea propietaria de la necesidad vinculada.
-    """
+def _puede_gestionar_iniciativa(iniciativa: Iniciativa, user_ctx) -> bool:
+    """Escritura: solo el responsable de la iniciativa."""
+    if isinstance(user_ctx, dict):
+        tipo = user_ctx.get("tipo")
+        if tipo == "individuo":
+            persona_id = user_ctx.get("persona_id")
+            return (iniciativa.responsable_tipo == "persona" and iniciativa.responsable_id == persona_id)
+        org_id = user_ctx.get("organizacion_id")
+    else:
+        org_id = user_ctx
     if iniciativa.responsable_tipo == "organizacion":
         return iniciativa.responsable_id == org_id
     return (
@@ -511,7 +543,7 @@ def create_recurso(
     _get_org(db, organizacion_id)
     if necesidad_id is not None:
         necesidad = db.get(Necesidad, necesidad_id)
-        if necesidad is None or not _need_accesible(necesidad, organizacion_id):
+        if necesidad is None or not _need_accesible(necesidad, {"tipo": "organizacion", "organizacion_id": organizacion_id}):
             raise HTTPException(
                 status_code=404,
                 detail=f"Necesidad {necesidad_id} no encontrada o no accesible",
@@ -606,7 +638,7 @@ def create_problema_colectivo(
         need = db.get(Necesidad, need_id)
         # No se distingue entre inexistente e inaccesible para no filtrar
         # la existencia de necesidades privadas de otras organizaciones.
-        if need is None or (org_id is not None and not _need_accesible(need, org_id)):
+        if need is None or (org_id is not None and not _need_accesible(need, org_id)) and not (tipo == "individuo" and need.persona_id is not None and need.persona_id == user.get("persona_id")):
             raise HTTPException(
                 status_code=404,
                 detail=f"Necesidad {need_id} no encontrada o no accesible",
@@ -710,7 +742,7 @@ def enviar_invitacion(
     problema = db.get(ProblemaColectivo, problema_id)
     if problema is None:
         raise HTTPException(status_code=404, detail="Problema no encontrado")
-    if not _problema_visible(problema, user.get("organizacion_id") or user.get("persona_id")):
+    if not _problema_visible(problema, user):
         raise HTTPException(status_code=403, detail="No puedes invitar a este problema")
     persona = db.get(Persona, persona_id)
     if persona is None or not persona.activo:
@@ -762,7 +794,26 @@ def list_problemas_colectivos(
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    org_id = user["organizacion_id"]
+    # Soporta tanto organizaciones como personas independientes
+    tipo = user.get("tipo")
+    if tipo == "individuo":
+        persona_id = user.get("persona_id")
+        problemas = (
+            db.query(ProblemaColectivo)
+            .filter(
+                or_(
+                    ProblemaColectivo.persona_id == persona_id,
+                    ProblemaColectivo.id.in_(
+                        db.query(problema_participantes_persona.c.problema_colectivo_id)
+                        .filter(problema_participantes_persona.c.persona_id == persona_id)
+                    )
+                )
+            )
+            .order_by(ProblemaColectivo.id)
+            .all()
+        )
+        return [_problema_dto(problema, user) for problema in problemas]
+    org_id = user.get("organizacion_id")
     problemas = (
         db.query(ProblemaColectivo)
         .outerjoin(
@@ -780,7 +831,7 @@ def list_problemas_colectivos(
         .order_by(ProblemaColectivo.id)
         .all()
     )
-    return [_problema_dto(problema, org_id) for problema in problemas]
+    return [_problema_dto(problema, user) for problema in problemas]
 
 
 @app.get(
@@ -903,7 +954,7 @@ def create_iniciativa(
     problema = None
     if problema_colectivo_id is not None:
         problema = db.get(ProblemaColectivo, problema_colectivo_id)
-        if problema is None or not _problema_visible(problema, org_id):
+        if problema is None or not _problema_visible(problema, user if tipo == "individuo" else org_id):
             raise HTTPException(
                 status_code=404, detail="Problema colectivo no encontrado"
             )
@@ -951,9 +1002,7 @@ def get_iniciativa(
     user=Depends(get_current_user),
 ):
     iniciativa = db.get(Iniciativa, iniciativa_id)
-    if iniciativa is None or not _puede_ver_iniciativa(
-        iniciativa, user["organizacion_id"]
-    ):
+    if iniciativa is None or not _puede_ver_iniciativa(iniciativa, user):
         raise HTTPException(status_code=404, detail="Iniciativa no encontrada")
     return {
         "id": iniciativa.id,
@@ -988,7 +1037,7 @@ def create_decision(
 ):
     iniciativa = db.get(Iniciativa, iniciativa_id)
     if iniciativa is None or not _puede_gestionar_iniciativa(
-        iniciativa, user["organizacion_id"]
+        iniciativa, user
     ):
         raise HTTPException(status_code=404, detail="Iniciativa no encontrada")
 
@@ -1046,24 +1095,24 @@ def create_evento(
     if tipo_evento not in {tipo.value for tipo in EventoTipo}:
         raise HTTPException(status_code=422, detail="Tipo de evento no permitido")
 
-    org_id = user["organizacion_id"]
+    org_id = user["organizacion_id"] if user.get("tipo") != "individuo" else None
+    persona_id = user.get("persona_id")
     autorizado = False
     if entidad_referencia == "necesidad":
         entidad = db.get(Necesidad, entidad_id)
-        autorizado = entidad is not None and entidad.organizacion_id == org_id
+        if user.get("tipo") == "individuo":
+            autorizado = entidad is not None and (entidad.persona_id == persona_id or entidad.visibilidad in ("compartible", "publica"))
+        else:
+            autorizado = entidad is not None and entidad.organizacion_id == org_id
     elif entidad_referencia == "iniciativa":
         entidad = db.get(Iniciativa, entidad_id)
-        autorizado = entidad is not None and _puede_gestionar_iniciativa(
-            entidad, org_id
-        )
+        autorizado = entidad is not None and _puede_gestionar_iniciativa(entidad, user)
     elif entidad_referencia == "problema_colectivo":
         entidad = db.get(ProblemaColectivo, entidad_id)
-        autorizado = entidad is not None and _problema_visible(entidad, org_id)
+        autorizado = entidad is not None and _problema_visible(entidad, user)
     elif entidad_referencia == "decision":
         entidad = db.get(Decision, entidad_id)
-        autorizado = entidad is not None and _puede_gestionar_iniciativa(
-            entidad.iniciativa, org_id
-        )
+        autorizado = entidad is not None and _puede_gestionar_iniciativa(entidad.iniciativa, user)
 
     if not autorizado:
         raise HTTPException(

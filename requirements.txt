@@ -7,3 +7,4 @@ passlib>=1.7
 pytest>=7.0
 python-dotenv>=1.0
 httpx>=0.24
+alembic>=1.13
