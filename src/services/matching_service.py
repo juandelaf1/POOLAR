@@ -41,6 +41,30 @@ def _evaluate_match(need_a: Necesidad, need_b: Necesidad, category_filter, geo_f
     differences = []
     missing_evidence = []
 
+    # Aplicar filtro territorial si se proporciona
+    if geo_filter is not None:
+        if need_a.poblacion_afectada is None or need_b.poblacion_afectada is None:
+            return None
+        if geo_filter.lower() not in need_a.poblacion_afectada.lower() or geo_filter.lower() not in need_b.poblacion_afectada.lower():
+            return None
+        if need_a.poblacion_afectada.lower() != need_b.poblacion_afectada.lower():
+            return None
+
+    # Aplicar filtro de capacidades requeridas
+    if required_capabilities:
+        cap_a = (need_a.criterios_exito or "").lower()
+        cap_b = (need_b.criterios_exito or "").lower()
+        for cap in required_capabilities:
+            if cap.lower() not in cap_a and cap.lower() not in cap_b:
+                return None
+
+    # Aplicar filtro de categoría
+    if category_filter is not None:
+        if category_filter.lower() not in (need_a.titulo + " " + (need_a.descripcion or "")).lower():
+            return None
+        if category_filter.lower() not in (need_b.titulo + " " + (need_b.descripcion or "")).lower():
+            return None
+
     # Criterio 1: tokens compartidos en título/descripción
     tokens_a = set((need_a.titulo + " " + (need_a.descripcion or "")).lower().split())
     tokens_b = set((need_b.titulo + " " + (need_b.descripcion or "")).lower().split())
