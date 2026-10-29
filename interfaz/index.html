@@ -190,7 +190,8 @@ async function invitar(e) {
 async function aceptar(e) {
   e.preventDefault();
   if (!token) alert('Primero inicia sesión');
-  document.getElementById('outInv').textContent = 'Función de participación pendiente de contexto de invitación. Documentado en docs/entrega_iteracion.md.';
+  const r = await post(`/problemas-colectivos/${document.getElementById('invProb').value}/participaciones`, {persona_id: +document.getElementById('invPersona').value, aceptar: true});
+  document.getElementById('outInv').textContent = JSON.stringify(r.data||{}, null, 2);
 }
 
 async function listarProblemas() {

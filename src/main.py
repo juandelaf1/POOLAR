@@ -277,32 +277,29 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=1, max_length=200)
 
 
+class PersonaRegistroRequest(BaseModel):
+    nombre: str = Field(min_length=2, max_length=200)
+    email: str = Field(min_length=5, max_length=254)
+    password: str = Field(min_length=8, max_length=200)
+    experiencia: Optional[str] = Field(default=None, max_length=500)
+
+
 @app.post("/personas/registro", status_code=201)
-def register_persona(
-    nombre: str,
-    email: str,
-    password: str,
-    experiencia: Optional[str] = None,
-    db: Session = Depends(get_db),
-):
-    email_norm = email.strip().lower()
-    if len(email_norm) < 5 or "@" not in email_norm:
+def register_persona(payload: PersonaRegistroRequest, db: Session = Depends(get_db)):
+    email_norm = payload.email.strip().lower()
+    if "@" not in email_norm:
         raise HTTPException(status_code=422, detail="Correo no válido")
-    if len(password) < 8:
-        raise HTTPException(status_code=422, detail="Contraseña muy corta")
-    if len(nombre.strip()) < 2 or len(nombre) > 200:
-        raise HTTPException(status_code=422, detail="Nombre fuera de rango")
     existente = db.query(Persona).filter(Persona.email == email_norm).first()
     if existente is not None and existente.activo:
         raise HTTPException(status_code=400, detail="Cuenta existente")
     persona = Persona(
-        nombre=nombre.strip(),
+        nombre=payload.nombre.strip(),
         email=email_norm,
-        hashed_password=hash_password(password),
+        hashed_password=hash_password(payload.password),
         rol="individuo",
         activo=1,
         estado="activa",
-        preferencias_participacion=experiencia,
+        preferencias_participacion=payload.experiencia,
     )
     db.add(persona)
     try:
@@ -731,11 +728,15 @@ def create_problema_colectivo(
     return _problema_dto(problema, org_id)
 
 
+class InvitacionRequest(BaseModel):
+    persona_id: int = Field(gt=0)
+    mensaje: Optional[str] = Field(default=None, max_length=500)
+
+
 @app.post("/problemas-colectivos/{problema_id}/invitaciones", status_code=201)
 def enviar_invitacion(
     problema_id: int,
-    persona_id: int,
-    mensaje: Optional[str] = None,
+    payload: InvitacionRequest,
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
@@ -744,42 +745,49 @@ def enviar_invitacion(
         raise HTTPException(status_code=404, detail="Problema no encontrado")
     if not _problema_visible(problema, user):
         raise HTTPException(status_code=403, detail="No puedes invitar a este problema")
-    persona = db.get(Persona, persona_id)
+    persona = db.get(Persona, payload.persona_id)
     if persona is None or not persona.activo:
         raise HTTPException(status_code=404, detail="Persona no encontrada")
-    _registrar_evento(db, "problema_colectivo", problema_id, "inicio", user, justificacion=f"Invitación a persona {persona_id}: {mensaje or ''}")
+    # Persistir invitación como evento de auditoría con estado pendiente
+    _registrar_evento(db, "problema_colectivo", problema_id, "inicio", user, justificacion=f"Invitación a persona {payload.persona_id}: {payload.mensaje or ''}")
     try:
         db.commit()
     except Exception:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Problema invitado")
-    return {"problema_id": problema_id, "persona_id": persona_id, "estado": "pendiente_aceptacion", "nota": "Invitación documentada; entrega física pendiente."}
+        raise HTTPException(status_code=400, detail="Error al registrar invitación")
+    return {"problema_id": problema_id, "persona_id": payload.persona_id, "estado": "pendiente_aceptacion", "nota": "Invitación documentada; entrega física pendiente."}
+
+
+class ParticipacionRequest(BaseModel):
+    persona_id: int = Field(gt=0)
+    aceptar: bool = True
 
 
 @app.post("/problemas-colectivos/{problema_id}/participaciones", status_code=201)
 def aceptar_participacion(
     problema_id: int,
-    persona_id: int,
-    aceptar: bool = True,
+    payload: ParticipacionRequest,
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
     problema = db.get(ProblemaColectivo, problema_id)
     if problema is None:
         raise HTTPException(status_code=404, detail="Problema no encontrado")
+    persona_id = payload.persona_id
     if user.get("tipo") == "individuo" and user.get("persona_id") != persona_id:
         raise HTTPException(status_code=403, detail="No corresponde a esta persona")
     persona = db.get(Persona, persona_id)
     if persona is None or not persona.activo:
         raise HTTPException(status_code=404, detail="Persona no encontrada")
-    if aceptar:
-        if persona not in [p for p in problema.personas_participantes]:
-            problema.personas_participantes.append(persona)
+    if payload.aceptar:
+        if not any(p.id == persona_id for p in problema.personas_participantes):
+            problema.personas_participantes = [p for p in (problema.personas_participantes or []) if p.id != persona_id] + [persona]
             db.commit()
             _registrar_evento(db, "problema_colectivo", problema_id, "hito", user, justificacion="Participación aceptada")
             db.commit()
         return {"problema_id": problema_id, "persona_id": persona_id, "estado": "aceptada"}
     else:
+        problema.personas_participantes = [p for p in (problema.personas_participantes or []) if p.id != persona_id]
         db.commit()
         _registrar_evento(db, "problema_colectivo", problema_id, "cambio_estado", user, justificacion="Participación retirada")
         db.commit()

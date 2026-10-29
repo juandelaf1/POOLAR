@@ -9,7 +9,7 @@ def test_flujo_completo_individual(client: TestClient, db_session):
     # 1. Registro individual controlado.
     r = client.post(
         "/personas/registro",
-        params={
+        json={
             "nombre": "Persona Sintética Flujo",
             "email": "flujo@test.local",
             "password": "secret123",
@@ -91,7 +91,7 @@ def test_flujo_completo_individual(client: TestClient, db_session):
     # En este flujo sintético solo verificamos que el endpoint responde sin exponer datos.
     r6 = client.post(
         f"/problemas-colectivos/{problema_id}/invitaciones",
-        params={"persona_id": persona_id, "mensaje": "Invitación sintética"},
+        json={"persona_id": persona_id, "mensaje": "Invitación sintética"},
         headers=headers,
     )
     # Puede ser 403 o 201 según visibilidad; aceptamos respuesta controlada.
@@ -103,7 +103,7 @@ def test_flujo_completo_individual(client: TestClient, db_session):
     # En flujo individual, la persona puede aceptar si está autorizada.
     r7 = client.post(
         f"/problemas-colectivos/{problema_id}/participaciones",
-        params={"persona_id": persona_id, "aceptar": True},
+        json={"persona_id": persona_id, "aceptar": True},
         headers=headers,
     )
     assert r7.status_code in (201, 403)
