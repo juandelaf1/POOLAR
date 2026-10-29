@@ -11,11 +11,25 @@
 11. `docs/vision_y_proposito.md` (actualizado con contexto individual pendiente)
 12. `README.md` (referencias actualizadas a `modelo_autorizacion.md` y `modelo_problemas_colectivos.md`)
 
-Nota: los repositorios auditados (`Anexo_Risk`, `EnRuta`, `CASE`) no se modificaron; se mantienen como referencias bloqueadas (`P0`/`P1` no corregidos en ellos, pero `TRAMA_ABIERTA_SECRET_KEY` sin clave fija y `PBKDF2-SHA256` evitan heredar los problemas de seguridad de los candidatos).
+## Estado de esta iteración (29 octubre 2026) — ENTREGADO
+- Dockerfile + docker-compose.yml creados y verificados.
+- Alembic configurado con migración inicial.
+- conftest.py actualizado para soportar PostgreSQL real vía `TRAMA_TEST_POSTGRES_URL`.
+- P0/P1 fixes aplicados (autorización individual, credenciales JSON).
+- Interfaz `interfaz/index.html` conectada a API.
+- Catálogo de herramientas (`docs/cat_herramientas.md`).
+- Escenario de logística compartida (`docs/demo/escenario_logistica.md`).
+- CI workflow con PostgreSQL service (`.github/workflows/ci.yml`).
+- Pruebas: 31 passed, 1 skipped (PostgreSQL pendiente de servidor).
+- Repo subido a GitHub (`juandelaf1/TRAMA-ABIERTA`, commit `516e0d8`).
 
----
-
-## Estado de esta iteración (28 octubre 2026) — ENTREGADO
+## Pendiente de infraestructura (documentado)
+- PostgreSQL real (`TRAMA_TEST_POSTGRES_URL` no disponible en este entorno).
+- Pruebas E2E con Playwright.
+- Consentimiento formal para datos reales.
+- Accesibilidad WCAG.
+- Licencia formal.
+- Integración con repos auditados (`P0`/`P1` corregidos).
 - Registro individual (`POST /personas/registro`) implementado y probado.
 - Auth dual (`individuo`/`organizacion`) funcional con `get_current_user` por contexto.
 - `ProblemaColectivo` completo con integridad N:M, transiciones controladas, eventos de auditoría.

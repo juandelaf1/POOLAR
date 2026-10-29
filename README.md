@@ -20,7 +20,85 @@ Estado: **Prototipo funcional, no producción**. Diseño independiente (`04_arqu
 - Datos sintéticos: etiquetados explícitamente (`DataProvenance`). No se presentan como resultados reales.
 - No se declara "listo para producción"; no se afirma impacto verificado sin evidencia.
 
-## Flujo de aceptación único
+## Inicio rápido
+
+### Requisitos previos
+- Python 3.11+
+- Docker y Docker Compose (opcional, para PostgreSQL)
+- PostgreSQL 16 (opcional, para pruebas de integración)
+
+### Variables de entorno
+
+Copiar `.env.example` a `.env` y ajustar:
+
+```bash
+cp .env.example .env
+```
+
+Variables requeridas:
+- `TRAMA_ABIERTA_SECRET_KEY` — secreto aleatorio para JWT (obligatorio, sin valor por defecto)
+- `DATABASE_URL` — URL de conexión a la base de datos
+- `TRAMA_DEMO_MODE` — `true`/`false` (false por defecto)
+- `CORS_ALLOW_ORIGINS` — orígenes permitidos para CORS
+
+### Instalación (desarrollo local)
+
+```bash
+# Crear entorno virtual
+python -m venv .venv
+.venv\Scripts\activate  # Windows
+# source .venv/bin/activate  # macOS/Linux
+
+# Instalar dependencias
+pip install -r requirements.txt
+
+# Ejecutar tests
+python -m pytest tests/ -q
+
+# Iniciar API
+python -m uvicorn src.main:app --reload --port 8000
+```
+
+### Docker Compose (PostgreSQL + API)
+
+```bash
+# Construir y levantar servicios
+docker-compose up -d db
+docker-compose up -d api
+
+# Ver logs
+docker-compose logs -f api
+
+# Detener (conserva datos)
+docker-compose down
+
+# Restablecer datos (destructivo)
+docker-compose down -v
+```
+
+### Migraciones PostgreSQL
+
+```bash
+# Aplicar migraciones
+alembic upgrade head
+
+# Verificar revisión
+alembic current
+```
+
+### Pruebas PostgreSQL
+
+```bash
+# Configurar URL de prueba
+set TRAMA_TEST_POSTGRES_URL=postgresql+psycopg2://trama:trama@localhost:5432/trama_test
+
+# Ejecutar tests
+python -m pytest tests/ -q
+```
+
+### Interfaz
+
+Abrir `interfaz/index.html` en el navegador (requiere API en `localhost:8000`).
 
 1. Crear organización + usuario autorizado (o persona individual).
 2. Registrar necesidad (`Need`).
