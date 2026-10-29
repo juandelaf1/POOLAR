@@ -50,6 +50,7 @@ from src.core.models import (
     problema_participantes_organizacion,
     problema_participantes_persona,
 )
+from src.services.matching_service import matching_find_related_needs
 
 # Solo desarrollo: en producción las tablas se crean con migraciones.
 Base.metadata.create_all(bind=engine)
@@ -1268,4 +1269,254 @@ def export_csv_necesidades(
             "synthetic": True,
             "nota": NOTA_SINTETICA,
         }
+    )# ---------------------------------------------------------------------------
+# Matching / Descubrimiento
+# ---------------------------------------------------------------------------
+@app.get("/matching/necesidades-relacionadas")
+def matching_necesidades_relacionadas(
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    """Descubre necesidades potencialmente relacionadas mediante reglas deterministas."""
+    tipo = user.get("tipo")
+    if tipo == "individuo":
+        pid = user.get("persona_id")
+        needs = (
+            db.query(Necesidad)
+            .filter(
+                (Necesidad.persona_id == pid)
+                | (Necesidad.visibilidad.in_(["compartible", "publica"]))
+            )
+            .order_by(Necesidad.id)
+            .all()
+        )
+    else:
+        org_id = user.get("organizacion_id")
+        needs = (
+            db.query(Necesidad)
+            .filter(
+                (Necesidad.organizacion_id == org_id)
+                | (Necesidad.visibilidad.in_(["compartible", "publica"]))
+            )
+            .order_by(Necesidad.id)
+            .all()
+        )
+    matches = matching_find_related_needs(needs)
+    return {"matches": matches, "total": len(matches), "nota": "Coincidencias basadas en reglas deterministas. No son probabilidades calibradas."}
+
+
+# ---------------------------------------------------------------------------
+# Decisiones por iniciativa
+# ---------------------------------------------------------------------------
+@app.post("/iniciativas/{iniciativa_id}/decisiones", status_code=201)
+def create_decision_for_initiative(
+    iniciativa_id: int,
+    tipo_decision: str,
+    alternativa_elegida: str,
+    motivo: str,
+    version_metodologia: str,
+    factors: Optional[str] = None,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    """Registra una decision para una iniciativa con autorizacion."""
+    iniciativa = db.get(Iniciativa, iniciativa_id)
+    if iniciativa is None or not _puede_gestionar_iniciativa(iniciativa, user):
+        raise HTTPException(status_code=404, detail="Iniciativa no encontrada")
+    tipo = user.get("tipo")
+    responsable = user.get("persona_id") if tipo == "individuo" else user.get("organizacion_id")
+    decision = Decision(
+        iniciativa_id=iniciativa_id,
+        tipo_decision=tipo_decision,
+        alternativa_elegida=alternativa_elegida,
+        motivo=motivo,
+        responsable_decision=responsable,
+        version_metodologia=version_metodologia,
+        factors=factors,
     )
+    db.add(decision)
+    db.flush()
+    _registrar_evento(db, "decision", decision.id, "resultado", user, justificacion=motivo)
+    db.commit()
+    db.refresh(decision)
+    return {
+        "id": decision.id,
+        "iniciativa_id": decision.iniciativa_id,
+        "tipo_decision": decision.tipo_decision,
+        "alternativa_elegida": decision.alternativa_elegida,
+        "motivo": decision.motivo,
+        "responsable_decision": decision.responsable_decision,
+        "version_metodologia": decision.version_metodologia,
+        "fecha": decision.fecha,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Actividades / Hitos por iniciativa
+# ---------------------------------------------------------------------------
+@app.post("/iniciativas/{iniciativa_id}/actividades", status_code=201)
+def create_actividad_for_initiative(
+    iniciativa_id: int,
+    tipo_actividad: str,
+    descripcion: str,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    """Registra una actividad o hito de ejecucion para una iniciativa."""
+    iniciativa = db.get(Iniciativa, iniciativa_id)
+    if iniciativa is None or not _puede_ver_iniciativa(iniciativa, user):
+        raise HTTPException(status_code=404, detail="Iniciativa no encontrada")
+    evento = EventoAuditoria(
+        entidad_referencia="iniciativa",
+        entidad_id=iniciativa_id,
+        tipo_evento="hito",
+        usuario_o_sistema=f"user_{user.get('user_id')}",
+        justificacion=descripcion,
+        dato_nuevo=tipo_actividad,
+    )
+    db.add(evento)
+    db.commit()
+    db.refresh(evento)
+    return {
+        "id": evento.id,
+        "iniciativa_id": iniciativa_id,
+        "tipo_actividad": tipo_actividad,
+        "descripcion": descripcion,
+        "fecha": evento.fecha,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Historial de iniciativa
+# ---------------------------------------------------------------------------
+@app.get("/iniciativas/{iniciativa_id}/historial")
+def get_historial_iniciativa(
+    iniciativa_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    """Retorna el timeline cronologico de una iniciativa."""
+    iniciativa = db.get(Iniciativa, iniciativa_id)
+    if iniciativa is None or not _puede_ver_iniciativa(iniciativa, user):
+        raise HTTPException(status_code=404, detail="Iniciativa no encontrada")
+    eventos = (
+        db.query(EventoAuditoria)
+        .filter(
+            EventoAuditoria.entidad_referencia == "iniciativa",
+            EventoAuditoria.entidad_id == iniciativa_id,
+        )
+        .order_by(EventoAuditoria.fecha)
+        .all()
+    )
+    decisiones = (
+        db.query(Decision)
+        .filter(Decision.iniciativa_id == iniciativa_id)
+        .order_by(Decision.fecha)
+        .all()
+    )
+    timeline = []
+    for e in eventos:
+        timeline.append({
+            "tipo": "evento",
+            "id": e.id,
+            "tipo_evento": e.tipo_evento,
+            "usuario": e.usuario_o_sistema,
+            "justificacion": e.justificacion,
+            "dato_nuevo": e.dato_nuevo,
+            "fecha": e.fecha.isoformat(),
+        })
+    for d in decisiones:
+        timeline.append({
+            "tipo": "decision",
+            "id": d.id,
+            "tipo_decision": d.tipo_decision,
+            "alternativa_elegida": d.alternativa_elegida,
+            "motivo": d.motivo,
+            "responsable_decision": d.responsable_decision,
+            "version_metodologia": d.version_metodologia,
+            "fecha": d.fecha.isoformat(),
+        })
+    timeline.sort(key=lambda x: x["fecha"])
+    return {"iniciativa_id": iniciativa_id, "timeline": timeline, "total": len(timeline)}
+
+
+# ---------------------------------------------------------------------------
+# Exportacion de expediente completo de iniciativa
+# ---------------------------------------------------------------------------
+@app.get("/exportar/iniciativa/{iniciativa_id}")
+def export_iniciativa(
+    iniciativa_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    """Exporta el expediente completo de una iniciativa (JSON)."""
+    iniciativa = db.get(Iniciativa, iniciativa_id)
+    if iniciativa is None or not _puede_ver_iniciativa(iniciativa, user):
+        raise HTTPException(status_code=404, detail="Iniciativa no encontrada")
+    decisiones = (
+        db.query(Decision)
+        .filter(Decision.iniciativa_id == iniciativa_id)
+        .order_by(Decision.fecha)
+        .all()
+    )
+    eventos = (
+        db.query(EventoAuditoria)
+        .filter(
+            EventoAuditoria.entidad_referencia == "iniciativa",
+            EventoAuditoria.entidad_id == iniciativa_id,
+        )
+        .order_by(EventoAuditoria.fecha)
+        .all()
+    )
+    necesidad = iniciativa.necesidad
+    problema = iniciativa.problema_colectivo
+    return JSONResponse(content={
+        "iniciativa": {
+            "id": iniciativa.id,
+            "titulo": iniciativa.titulo,
+            "descripcion": iniciativa.descripcion,
+            "estado": iniciativa.estado,
+            "responsable_id": iniciativa.responsable_id,
+            "responsable_tipo": iniciativa.responsable_tipo,
+            "criterios_decision": iniciativa.criterios_decision,
+            "alternativas_evaluadas": iniciativa.alternativas_evaluadas,
+            "plazo": iniciativa.plazo,
+            "fecha_creacion": iniciativa.fecha_creacion.isoformat(),
+        },
+        "necesidad_origen": {
+            "id": necesidad.id,
+            "titulo": necesidad.titulo,
+            "descripcion": necesidad.descripcion,
+            "visibilidad": necesidad.visibilidad,
+        } if necesidad else None,
+        "problema_colectivo": {
+            "id": problema.id,
+            "descripcion": problema.descripcion,
+            "estado": problema.estado,
+            "origen_datos": problema.origen_datos,
+        } if problema else None,
+        "decisiones": [
+            {
+                "id": d.id,
+                "tipo_decision": d.tipo_decision,
+                "alternativa_elegida": d.alternativa_elegida,
+                "motivo": d.motivo,
+                "responsable_decision": d.responsable_decision,
+                "version_metodologia": d.version_metodologia,
+                "fecha": d.fecha.isoformat(),
+            }
+            for d in decisiones
+        ],
+        "eventos": [
+            {
+                "id": e.id,
+                "tipo_evento": e.tipo_evento,
+                "usuario": e.usuario_o_sistema,
+                "justificacion": e.justificacion,
+                "fecha": e.fecha.isoformat(),
+            }
+            for e in eventos
+        ],
+        "synthetic": True,
+        "nota": NOTA_SINTETICA,
+    })
