@@ -97,7 +97,7 @@ def test_flujo_completo_individual(client: TestClient, db_session):
     # Puede ser 403 o 201 según visibilidad; aceptamos respuesta controlada.
     assert r6.status_code in (201, 403)
     if r6.status_code == 201:
-        assert r6.json()["estado"] == "pendiente_aceptacion"
+        assert r6.json()["estado"] == "pendiente"
 
     # 8. Aceptación de participación (mismo usuario o contexto autorizado).
     # En flujo individual, la persona puede aceptar si está autorizada.

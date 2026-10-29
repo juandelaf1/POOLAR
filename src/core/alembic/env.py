@@ -10,7 +10,7 @@ from alembic import context
 # Make src importable when alembic runs from repo root.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
-from src.core.database import Base  # noqa: E402
+from src.core.models import Base  # noqa: E402
 
 config = context.config
 

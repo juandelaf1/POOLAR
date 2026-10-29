@@ -40,6 +40,7 @@ from src.core.models import (
     Decision,
     EventoAuditoria,
     Iniciativa,
+    Invitacion,
     Necesidad,
     Organizacion,
     OperationalUser,
@@ -475,8 +476,6 @@ def create_necesidad(
         organizacion_id=organizacion_id,
         visibilidad=visibilidad,
         criterios_exito=criterios_exito,
-        responsable_id=organizacion_id,
-        responsable_tipo="organizacion",
         estado="propuesta",
     )
     db.add(necesidad)
@@ -733,6 +732,11 @@ class InvitacionRequest(BaseModel):
     mensaje: Optional[str] = Field(default=None, max_length=500)
 
 
+class ParticipacionRequest(BaseModel):
+    persona_id: int = Field(gt=0)
+    aceptar: bool = True
+
+
 @app.post("/problemas-colectivos/{problema_id}/invitaciones", status_code=201)
 def enviar_invitacion(
     problema_id: int,
@@ -748,19 +752,34 @@ def enviar_invitacion(
     persona = db.get(Persona, payload.persona_id)
     if persona is None or not persona.activo:
         raise HTTPException(status_code=404, detail="Persona no encontrada")
-    # Persistir invitación como evento de auditoría con estado pendiente
-    _registrar_evento(db, "problema_colectivo", problema_id, "inicio", user, justificacion=f"Invitación a persona {payload.persona_id}: {payload.mensaje or ''}")
+    # No duplicados: verificar invitación pendiente existente
+    existente = db.query(Invitacion).filter(
+        Invitacion.problema_colectivo_id == problema_id,
+        Invitacion.destinatario_id == payload.persona_id,
+        Invitacion.estado == "pendiente",
+    ).first()
+    if existente:
+        raise HTTPException(status_code=400, detail="Ya existe una invitación pendiente")
+    emisor_tipo = "persona" if user.get("tipo") == "individuo" else "organizacion"
+    emisor_id = user.get("persona_id") if user.get("tipo") == "individuo" else user.get("organizacion_id")
+    invitacion = Invitacion(
+        problema_colectivo_id=problema_id,
+        emisor_id=emisor_id,
+        emisor_tipo=emisor_tipo,
+        destinatario_id=payload.persona_id,
+        estado="pendiente",
+        mensaje=payload.mensaje,
+    )
+    db.add(invitacion)
     try:
         db.commit()
+        db.refresh(invitacion)
     except Exception:
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al registrar invitación")
-    return {"problema_id": problema_id, "persona_id": payload.persona_id, "estado": "pendiente_aceptacion", "nota": "Invitación documentada; entrega física pendiente."}
-
-
-class ParticipacionRequest(BaseModel):
-    persona_id: int = Field(gt=0)
-    aceptar: bool = True
+    _registrar_evento(db, "problema_colectivo", problema_id, "inicio", user, justificacion=f"Invitación {invitacion.id} creada para persona {payload.persona_id}: {payload.mensaje or ''}")
+    db.commit()
+    return {"id": invitacion.id, "problema_id": problema_id, "persona_id": payload.persona_id, "estado": invitacion.estado, "nota": "Invitación persistida; consentimiento pendiente."}
 
 
 @app.post("/problemas-colectivos/{problema_id}/participaciones", status_code=201)
@@ -779,14 +798,34 @@ def aceptar_participacion(
     persona = db.get(Persona, persona_id)
     if persona is None or not persona.activo:
         raise HTTPException(status_code=404, detail="Persona no encontrada")
+    # Verificar invitación válida y pendiente
+    invitacion = db.query(Invitacion).filter(
+        Invitacion.problema_colectivo_id == problema_id,
+        Invitacion.destinatario_id == persona_id,
+        Invitacion.estado == "pendiente",
+    ).first()
+    if not invitacion and payload.aceptar:
+        # Permitir solo si ya es participante (compatibilidad)
+        if not any(p.id == persona_id for p in (problema.personas_participantes or [])):
+            raise HTTPException(status_code=403, detail="No existe invitación pendiente para esta persona")
     if payload.aceptar:
-        if not any(p.id == persona_id for p in problema.personas_participantes):
-            problema.personas_participantes = [p for p in (problema.personas_participantes or []) if p.id != persona_id] + [persona]
+        if not any(p.id == persona_id for p in (problema.personas_participantes or [])):
+            problema.personas_participantes = (problema.personas_participantes or []) + [persona]
             db.commit()
-            _registrar_evento(db, "problema_colectivo", problema_id, "hito", user, justificacion="Participación aceptada")
+        if invitacion:
+            invitacion.estado = "aceptada"
+            from sqlalchemy.sql import func
+            invitacion.fecha_respuesta = func.now()
             db.commit()
+        _registrar_evento(db, "problema_colectivo", problema_id, "hito", user, justificacion="Participación aceptada")
+        db.commit()
         return {"problema_id": problema_id, "persona_id": persona_id, "estado": "aceptada"}
     else:
+        if invitacion:
+            invitacion.estado = "rechazada"
+            from sqlalchemy.sql import func
+            invitacion.fecha_respuesta = func.now()
+            db.commit()
         problema.personas_participantes = [p for p in (problema.personas_participantes or []) if p.id != persona_id]
         db.commit()
         _registrar_evento(db, "problema_colectivo", problema_id, "cambio_estado", user, justificacion="Participación retirada")
