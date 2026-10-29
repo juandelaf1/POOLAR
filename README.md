@@ -116,6 +116,26 @@ Abrir `interfaz/index.html` en el navegador (requiere API en `localhost:8000`).
 - `EventAudit`: no copia datos personales a logs sin filtro.
 - Pruebas: autenticación, expiración, aislamiento entre orgs, no acceso anónimo a escritura, ausencia de datos privados en `GET` público, transición válida, audit, exportación, datos sintéticos etiquetados.
 
+## Infraestructura y seguridad (Fase anexo)
+
+- **Capa de modelos**: `src/core/model_provider.py` — adaptador intercambiable, NullProvider por defecto, cuotas y reintentos.
+- **Seguridad transversal**: `src/core/security.py` — rate limiting, validación, redacción de datos, detección de inyección.
+- **ADR LangGraph vs CrewAI**: `docs/adr_langgraph_crewai.md`
+- **ADR LangSmith vs Langfuse**: `docs/adr_langsmith_langfuse.md`
+- **Docker**: `Dockerfile`, `docker-compose.yml`, `.dockerignore`
+- **Migraciones**: Alembic (`src/core/alembic/`) con revisión inicial
+- **CI**: `.github/workflows/ci.yml` con PostgreSQL service
+- **Variables de entorno**: `.env.example`
+
+### Variables de entorno adicionales
+- `TRAMA_MODEL_PROVIDER` — proveedor de modelos (null por defecto)
+- `TRAMA_MODEL_NAME` — nombre del modelo
+- `TRAMA_MODEL_TIMEOUT` — timeout en segundos
+- `TRAMA_MODEL_MAX_TOKENS` — máximo de tokens
+- `TRAMA_MODEL_MAX_RETRIES` — reintentos máximos
+- `TRAMA_MODEL_QUOTA` — cuota por usuario
+- `TRAMA_RATE_LIMIT` — límite de tasa por minuto
+
 ## Datos
 
 - Datos de desarrollo: sintéticos (`DataProvenance.source = "synthetic_pilot"`, `quality = "low"`, `assumptions = "development only"`). No se confunden con resultados verificados.

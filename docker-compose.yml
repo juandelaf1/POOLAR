@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-trama_abierta}
       POSTGRES_USER: ${POSTGRES_USER:-trama}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-example-password-change-me-local-only}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
@@ -20,27 +20,27 @@ services:
     restart: unless-stopped
 
   migrate:
-    image: trama_abierta:latest
+    build: .
     depends_on:
       db:
         condition: service_healthy
     command: ["python", "-m", "src.core.migrate", "upgrade", "head"]
     environment:
-      DATABASE_URL: "postgresql+psycopg2://${POSTGRES_USER:-trama}:${POSTGRES_PASSWORD:-example-password-change-me-local-only}@db:5432/${POSTGRES_DB:-trama_abierta}"
-      TRAMA_ABIERTA_SECRET_KEY: development-only-key
+      DATABASE_URL: "postgresql+psycopg2://${POSTGRES_USER:-trama}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-trama_abierta}"
+      TRAMA_ABIERTA_SECRET_KEY: ${TRAMA_ABIERTA_SECRET_KEY:?TRAMA_ABIERTA_SECRET_KEY is required}
       PYTHONUNBUFFERED: 1
     restart: "no"
 
   api:
-    image: trama_abierta:latest
+    build: .
     depends_on:
       migrate:
         condition: service_completed_successfully
     environment:
-      DATABASE_URL: "postgresql+psycopg2://${POSTGRES_USER:-trama}:${POSTGRES_PASSWORD:-example-password-change-me-local-only}@db:5432/${POSTGRES_DB:-trama_abierta}"
-      TRAMA_ABIERTA_SECRET_KEY: development-only-key
-      TRAMA_DEMO_MODE: "true"
-      CORS_ALLOW_ORIGINS: http://localhost:8000,http://127.0.0.1:8000
+      DATABASE_URL: "postgresql+psycopg2://${POSTGRES_USER:-trama}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-trama_abierta}"
+      TRAMA_ABIERTA_SECRET_KEY: ${TRAMA_ABIERTA_SECRET_KEY:?TRAMA_ABIERTA_SECRET_KEY is required}
+      TRAMA_DEMO_MODE: ${TRAMA_DEMO_MODE:-false}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
       PYTHONUNBUFFERED: 1
     ports:
       - "8000:8000"

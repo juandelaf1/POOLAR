@@ -8,11 +8,36 @@ on:
 jobs:
   test-backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: trama_test
+          POSTGRES_USER: trama
+          POSTGRES_PASSWORD: trama-test-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
-      with: {python-version: '3.11'}
+      with:
+        python-version: '3.11'
     - run: pip install -r requirements.txt
-    - run: pytest tests/ -q --tb=short
+    - name: Run migrations
+      env:
+        DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_test
+        TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
+      run: alembic upgrade head
+    - name: Run tests
+      env:
+        DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_test
+        TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
+        TRAMA_TEST_POSTGRES_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_test
+      run: python -m pytest tests/ -q --tb=short
     - name: Verificar sintético
       run: echo "Estado sintético mantenido (synthetic_pilot)"
