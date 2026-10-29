@@ -63,11 +63,7 @@ def upgrade() -> None:
         sa.Column("criterios_exito", sa.Text, nullable=True),
         sa.Column("fecha_creacion", sa.DateTime, server_default=sa.func.now()),
         sa.Column("fecha_actualizacion", sa.DateTime, server_default=sa.func.now(), onupdate=sa.func.now()),
-    )
-    op.create_check_constraint(
-        "ck_necesidad_propietario",
-        "necesidades",
-        "organizacion_id IS NOT NULL OR persona_id IS NOT NULL",
+        sa.CheckConstraint("organizacion_id IS NOT NULL OR persona_id IS NOT NULL", name="ck_necesidad_propietario"),
     )
     # Conocimiento/capacidad
     op.create_table(
@@ -80,11 +76,7 @@ def upgrade() -> None:
         sa.Column("descripcion", sa.Text, nullable=True),
         sa.Column("estado", sa.String(20), default="disponible"),
         sa.Column("fecha_registro", sa.DateTime, server_default=sa.func.now()),
-    )
-    op.create_check_constraint(
-        "ck_conocimiento_propietario",
-        "conocimiento_capacidad",
-        "persona_id IS NOT NULL OR organizacion_id IS NOT NULL",
+        sa.CheckConstraint("persona_id IS NOT NULL OR organizacion_id IS NOT NULL", name="ck_conocimiento_propietario"),
     )
     # Recursos/aportes
     op.create_table(
@@ -112,11 +104,7 @@ def upgrade() -> None:
         sa.Column("creado_por_id", sa.Integer, nullable=False),
         sa.Column("fecha_deteccion", sa.DateTime, server_default=sa.func.now()),
         sa.Column("fecha_actualizacion", sa.DateTime, server_default=sa.func.now(), onupdate=sa.func.now()),
-    )
-    op.create_check_constraint(
-        "ck_problema_colectivo_propietario",
-        "problemas_colectivos",
-        "organizacion_id IS NOT NULL OR persona_id IS NOT NULL",
+        sa.CheckConstraint("organizacion_id IS NOT NULL OR persona_id IS NOT NULL", name="ck_problema_colectivo_propietario"),
     )
     # Invitaciones
     op.create_table(
@@ -131,11 +119,7 @@ def upgrade() -> None:
         sa.Column("fecha_creacion", sa.DateTime, server_default=sa.func.now()),
         sa.Column("fecha_respuesta", sa.DateTime, nullable=True),
         sa.Column("fecha_retirada", sa.DateTime, nullable=True),
-    )
-    op.create_check_constraint(
-        "ck_invitacion_estado",
-        "invitaciones",
-        "estado IN ('pendiente', 'aceptada', 'rechazada', 'retirada', 'caducada')",
+        sa.CheckConstraint("estado IN ('pendiente', 'aceptada', 'rechazada', 'retirada', 'caducada')", name="ck_invitacion_estado"),
     )
     # Iniciativas
     op.create_table(
@@ -180,11 +164,7 @@ def upgrade() -> None:
         sa.Column("dato_anterior", sa.Text, nullable=True),
         sa.Column("dato_nuevo", sa.Text, nullable=True),
         sa.Column("fecha", sa.DateTime, server_default=sa.func.now()),
-    )
-    op.create_check_constraint(
-        "ck_evento_entidad_id",
-        "eventos_auditoria",
-        "entidad_id > 0",
+        sa.CheckConstraint("entidad_id > 0", name="ck_evento_entidad_id"),
     )
     # Recursos
     op.create_table(
