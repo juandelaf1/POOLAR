@@ -60,6 +60,11 @@ app = FastAPI(title="Trama Abierta MVP", version="0.6.0")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "version": "0.6.0"}
+
+
 # ---------------------------------------------------------------------------
 # Dependencias y utilidades de autorización
 # ---------------------------------------------------------------------------
