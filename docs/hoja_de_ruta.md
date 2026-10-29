@@ -1,8 +1,10 @@
 # Hoja de Ruta — Trama Abierta MVP v0.6
-Fecha: 28 octubre 2026
+
+Fecha: 29 octubre 2026
 Estado: Entregado; no producción.
 
 ## Completado (esta iteración)
+
 - [x] Diseño independiente (no copia de repos auditados)
 - [x] Modelo `ProblemaColectivo` + `Persona` + relaciones N:M
 - [x] Contratos versionados (`contracts.py`)
@@ -13,21 +15,41 @@ Estado: Entregado; no producción.
 - [x] Autorización dual (org / persona) implementada
 - [x] Invitación / participación mínima
 - [x] Datos sintéticos obligatorios (`synthetic_pilot`)
-- [x] Pruebas: 30 passed + flujo individual
+- [x] Pruebas: 31 passed + flujo individual
 - [x] Documentación: auditoría, entrega, cierre, autorización, decisiones técnicas, registro, visión
 - [x] README actualizado
+- [x] Dockerfile + docker-compose.yml
+- [x] Alembic configurado con migración inicial
+- [x] conftest.py actualizado para soportar PostgreSQL real
+- [x] P0/P1 fixes aplicados (autorización individual, credenciales JSON)
+- [x] Interfaz `interfaz/index.html` conectada a API
+- [x] Catálogo de herramientas (`docs/cat_herramientas.md`)
+- [x] Escenario de logística compartida (`docs/demo/escenario_logistica.md`)
+- [x] CI workflow con PostgreSQL service (`.github/workflows/ci.yml`)
+- [x] Capa de modelos (`src/core/model_provider.py`)
+- [x] Seguridad transversal (`src/core/security.py`)
+- [x] ADR LangGraph vs CrewAI (`docs/adr_langgraph_crewai.md`)
+- [x] ADR LangSmith vs Langfuse (`docs/adr_langsmith_langfuse.md`)
+- [x] Logo (`assets/logo_trama_abierta.svg`) y badges en README
 
 ## Pendiente (documentado, no bloqueante para este MVP)
+
 - [ ] PostgreSQL real (`TRAMA_TEST_POSTGRES_URL`)
 - [ ] Integración con repos auditados (`P0`/`P1` corregidos)
 - [ ] Proceso de consentimiento para datos reales
 - [ ] Canal físico de invitación / consentimiento verificado
 - [ ] Accesibilidad WCAG / adaptaciones
-- [ ] Trazabilidad ética formal (cada decisión justificada con criterio ético)
-- [ ] Perfil technic global automático (más allá de fixtures `org_a`/`org_b`)
+- [ ] Trazabilidad ética formal
+- [ ] Perfil technic global automático
 - [ ] Exportación completa verificada con datos sintéticos
+- [ ] Pruebas E2E con Playwright
+- [ ] Licencia formal
+- [ ] LangGraph/CrewAI (documentado, pendiente de implementación)
+- [ ] LangSmith/Langfuse (documentado, pendiente de implementación)
+- [ ] PostGIS, OR-Tools, MCP (documentado, pendiente de necesidad demostrada)
 
 ## Próxima iteración sugerida
+
 1. Confirmar PostgreSQL y ejecutar `test_migracion_postgresql`.
 2. Completar trazabilidad ética + accesibilidad.
 3. Cerrar integración solo tras `P0`/`P1` corregidos.
