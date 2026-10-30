@@ -3,6 +3,10 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 from enum import Enum
 
+# Importar todos los puertos
+from .evidence import Evidence, EvidencePort, EvidenceService, evidence_service
+from .geo import GeoPort, OptimizationPort, SimpleGeoService, SimpleOptimizationService, geo_service, optimization_service
+
 
 class RiskLevel(str, Enum):
     LOW = "low"
