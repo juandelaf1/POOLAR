@@ -61,6 +61,12 @@ app = FastAPI(title="Trama Abierta MVP", version="0.6.0")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
+# Montar interfaz estática
+interfaz_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "interfaz")
+if os.path.isdir(interfaz_dir):
+    from fastapi.staticfiles import StaticFiles
+    app.mount("/interfaz", StaticFiles(directory=interfaz_dir), name="interfaz")
+
 
 @app.get("/health")
 def health_check():
