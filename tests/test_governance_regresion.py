@@ -103,15 +103,31 @@ def test_operacion_sensible_ruta_definida():
 
 def test_decision_humana_auditoria():
     """8. Las decisiones humanas generan registro de auditoría (por contrato de ApprovalManager)."""
+    from src.core.agent_harness.approvals import ApprovalManager, ApprovalStatus
+    from src.core.models import OperationalUser, Organizacion
+    from src.core.database import SessionLocal
+    def _create(uid_email="h@poolar.local"):
+        with SessionLocal() as s:
+            existing = s.query(OperationalUser).filter_by(email=uid_email).first()
+            if existing: return existing.id
+            org = s.query(Organizacion).filter_by(nombre="Org P0.1").first()
+            if not org:
+                org = Organizacion(nombre="Org P0.1", tipo_organizacion="cooperativa", contacto_publico="p0@poolar.local")
+                s.add(org); s.flush()
+            user = OperationalUser(email=uid_email, hashed_password="fakehash", nombre="U P0.1", rol="individuo", organizacion_id=org.id)
+            s.add(user); s.commit(); s.refresh(user)
+            return user.id
+    proposed_uid = _create("decision_hum@poolar.local")
+    approved_uid = _create("decision_app@poolar.local")
     manager = ApprovalManager()
-    req = manager.create("exec_001", "test_tool", {"test": True}, proposed_by=42)
-    manager.approve(req.approval_id, approved_by=99)
+    req = manager.create("exec_001", "test_tool", {"test": True}, proposed_by=proposed_uid)
+    manager.approve(req.approval_id, approved_by=approved_uid)
     approved_req = manager.get(req.approval_id)
     assert approved_req is not None
     assert approved_req.status == ApprovalStatus.APPROVED
-    assert approved_req.approved_by == 99
+    assert approved_req.approved_by == approved_uid
     assert approved_req.approved_at is not None
-    assert approved_req.proposed_by == 42
+    assert approved_req.proposed_by == proposed_uid
     # El solicitante no puede ser el mismo que aprueba si no hay restricción explícita,
     # pero el contrato garantiza registro duradero.
     assert approved_req.approval_id == req.approval_id
