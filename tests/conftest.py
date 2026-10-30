@@ -8,6 +8,7 @@ Define un entorno efímero y aislado:
 import os
 import sys
 from pathlib import Path
+from sqlalchemy import text
 
 import pytest
 
@@ -60,11 +61,11 @@ def reset_db():
         # PostgreSQL: solo limpiar datos, conservar esquema migrado
         # TRUNCATE todas las tablas en orden de dependencias
         with engine.connect() as conn:
-            conn.execute("TRUNCATE TABLE eventos_auditoria, decisiones, iniciativas, invitaciones, recursos, recursos_aportes, conocimiento_capacidad, necesidad_problema_colectivo, problema_participantes_persona, problema_participantes_organizacion, problemas_colectivos, necesidades, operational_users, personas, organizaciones CASCADE")
+            conn.execute(text("TRUNCATE TABLE eventos_auditoria, decisiones, iniciativas, invitaciones, recursos, recursos_aportes, conocimiento_capacidad, necesidad_problema_colectivo, problema_participantes_persona, problema_participantes_organizacion, problemas_colectivos, necesidades, operational_users, personas, organizaciones CASCADE"))
             conn.commit()
         yield
         with engine.connect() as conn:
-            conn.execute("TRUNCATE TABLE eventos_auditoria, decisiones, iniciativas, invitaciones, recursos, recursos_aportes, conocimiento_capacidad, necesidad_problema_colectivo, problema_participantes_persona, problema_participantes_organizacion, problemas_colectivos, necesidades, operational_users, personas, organizaciones CASCADE")
+            conn.execute(text("TRUNCATE TABLE eventos_auditoria, decisiones, iniciativas, invitaciones, recursos, recursos_aportes, conocimiento_capacidad, necesidad_problema_colectivo, problema_participantes_persona, problema_participantes_organizacion, problemas_colectivos, necesidades, operational_users, personas, organizaciones CASCADE"))
             conn.commit()
 
 

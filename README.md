@@ -21,10 +21,10 @@
 <p align="center">
   <img src="https://img.shields.io/badge/estado-prototipo%20no%20producci%C3%B3n-blue?logo=shield" alt="Estado">
   <img src="https://img.shields.io/badge/version-v0.6--mvp-blue?logo=tag" alt="Versión">
-  <img src="https://img.shields.io/badge/tests-41%20passed%2C%201%20skipped-2ea44f?logo=pytest" alt="Tests">
+  <img src="https://img.shields.io/github/actions/workflow/status/juandelaf1/TRAMA-ABIERTA/ci.yml?label=CI&logo=github" alt="CI">
   <img src="https://img.shields.io/badge/datos-synthetic__pilot-7C3AED?logo=database" alt="Datos">
   <img src="https://img.shields.io/badge/auth-PBKDF2--SHA256%20%2B%20JWT-2563EB?logo=lock" alt="Auth">
-  <img src="https://img.shields.io/badge/postgresql-pendiente%20servidor-red?logo=postgresql" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/postgresql-en%20CI%20y%20Compose-orange?logo=postgresql" alt="PostgreSQL">
   <img src="https://img.shields.io/badge/licencia-MIT-10B981?logo=license" alt="Licencia">
 </p>
 
@@ -39,7 +39,7 @@
 - [Modelo de dominio](#-modelo-de-dominio)
 - [Agent Harness](#-agent-harness)
 - [Funcionalidades](#-funcionalidades)
-- [Escenario demostrativo](#-escenario-demostativo-logistica-compartida)
+- [Escenario demostrativo](#-escenario-demostrativo-logistica-compartida)
 - [Tecnologías](#-tecnologias)
 - [API y desarrollo](#-api-y-desarrollo)
 - [Instalación y ejecución](#-instalacion-y-ejecucion)
@@ -177,7 +177,7 @@ erDiagram
     ORGANIZACION ||--o{ RECURSO : "aporta"
     NECESIDAD }o--o{ PROBLEMA_COLECTIVO : "se asocia a"
     PERSONA }o--o{ PROBLEMA_COLECTIVO : "participa"
-    ORGANIZACION }o--o{ PROBLEma_COLECTIVO : "participa"
+    ORGANIZACION }o--o{ PROBLEMA_COLECTIVO : "participa"
     PROBLEMA_COLECTIVO ||--o{ INICIATIVA : "genera"
     INICIATIVA ||--o{ DECISION : "registra"
     INICIATIVA ||--o{ EVENTO_AUDITORIA : "registra"
@@ -252,7 +252,7 @@ El Agent Harness es una **base experimental**. No existe todavía un sistema de 
 | Exportación | ✅ | JSON/CSV con etiqueta `synthetic: true` |
 | Auditoría | ✅ | Eventos con actor, justificación, fecha |
 | Docker/Compose | ✅ | PostgreSQL 16 + API + migraciones |
-| CI | ✅ | GitHub Actions con PostgreSQL service |
+| CI (configurado) | ⚙️ | GitHub Actions con PostgreSQL service. Verificado localmente; CI real pendiente de ejecución exitosa. |
 | Interfaz funcional | ✅ | `interfaz/index.html` conectada a API |
 
 ### Base técnica experimental
@@ -272,7 +272,6 @@ El Agent Harness es una **base experimental**. No existe todavía un sistema de 
 | Playwright E2E | Alta | Configurado, ejecución pendiente |
 | Consentimiento formal | Alta | Documentado, no implementado |
 | Accesibilidad WCAG | Media | Guía base, no implementado |
-| Licencia formal | Media | MIT agregada |
 | RAG + pgvector | Media | Pendiente de corpus y necesidad demostrada |
 | LangGraph | Media | Documentado, pendiente de implementación |
 | LangSmith/Langfuse | Baja | Documentado, pendiente de implementación |
