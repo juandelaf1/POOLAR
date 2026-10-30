@@ -44,14 +44,38 @@ Necesidad → Descubrimiento → Problema Colectivo → Capacidades y recursos �
 - Migraciones reproducibles con Alembic.
 - CI con PostgreSQL real y Playwright E2E.
 
-## Estado / Historial
+## Auditoría de Estado y Hoja de Ruta
 
-- **Fase E2E completada**: 5/5 tests Playwright + Chromium pasando (navegador real, independientes, emails únicos).
-- **Suite backend**: 41 passed, 1 skipped (PostgreSQL pendiente de servidor).
-- **Infraestructura**: Dockerfile, docker-compose, Alembic, CI workflow con PostgreSQL service.
-- **Seguridad**: P0/P1 corregidos, autorización dual (individuo/org), credenciales JSON tipado.
-- **Matching determinista**: Filtros de categoría, territorio, capacidades. Score basado en criterios.
+### Hito alcanzado
+- MVP funcional con tests backend (41 passed) y E2E con Playwright (5 passed) en SQLite.
+- Rebranding a Poolar completado (INTENT.md, BOUNDARIES.md, assets, env vars).
+- P0/P1 corregidos (autorización individual, credenciales JSON tipado).
+- Invitación persistente con consentimiento real.
+- Matching determinista con filtros y explicación.
+- Interfaz funcional conectada a API.
+- Dockerfile, docker-compose, Alembic, CI workflow.
+- Seguridad transversal (rate limiting, validación, redacción, detección de inyección).
+- Capa de modelos desacoplada (NullProvider por defecto).
+- ADRs (LangGraph vs CrewAI, LangSmith vs Langfuse).
+- Catálogo de herramientas operativas.
+- Escenario de logística compartida documentado.
 
-## Siguiente intención
+### Siguiente intención principal (Sprint actual)
+Migración del entorno local a PostgreSQL 16 vía Docker Compose y ajuste del pipeline de migraciones Alembic.
 
-Preparar el repositorio para despliegues locales orquestados y pulido de experiencia de usuario en el frontend. Renombrar directorio local de `trama_abierta_mvp` a `poolar` para coherencia con la marca.
+### Backlog priorizado
+1. Activación de PostgreSQL local y ejecución de suite de pruebas sobre Postgres.
+2. Pulido de UI/UX en `interfaz/index.html` y accesibilidad WCAG.
+3. Renombrado del repositorio en GitHub y CI/CD en GitHub Actions.
+
+### Pendiente (documentado)
+- PostgreSQL real (`POOLAR_TEST_POSTGRES_URL`)
+- Playwright E2E ejecución real
+- Consentimiento formal para datos reales
+- Accesibilidad WCAG completa
+- Licencia formal (MIT ya agregada)
+- Integración con repos auditados (`P0`/`P1` corregidos)
+- RAG + búsqueda semántica (pgvector)
+- LangGraph (orquestación de flujos)
+- LangSmith/Langfuse (observabilidad)
+- PostGIS, OR-Tools, MCP (pendiente de necesidad demostrada)
