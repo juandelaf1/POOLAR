@@ -478,9 +478,19 @@ alembic upgrade head
 alembic current
 ```
 
-### Interfaz
+### Nota sobre renombrado de directorio local
 
-Abrir `interfaz/index.html` en el navegador (requiere API en `localhost:8000`).
+Si tu directorio local sigue llamándose `trama_abierta_mvp`, puedes renombrarlo de forma segura en Windows:
+
+```powershell
+# Cerrar todos los procesos (uvicorn, pytest, etc.)
+# Luego renombrar
+Rename-Item "C:\Users\JUAN\Desktop\Proyectos\Trama_Abierta\trama_abierta_mvp" "poolar"
+# Actualizar la variable de entorno si es necesario
+cd "C:\Users\JUAN\Desktop\Proyectos\Trama_Abierta\poolar"
+```
+
+No hay rutas absolutas duras en el código que dependan del nombre del directorio.
 
 ---
 

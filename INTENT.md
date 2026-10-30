@@ -54,4 +54,4 @@ Necesidad → Descubrimiento → Problema Colectivo → Capacidades y recursos �
 
 ## Siguiente intención
 
-Preparar el repositorio para despliegues locales orquestados y pulido de experiencia de usuario en el frontend.
+Preparar el repositorio para despliegues locales orquestados y pulido de experiencia de usuario en el frontend. Renombrar directorio local de `trama_abierta_mvp` a `poolar` para coherencia con la marca.
