@@ -73,6 +73,24 @@ def health_check():
     return {"status": "ok", "version": "0.6.0"}
 
 
+def _handle_governance(db: Session, governance: dict, user: dict, proposal: dict, execution_id: str = "") -> dict:
+    """Aplica gobernanza: REJECT bloquea, HUMAN_REVIEW crea aprobación persistida y detiene,
+    AUTO_APPROVE permite continuar."""
+    if governance["rejected"]:
+        raise HTTPException(status_code=403, detail="Propuesta rechazada por política de gobernanza")
+    if governance["requires_human_review"]:
+        from src.core.agent_harness.approvals import approval_manager
+        req = approval_manager.create(
+            execution_id=execution_id or str(__import__("uuid").uuid4()),
+            tool_name=proposal.get("action", "unknown"),
+            inputs=proposal,
+            proposed_by=user.get("user_id") or user.get("persona_id"),
+            reason="Requiere revisión humana por política de gobernanza",
+        )
+        return {"status": "pending_review", "approval_id": req.approval_id, "note": "Solicitud persistida; aprobación humana requerida antes de ejecución."}
+    return {"status": "approved", "note": "Auto-aprobado por gobernanza"}
+
+
 # ---------------------------------------------------------------------------
 # Dependencias y utilidades de autorización
 # ---------------------------------------------------------------------------
@@ -696,10 +714,11 @@ def create_problema_colectivo(
         {"action": "create_problema_colectivo", "origen_datos": payload.origen_datos.value},
         {"actor_type": user.get("tipo"), "actor_rol": user.get("rol", "individuo"), "is_destinatario": False},
     )
-    if governance["rejected"]:
-        raise HTTPException(status_code=403, detail="Propuesta rechazada por política de gobernanza")
-    # Si requiere revisión humana, se registra como pendiente
-    requires_review = governance["requires_human_review"]
+    gov_result = _handle_governance(db, governance, user, {"action": "create_problema_colectivo", "origen_datos": payload.origen_datos.value})
+    if "approval_id" in gov_result:
+        # HUMAN_REVIEW: no ejecutar efecto de negocio; devolver solicitud pendiente
+        return {"status": "pending_review", "approval_id": gov_result["approval_id"], "nota": "Revisión humana pendiente. El problema colectivo NO se creó aún.", "governance_route": governance["route"], "governance_reasons": governance["reasons"], "synthetic_pilot": payload.origen_datos.value == "synthetic_pilot"}
+    # AUTO_APPROVE: continuar ejecución (REJECT ya lanza HTTPException)
 
     personas_derivadas = {
         need.persona_id for need in necesidades if need.persona_id is not None
@@ -1042,8 +1061,9 @@ def create_iniciativa(
         {"action": "create_iniciativa", "origen_datos": "synthetic_pilot"},
         {"actor_type": user.get("tipo"), "actor_rol": user.get("rol", "individuo"), "is_destinatario": False},
     )
-    if governance["rejected"]:
-        raise HTTPException(status_code=403, detail="Propuesta rechazada por política de gobernanza")
+    gov_result = _handle_governance(db, governance, user, {"action": "create_iniciativa", "origen_datos": "synthetic_pilot"})
+    if "approval_id" in gov_result:
+        return {"status": "pending_review", "approval_id": gov_result["approval_id"], "nota": "Revisión humana pendiente. La iniciativa NO se creó aún.", "governance_route": governance["route"], "governance_reasons": governance["reasons"]}
 
     problema = None
     if problema_colectivo_id is not None:

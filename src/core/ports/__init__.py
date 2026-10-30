@@ -88,15 +88,15 @@ class AutomationEvaluator:
                 risk_level = result_risk
             reasons.extend(result.get("reasons", []))
 
-        # Garantía final: datos reales sin consentimiento nunca permiten AUTO_APPROVE
-        origen = proposal.get("origen_datos", "synthetic_pilot")
-        if origen != "synthetic_pilot":
+        # Garantía final: datos reales o desconocidos nunca permiten AUTO_APPROVE
+        origen = proposal.get("origen_datos")
+        if origen is None or origen == "" or origen not in ("synthetic_pilot",):
             if route == AutomationRoute.AUTO_APPROVE:
                 route = AutomationRoute.HUMAN_REVIEW
-                reasons.append("Datos reales requieren revisión humana (garantía de precedencia)")
+                reasons.append("Origen desconocido o no sintético requiere revisión humana")
             if risk_level == RiskLevel.LOW:
                 risk_level = RiskLevel.MEDIUM
-                reasons.append("Datos reales elevan riesgo mínimo")
+                reasons.append("Origen desconocido eleva riesgo mínimo")
 
         return {
             "route": route.value,
@@ -108,11 +108,14 @@ class AutomationEvaluator:
         }
 
     def _rule_synthetic_data(self, proposal, context, risk_level):
-        """Regla: datos sintéticos tienen menor riesgo."""
-        origen = proposal.get("origen_datos", "synthetic_pilot")
+        """Regla: datos sintéticos tienen menor riesgo; desconocidos se rechazan."""
+        origen = proposal.get("origen_datos")
+        if origen is None or origen == "" or origen not in ("synthetic_pilot", "real_pilot"):
+            return {"risk_level": RiskLevel.HIGH, "route": AutomationRoute.REJECT, "reasons": ["origen de datos ausente o desconocido; no se permite aprobación automática"]}
         if origen == "synthetic_pilot":
-            return {"risk_level": risk_level, "route": AutomationRoute.AUTO_APPROVE, "reasons": ["datos sintéticos"]}
-        return {"risk_level": RiskLevel.MEDIUM, "route": AutomationRoute.HUMAN_REVIEW, "reasons": ["datos reales requieren consentimiento"]}
+            return {"risk_level": risk_level, "route": AutomationRoute.AUTO_APPROVE, "reasons": ["datos sintéticos etiquetados"]}
+        # real_pilot sin consentimiento formal verificable
+        return {"risk_level": RiskLevel.MEDIUM, "route": AutomationRoute.HUMAN_REVIEW, "reasons": ["datos reales requieren consentimiento formal verificable"]}
 
     def _rule_risk_level(self, proposal, context, risk_level):
         """Regla: operaciones sensibles requieren revisión humana."""
