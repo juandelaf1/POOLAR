@@ -42,8 +42,15 @@ Estado: Entregado; no producción.
 - [ ] Trazabilidad ética formal
 - [ ] Perfil technic global automático
 - [ ] Exportación completa verificada con datos sintéticos
-- [ ] Pruebas E2E con Playwright
-- [ ] Licencia formal
+- [x] Pruebas E2E con Playwright (5 passed en Chromium real)
+- [x] Licencia formal (MIT)
+- [x] EvidencePort (FitFamily) implementado con tests
+- [x] GeoPort/OptimizationPort (EnRuta/DashLogistics) implementado con tests
+- [x] Gobernanza (AutomationEvaluator) integrado en endpoints
+- [x] Interfaz estática servida desde FastAPI
+- [x] Matching determinista con filtros y explicación
+- [x] Invitación persistente con consentimiento real
+- [x] Accesibilidad WCAG básica (focus, ARIA, labels)
 - [ ] LangGraph/CrewAI (documentado, pendiente de implementación)
 - [ ] LangSmith/Langfuse (documentado, pendiente de implementación)
 - [ ] PostGIS, OR-Tools, MCP (documentado, pendiente de necesidad demostrada)
