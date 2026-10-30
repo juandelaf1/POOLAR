@@ -1,11 +1,11 @@
 """Configuración de Playwright E2E para Trama Abierta."""
 import os
-import subprocess
 import time
 import sys
 from pathlib import Path
 
 import pytest
+import httpx
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -25,11 +25,20 @@ def api_server():
     import threading
     from src.main import app
 
-    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=8001, log_level="warning"))
+    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=8002, log_level="warning"))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
-    time.sleep(2)
-    yield "http://127.0.0.1:8001"
+    # Health check with timeout instead of fixed sleep
+    for _ in range(30):
+        try:
+            r = httpx.get("http://127.0.0.1:8002/health", timeout=1)
+            if r.status_code == 200:
+                break
+        except Exception:
+            time.sleep(0.5)
+    else:
+        raise RuntimeError("API server did not start")
+    yield "http://127.0.0.1:8002"
     server.should_exit = True
     thread.join(timeout=5)
 

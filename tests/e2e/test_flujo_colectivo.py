@@ -1,59 +1,89 @@
-"""Pruebas E2E del flujo colectivo de Trama Abierta con Playwright."""
+"""Pruebas E2E del flujo colectivo de Trama Abierta (API-level)."""
+import httpx
 import pytest
-
-pytest.importorskip("playwright")
 
 
 class TestFlujoColectivoE2E:
-    """Recorrido completo desde el navegador."""
+    """Recorrido completo desde la API."""
 
-    def test_registro_y_login(self, page, base_url):
+    def test_registro_y_login(self, base_url):
         """Registro y login de usuario independiente."""
-        page.goto(f"{base_url}/interfaz/index.html")
-        page.fill("#rNom", "Persona E2E")
-        page.fill("#rEmail", "e2e@test.local")
-        page.fill("#rPass", "secret123")
-        page.click("button:has-text('Registrar')")
-        page.wait_for_timeout(1000)
-        assert "OK" in page.text_content("#msgReg") or "id=" in page.text_content("#msgReg")
+        r = httpx.post(f"{base_url}/personas/registro", json={
+            "nombre": "Persona E2E",
+            "email": "e2e@test.local",
+            "password": "secret123",
+            "experiencia": "logistica",
+        })
+        assert r.status_code == 201
+        assert r.json()["rol"] == "individuo"
+        assert "id" in r.json()
 
-    def test_login_individuo(self, page, base_url):
+    def test_login_individuo(self, base_url):
         """Login de individuo."""
-        page.goto(f"{base_url}/interfaz/index.html")
-        page.fill("#lEmail", "e2e@test.local")
-        page.fill("#lPass", "secret123")
-        page.click("button:has-text('Iniciar')")
-        page.wait_for_timeout(1000)
-        assert "token" in page.text_content("#msgLog").lower() or "OK" in page.text_content("#msgLog")
+        r = httpx.post(f"{base_url}/auth/token", json={
+            "email": "e2e@test.local",
+            "password": "secret123",
+        })
+        assert r.status_code == 200
+        assert "access_token" in r.json()
+        token = r.json()["access_token"]
+        assert len(token) > 10
 
-    def test_descubrimiento_coincidencias(self, page, base_url):
+    def test_descubrimiento_coincidencias(self, base_url):
         """Descubrir coincidencias de necesidades."""
-        page.goto(f"{base_url}/interfaz/index.html")
-        # Login first
-        page.fill("#lEmail", "e2e@test.local")
-        page.fill("#lPass", "secret123")
-        page.click("button:has-text('Iniciar')")
-        page.wait_for_timeout(1000)
-        page.click("button:has-text('Listar')")
-        page.wait_for_timeout(1000)
-        # Verify no crash
-        assert page.locator("#outProblemas").is_visible()
+        # Login
+        r = httpx.post(f"{base_url}/auth/token", json={
+            "email": "e2e@test.local",
+            "password": "secret123",
+        })
+        token = r.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        # Create need via API
+        r2 = httpx.post(f"{base_url}/necesidades", params={
+            "titulo": "Necesidad E2E",
+            "descripcion": "Necesidad sintética para E2E",
+            "persona_id": 1,
+            "visibilidad": "compartible",
+        }, headers=headers)
+        # Matching
+        r3 = httpx.get(f"{base_url}/matching/necesidades-relacionadas", headers=headers)
+        assert r3.status_code == 200
+        assert "matches" in r3.json()
 
-    def test_crear_problema(self, page, base_url):
+    def test_crear_problema(self, base_url):
         """Crear problema colectivo."""
-        page.goto(f"{base_url}/interfaz/index.html")
-        page.fill("#lEmail", "e2e@test.local")
-        page.fill("#lPass", "secret123")
-        page.click("button:has-text('Iniciar')")
-        page.wait_for_timeout(1000)
-        page.fill("#pDesc", "Problema colectivo sintético para prueba E2E")
-        page.click("button:has-text('Crear problema')")
-        page.wait_for_timeout(1000)
-        assert "OK" in page.text_content("#msgProb") or "id=" in page.text_content("#msgProb")
+        r = httpx.post(f"{base_url}/auth/token", json={
+            "email": "e2e@test.local",
+            "password": "secret123",
+        })
+        token = r.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        # Create need
+        r2 = httpx.post(f"{base_url}/necesidades", params={
+            "titulo": "Necesidad E2E Problema",
+            "descripcion": "Necesidad para problema",
+            "persona_id": 1,
+            "visibilidad": "compartible",
+        }, headers=headers)
+        need_id = r2.json()["id"]
+        # Create problem
+        r3 = httpx.post(f"{base_url}/problemas-colectivos", json={
+            "descripcion": "Problema colectivo sintético para E2E",
+            "necesidades_asociadas": [need_id],
+            "origen_datos": "synthetic_pilot",
+        }, headers=headers)
+        assert r3.status_code == 201
+        assert "id" in r3.json()
 
-    def test_exportacion_expediente(self, page, base_url):
-        """Verificar que el endpoint de exportación funciona."""
-        # Direct API test via fetch
-        page.goto(f"{base_url}/interfaz/index.html")
-        # Just verify the page loads
-        assert page.title() == "Trama Abierta — Interfaz MVP v0.6"
+    def test_exportacion_expediente(self, base_url):
+        """Verificar exportación de expediente."""
+        r = httpx.post(f"{base_url}/auth/token", json={
+            "email": "e2e@test.local",
+            "password": "secret123",
+        })
+        token = r.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        # Just verify the endpoint exists and returns proper format
+        r2 = httpx.get(f"{base_url}/exportar/necesidades", headers=headers)
+        assert r2.status_code == 200
+        assert "synthetic" in r2.json() or "export" in r2.json()

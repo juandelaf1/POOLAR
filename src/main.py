@@ -465,21 +465,34 @@ def create_user(
 def create_necesidad(
     titulo: str,
     descripcion: str,
-    organizacion_id: int,
+    organizacion_id: Optional[int] = None,
+    persona_id: Optional[int] = None,
     visibilidad: str = "privada",
     criterios_exito: Optional[str] = None,
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    if user.get("organizacion_id") != organizacion_id:
-        raise HTTPException(status_code=403, detail="No pertenece a esta organización")
-    _get_org(db, organizacion_id)
+    tipo = user.get("tipo")
+    if tipo == "individuo":
+        if organizacion_id is not None:
+            raise HTTPException(status_code=403, detail="No pertenece a esta organización")
+        if persona_id is None or persona_id != user.get("persona_id"):
+            raise HTTPException(status_code=403, detail="No pertenece a esta persona")
+        org_id = None
+    else:
+        org_id = user.get("organizacion_id")
+        if organizacion_id is not None and org_id != organizacion_id:
+            raise HTTPException(status_code=403, detail="No pertenece a esta organización")
+        if organizacion_id is None:
+            organizacion_id = org_id
+        persona_id = None
     if visibilidad not in {v.value for v in NecesidadVisibilidad}:
         raise HTTPException(status_code=422, detail="Visibilidad no permitida")
     necesidad = Necesidad(
         titulo=titulo,
         descripcion=descripcion,
         organizacion_id=organizacion_id,
+        persona_id=persona_id,
         visibilidad=visibilidad,
         criterios_exito=criterios_exito,
         estado="propuesta",
@@ -496,7 +509,7 @@ def create_necesidad(
     )
     db.commit()
     db.refresh(necesidad)
-    return _need_dto(necesidad, organizacion_id)
+    return _need_dto(necesidad, org_id if tipo != "individuo" else None)
 
 
 @app.get("/necesidades")
@@ -1044,7 +1057,16 @@ def create_iniciativa(
         "necesidad_id": iniciativa.necesidad_id,
         "problema_colectivo_id": iniciativa.problema_colectivo_id,
         "titulo": iniciativa.titulo,
+        "descripcion": iniciativa.descripcion,
+        "alternativas_evaluadas": iniciativa.alternativas_evaluadas,
+        "criterios_decision": iniciativa.criterios_decision,
+        "presupuesto_estimate": iniciativa.presupuesto_estimate,
+        "plazo": iniciativa.plazo,
         "estado": iniciativa.estado,
+        "responsable_id": iniciativa.responsable_id,
+        "responsable_tipo": iniciativa.responsable_tipo,
+        "fecha_creacion": iniciativa.fecha_creacion,
+        "fecha_actualizacion": iniciativa.fecha_actualizacion,
     }
 
 
@@ -1068,6 +1090,8 @@ def get_iniciativa(
         "presupuesto_estimate": iniciativa.presupuesto_estimate,
         "plazo": iniciativa.plazo,
         "estado": iniciativa.estado,
+        "responsable_id": iniciativa.responsable_id,
+        "responsable_tipo": iniciativa.responsable_tipo,
         "fecha_creacion": iniciativa.fecha_creacion,
         "fecha_actualizacion": iniciativa.fecha_actualizacion,
     }
