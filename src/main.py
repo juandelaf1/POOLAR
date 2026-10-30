@@ -976,6 +976,14 @@ def cambiar_estado_problema_colectivo(
         raise HTTPException(
             status_code=404, detail="Problema colectivo no encontrado"
         )
+    from src.core.ports import automation_evaluator
+    governance = automation_evaluator.evaluate(
+        {"action": "cambiar_estado_problema_colectivo", "origen_datos": "synthetic_pilot"},
+        {"actor_type": user.get("tipo"), "actor_rol": user.get("rol", "individuo"), "is_destinatario": False},
+    )
+    gov_result = _handle_governance(db, governance, user, {"action": "cambiar_estado_problema_colectivo", "origen_datos": "synthetic_pilot"})
+    if "approval_id" in gov_result:
+        return {"status": "pending_review", "approval_id": gov_result["approval_id"], "nota": "Revisión humana pendiente. El cambio de estado NO se aplicó aún.", "governance_route": governance["route"], "governance_reasons": governance["reasons"]}
 
     estado_actual = ProblemaColectivoEstado(problema.estado)
     permitidos = TRANSICIONES_PROBLEMA_COLECTIVO[estado_actual]
@@ -1165,6 +1173,14 @@ def create_decision(
         iniciativa, user
     ):
         raise HTTPException(status_code=404, detail="Iniciativa no encontrada")
+    from src.core.ports import automation_evaluator
+    governance = automation_evaluator.evaluate(
+        {"action": "create_decision", "origen_datos": "synthetic_pilot"},
+        {"actor_type": user.get("tipo"), "actor_rol": user.get("rol", "individuo"), "is_destinatario": False},
+    )
+    gov_result = _handle_governance(db, governance, user, {"action": "create_decision", "origen_datos": "synthetic_pilot"})
+    if "approval_id" in gov_result:
+        return {"status": "pending_review", "approval_id": gov_result["approval_id"], "nota": "Revisión humana pendiente. La decisión NO se creó aún.", "governance_route": governance["route"], "governance_reasons": governance["reasons"]}
 
     decision = Decision(
         iniciativa_id=iniciativa_id,
@@ -1400,6 +1416,14 @@ def create_decision_for_initiative(
     iniciativa = db.get(Iniciativa, iniciativa_id)
     if iniciativa is None or not _puede_gestionar_iniciativa(iniciativa, user):
         raise HTTPException(status_code=404, detail="Iniciativa no encontrada")
+    from src.core.ports import automation_evaluator
+    governance = automation_evaluator.evaluate(
+        {"action": "create_decision_for_initiative", "origen_datos": "synthetic_pilot"},
+        {"actor_type": user.get("tipo"), "actor_rol": user.get("rol", "individuo"), "is_destinatario": False},
+    )
+    gov_result = _handle_governance(db, governance, user, {"action": "create_decision_for_initiative", "origen_datos": "synthetic_pilot"})
+    if "approval_id" in gov_result:
+        return {"status": "pending_review", "approval_id": gov_result["approval_id"], "nota": "Revisión humana pendiente. La decisión NO se creó aún.", "governance_route": governance["route"], "governance_reasons": governance["reasons"]}
     tipo = user.get("tipo")
     responsable = user.get("persona_id") if tipo == "individuo" else user.get("organizacion_id")
     decision = Decision(
