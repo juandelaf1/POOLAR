@@ -34,7 +34,8 @@ Estado: Entregado; no producción.
 
 ## Pendiente (documentado, no bloqueante para este MVP)
 
-- [ ] PostgreSQL real (`POOLAR_TEST_POSTGRES_URL`)
+- [x] PostgreSQL 16 verificado localmente (suite 29/29 passing contra PostgreSQL real)
+- [x] Búsqueda semántica (SemanticSearchPort + tests unitarios) implementada
 - [ ] Integración con repos auditados (`P0`/`P1` corregidos)
 - [ ] Proceso de consentimiento para datos reales
 - [ ] Canal físico de invitación / consentimiento verificado
@@ -57,6 +58,7 @@ Estado: Entregado; no producción.
 
 ## Próxima iteración sugerida
 
-1. Confirmar PostgreSQL y ejecutar `test_migracion_postgresql`.
-2. Completar trazabilidad ética + accesibilidad.
-3. Cerrar integración solo tras `P0`/`P1` corregidos.
+1. Confirmar PostgreSQL 16 (COMPLETADO — suite 29/29 passing).
+2. Completar accesibilidad WCAG (focus visible, ARIA live regions, contraste mínimo).
+3. Implementación completa de pgvector para búsqueda semántica real (actualmente mock local).
+4. Cerrar integración solo tras `P0`/`P1` corregidos en repos auditados.

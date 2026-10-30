@@ -59,12 +59,14 @@ Necesidad → Descubrimiento → Problema Colectivo → Capacidades y recursos �
 - ADRs (LangGraph vs CrewAI, LangSmith vs Langfuse).
 - Catálogo de herramientas operativas.
 - Escenario de logística compartida documentado.
+- PostgreSQL 16 verificado localmente (suite completa 29/29 tests pasando contra PostgreSQL real).
+- Capa de búsqueda semántica (SemanticSearchPort) implementada con servicio local y tests unitarios.
 
 ### Siguiente intención principal (Sprint actual)
-Migración del entorno local a PostgreSQL 16 vía Docker Compose y ajuste del pipeline de migraciones Alembic.
+Pulido de UI/UX en `interfaz/index.html` y accesibilidad WCAG.
 
 ### Backlog priorizado
-1. Activación de PostgreSQL local y ejecución de suite de pruebas sobre Postgres.
+1. Activación de PostgreSQL local y ejecución de suite de pruebas sobre Postgres. (COMPLETADO)
 2. Pulido de UI/UX en `interfaz/index.html` y accesibilidad WCAG.
 3. Renombrado del repositorio en GitHub y CI/CD en GitHub Actions.
 
