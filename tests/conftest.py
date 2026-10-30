@@ -49,10 +49,23 @@ def db_session():
 def reset_db():
     from src.core.database import engine
     from src.core.models import Base
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
+    is_sqlite = str(engine.url).startswith("sqlite")
+    if is_sqlite:
+        # SQLite: crear y destruir esquema completo
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+        yield
+        Base.metadata.drop_all(bind=engine)
+    else:
+        # PostgreSQL: solo limpiar datos, conservar esquema migrado
+        # TRUNCATE todas las tablas en orden de dependencias
+        with engine.connect() as conn:
+            conn.execute("TRUNCATE TABLE eventos_auditoria, decisiones, iniciativas, invitaciones, recursos, recursos_aportes, conocimiento_capacidad, necesidad_problema_colectivo, problema_participantes_persona, problema_participantes_organizacion, problemas_colectivos, necesidades, operational_users, personas, organizaciones CASCADE")
+            conn.commit()
+        yield
+        with engine.connect() as conn:
+            conn.execute("TRUNCATE TABLE eventos_auditoria, decisiones, iniciativas, invitaciones, recursos, recursos_aportes, conocimiento_capacidad, necesidad_problema_colectivo, problema_participantes_persona, problema_participantes_organizacion, problemas_colectivos, necesidades, operational_users, personas, organizaciones CASCADE")
+            conn.commit()
 
 
 def _crear_organizacion(db_session, nombre: str, email: str):

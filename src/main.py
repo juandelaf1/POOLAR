@@ -8,6 +8,7 @@ Autorización: por organización/rol y por persona individual (`tipo` en token).
 """
 import csv
 import io
+import os
 from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException, status
@@ -53,7 +54,8 @@ from src.core.models import (
 from src.services.matching_service import matching_find_related_needs
 
 # Solo desarrollo: en producción las tablas se crean con migraciones.
-Base.metadata.create_all(bind=engine)
+if os.getenv("DATABASE_URL", "").startswith("sqlite"):
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Trama Abierta MVP", version="0.6.0")
 
