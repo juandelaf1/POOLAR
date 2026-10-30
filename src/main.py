@@ -690,9 +690,17 @@ def create_problema_colectivo(
             )
         organizaciones_solicitadas.append(participante)
 
-    # Participantes derivados de las necesidades asociadas. No se permite
-    # incorporar terceros sin una relación previa (no hay flujo de invitación
-    # ni consentimiento implementado todavía).
+    # Evaluación de gobernanza: determinar ruta de automatización
+    from src.core.ports import automation_evaluator
+    governance = automation_evaluator.evaluate(
+        {"action": "create_problema_colectivo", "origen_datos": payload.origen_datos.value},
+        {"actor_type": user.get("tipo"), "actor_rol": user.get("rol", "individuo"), "is_destinatario": False},
+    )
+    if governance["rejected"]:
+        raise HTTPException(status_code=403, detail="Propuesta rechazada por política de gobernanza")
+    # Si requiere revisión humana, se registra como pendiente
+    requires_review = governance["requires_human_review"]
+
     personas_derivadas = {
         need.persona_id for need in necesidades if need.persona_id is not None
     }
@@ -1027,6 +1035,15 @@ def create_iniciativa(
             status_code=422,
             detail="criterios_decision debe describir el criterio de decisión",
         )
+
+    # Evaluación de gobernanza
+    from src.core.ports import automation_evaluator
+    governance = automation_evaluator.evaluate(
+        {"action": "create_iniciativa", "origen_datos": "synthetic_pilot"},
+        {"actor_type": user.get("tipo"), "actor_rol": user.get("rol", "individuo"), "is_destinatario": False},
+    )
+    if governance["rejected"]:
+        raise HTTPException(status_code=403, detail="Propuesta rechazada por política de gobernanza")
 
     problema = None
     if problema_colectivo_id is not None:
