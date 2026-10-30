@@ -1,7 +1,7 @@
 """Configuración de Playwright E2E para Trama Abierta."""
 import os
-import time
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -11,11 +11,9 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-os.environ["TRAMA_ABIERTA_SECRET_KEY"] = (
-    "test-only-secret-key-not-for-production-0123456789abcdef"
-)
-os.environ["DATABASE_URL"] = "sqlite:///./.pytest_e2e.db"
-os.environ["TRAMA_DEMO_MODE"] = "true"
+# Aislar configuración de E2E: no sobrescribir DATABASE_URL del proceso principal
+os.environ.setdefault("TRAMA_ABIERTA_SECRET_KEY", "test-only-secret-key-not-for-production-0123456789abcdef")
+os.environ.setdefault("TRAMA_DEMO_MODE", "true")
 
 
 @pytest.fixture(scope="session")
@@ -25,20 +23,21 @@ def api_server():
     import threading
     from src.main import app
 
-    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=8002, log_level="warning"))
+    port = 8002
+    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning"))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
-    # Health check with timeout instead of fixed sleep
+    # Health check con timeout
     for _ in range(30):
         try:
-            r = httpx.get("http://127.0.0.1:8002/health", timeout=1)
+            r = httpx.get(f"http://127.0.0.1:{port}/health", timeout=1)
             if r.status_code == 200:
                 break
         except Exception:
             time.sleep(0.5)
     else:
         raise RuntimeError("API server did not start")
-    yield "http://127.0.0.1:8002"
+    yield f"http://127.0.0.1:{port}"
     server.should_exit = True
     thread.join(timeout=5)
 

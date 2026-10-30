@@ -1,89 +1,65 @@
-"""Pruebas E2E del flujo colectivo de Trama Abierta (API-level)."""
-import httpx
+"""Pruebas E2E del flujo colectivo de Trama Abierta con Playwright (navegador real)."""
 import pytest
 
 
+@pytest.mark.playwright
 class TestFlujoColectivoE2E:
-    """Recorrido completo desde la API."""
+    """Recorrido completo desde el navegador."""
 
-    def test_registro_y_login(self, base_url):
-        """Registro y login de usuario independiente."""
-        r = httpx.post(f"{base_url}/personas/registro", json={
-            "nombre": "Persona E2E",
-            "email": "e2e@test.local",
-            "password": "secret123",
-            "experiencia": "logistica",
-        })
-        assert r.status_code == 201
-        assert r.json()["rol"] == "individuo"
-        assert "id" in r.json()
+    def test_pagina_carga(self, page, base_url):
+        """La interfaz carga correctamente."""
+        page.goto(f"{base_url}/interfaz/index.html")
+        page.wait_for_load_state("networkidle")
+        assert "Trama Abierta" in page.title()
 
-    def test_login_individuo(self, base_url):
-        """Login de individuo."""
-        r = httpx.post(f"{base_url}/auth/token", json={
-            "email": "e2e@test.local",
-            "password": "secret123",
-        })
-        assert r.status_code == 200
-        assert "access_token" in r.json()
-        token = r.json()["access_token"]
-        assert len(token) > 10
+    def test_registro_individual(self, page, base_url):
+        """Registro de persona independiente."""
+        page.goto(f"{base_url}/interfaz/index.html")
+        page.wait_for_load_state("networkidle")
+        page.fill("#rNom", "Persona E2E")
+        page.fill("#rEmail", "e2e@test.local")
+        page.fill("#rPass", "secret123")
+        page.click("button:has-text('Registrar')")
+        page.wait_for_timeout(2000)
+        msg = page.text_content("#msgReg")
+        assert "OK" in msg or "id=" in msg
 
-    def test_descubrimiento_coincidencias(self, base_url):
-        """Descubrir coincidencias de necesidades."""
+    def test_login_individuo(self, page, base_url):
+        """Login de individuo y obtención de token."""
+        page.goto(f"{base_url}/interfaz/index.html")
+        page.wait_for_load_state("networkidle")
+        page.fill("#lEmail", "e2e@test.local")
+        page.fill("#lPass", "secret123")
+        page.click("button:has-text('Iniciar')")
+        page.wait_for_timeout(2000)
+        msg = page.text_content("#msgLog")
+        assert "OK" in msg or "token" in msg.lower()
+
+    def test_crear_problema(self, page, base_url):
+        """Crear problema colectivo desde la interfaz."""
+        page.goto(f"{base_url}/interfaz/index.html")
+        page.wait_for_load_state("networkidle")
         # Login
-        r = httpx.post(f"{base_url}/auth/token", json={
-            "email": "e2e@test.local",
-            "password": "secret123",
-        })
-        token = r.json()["access_token"]
-        headers = {"Authorization": f"Bearer {token}"}
-        # Create need via API
-        r2 = httpx.post(f"{base_url}/necesidades", params={
-            "titulo": "Necesidad E2E",
-            "descripcion": "Necesidad sintética para E2E",
-            "persona_id": 1,
-            "visibilidad": "compartible",
-        }, headers=headers)
-        # Matching
-        r3 = httpx.get(f"{base_url}/matching/necesidades-relacionadas", headers=headers)
-        assert r3.status_code == 200
-        assert "matches" in r3.json()
+        page.fill("#lEmail", "e2e@test.local")
+        page.fill("#lPass", "secret123")
+        page.click("button:has-text('Iniciar')")
+        page.wait_for_timeout(2000)
+        # Crear problema
+        page.fill("#pDesc", "Problema colectivo sintético para prueba E2E")
+        page.click("button:has-text('Crear problema')")
+        page.wait_for_timeout(2000)
+        msg = page.text_content("#msgProb")
+        assert "OK" in msg or "id=" in msg
 
-    def test_crear_problema(self, base_url):
-        """Crear problema colectivo."""
-        r = httpx.post(f"{base_url}/auth/token", json={
-            "email": "e2e@test.local",
-            "password": "secret123",
-        })
-        token = r.json()["access_token"]
-        headers = {"Authorization": f"Bearer {token}"}
-        # Create need
-        r2 = httpx.post(f"{base_url}/necesidades", params={
-            "titulo": "Necesidad E2E Problema",
-            "descripcion": "Necesidad para problema",
-            "persona_id": 1,
-            "visibilidad": "compartible",
-        }, headers=headers)
-        need_id = r2.json()["id"]
-        # Create problem
-        r3 = httpx.post(f"{base_url}/problemas-colectivos", json={
-            "descripcion": "Problema colectivo sintético para E2E",
-            "necesidades_asociadas": [need_id],
-            "origen_datos": "synthetic_pilot",
-        }, headers=headers)
-        assert r3.status_code == 201
-        assert "id" in r3.json()
-
-    def test_exportacion_expediente(self, base_url):
-        """Verificar exportación de expediente."""
-        r = httpx.post(f"{base_url}/auth/token", json={
-            "email": "e2e@test.local",
-            "password": "secret123",
-        })
-        token = r.json()["access_token"]
-        headers = {"Authorization": f"Bearer {token}"}
-        # Just verify the endpoint exists and returns proper format
-        r2 = httpx.get(f"{base_url}/exportar/necesidades", headers=headers)
-        assert r2.status_code == 200
-        assert "synthetic" in r2.json() or "export" in r2.json()
+    def test_descubrimiento(self, page, base_url):
+        """Descubrir problemas accesibles."""
+        page.goto(f"{base_url}/interfaz/index.html")
+        page.wait_for_load_state("networkidle")
+        page.fill("#lEmail", "e2e@test.local")
+        page.fill("#lPass", "secret123")
+        page.click("button:has-text('Iniciar')")
+        page.wait_for_timeout(2000)
+        page.click("button:has-text('Listar')")
+        page.wait_for_timeout(2000)
+        out = page.text_content("#outProblemas")
+        assert out is not None

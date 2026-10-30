@@ -95,14 +95,18 @@ def _evaluate_match(need_a: Necesidad, need_b: Necesidad, category_filter, geo_f
     if prop_a != prop_b:
         shared_criteria.append("propietarios_distintos")
 
-    # Calcular nivel de confianza (determinista, no inventado)
-    # Basado en número de criterios compartidos / total criterios evaluados
-    total_criteria = 5
-    confidence = round(len(shared_criteria) / total_criteria, 2) if shared_criteria else 0.0
+    # Si no hay tokens compartidos, no es coincidencia (aunque compartan visibilidad)
+    if not common_tokens:
+        return None
 
     # Si no hay criterios compartidos, no es coincidencia
     if not shared_criteria:
         return None
+
+    # Calcular nivel de confianza (determinista, no inventado)
+    # Basado en número de criterios compartidos / total criterios evaluados
+    total_criteria = 5
+    confidence = round(len(shared_criteria) / total_criteria, 2) if shared_criteria else 0.0
 
     # Determinar incertidumbre
     uncertainty = "alta" if len(missing_evidence) >= 2 else "media" if missing_evidence else "baja"

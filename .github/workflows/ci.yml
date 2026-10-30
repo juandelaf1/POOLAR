@@ -33,11 +33,67 @@ jobs:
         DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_test
         TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
       run: alembic upgrade head
+    - name: Verify migration revision
+      env:
+        DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_test
+        TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
+      run: |
+        alembic current
+        alembic heads
     - name: Run tests
       env:
         DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_test
         TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
         TRAMA_TEST_POSTGRES_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_test
-      run: python -m pytest tests/ -q --tb=short
-    - name: Verificar sintético
-      run: echo "Estado sintético mantenido (synthetic_pilot)"
+      run: python -m pytest tests/ -q --tb=short --ignore=tests/e2e
+
+  test-e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: trama_e2e
+          POSTGRES_USER: trama
+          POSTGRES_PASSWORD: trama-test-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - run: pip install -r requirements.txt
+    - name: Install Playwright browsers
+      run: python -m playwright install chromium --with-deps
+    - name: Run migrations
+      env:
+        DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_e2e
+        TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
+      run: alembic upgrade head
+    - name: Start API server
+      env:
+        DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_e2e
+        TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
+        TRAMA_DEMO_MODE: "true"
+      run: |
+        python -m uvicorn src.main:app --host 127.0.0.1 --port 8000 &
+        for i in $(seq 1 30); do
+          if curl -sf http://127.0.0.1:8000/health > /dev/null; then
+            echo "Server ready"
+            break
+          fi
+          sleep 1
+        done
+    - name: Run E2E tests
+      env:
+        DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_e2e
+        TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
+        TRAMA_TEST_POSTGRES_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_e2e
+        TRAMA_DEMO_MODE: "true"
+      run: python -m pytest tests/e2e/ -q --tb=short
