@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trama Abierta — Interfaz MVP v0.6</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
 <style>
   :root { --bg:#0F172A; --card:#1E293B; --text:#F8FAFC; --muted:#94A3B8; --accent:#2563EB; --ok:#2EA44F; --warn:#D97706; }
   * { box-sizing: border-box; }
@@ -28,12 +29,12 @@
 </style>
 </head>
 <body>
-<header>
+<header role="banner">
   <h1>Trama Abierta <span style="font-weight:400; color:#94A3B8">v0.6 MVP</span></h1>
   <p class="sub">Infraestructura Participativa — Interfaz funcional | Datos sintéticos (synthetic_pilot)</p>
 </header>
 
-<main class="container">
+<main class="container" role="main">
   <div style="display:flex; gap:.5rem; margin-bottom:1rem; flex-wrap:wrap;">
     <span class="badge badge-ok">Registro individual</span>
     <span class="badge badge-info">Problema Colectivo</span>
@@ -51,7 +52,7 @@
         <label>Contraseña (min 8)</label><input id="rPass" type="password" required minlength="8">
         <label>Experiencia</label><input id="rExp" placeholder="logística, etc. (opcional)">
         <button type="submit">Registrar</button>
-        <p id="msgReg" style="margin:.5rem 0 0; font-size:.85rem;"></p>
+        <p id="msgReg" role="status" aria-live="polite" style="margin:.5rem 0 0; font-size:.85rem;"></p>
       </form>
     </section>
 
@@ -62,7 +63,7 @@
         <label>Email</label><input id="lEmail" type="email" required placeholder="email@ejemplo.org">
         <label>Contraseña</label><input id="lPass" type="password" required>
         <button type="submit">Iniciar sesión</button>
-        <p id="msgLog" style="margin:.5rem 0 0; font-size:.85rem;"></p>
+        <p id="msgLog" role="status" aria-live="polite" style="margin:.5rem 0 0; font-size:.85rem;"></p>
       </form>
       <div id="tokenArea" style="margin-top:.75rem; display:none;">
         <label>Token (guardar en navegador)</label>

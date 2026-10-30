@@ -646,13 +646,14 @@ def create_problema_colectivo(
             raise HTTPException(status_code=403, detail="No se identificó una organización válida")
         _get_org(db, org_id)
 
+    # Validación de origen de datos: solo synthetic_pilot permitido en MVP
     if payload.origen_datos is not OrigenDatos.synthetic_pilot:
-        # El MVP no tiene proceso de consentimiento para datos reales.
         raise HTTPException(
             status_code=403,
             detail=(
                 "Este MVP solo admite datos sintéticos etiquetados "
-                "(origen_datos=synthetic_pilot)"
+                "(origen_datos=synthetic_pilot). Los datos reales requieren "
+                "proceso de consentimiento formal (ver docs/consentimiento.md)."
             ),
         )
 
