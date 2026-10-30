@@ -47,11 +47,11 @@
     <section class="card" aria-label="Registro individual">
       <h2>1. Registro individual</h2>
       <form id="formRegistro" onsubmit="registrar(event)">
-        <label>Nombre</label><input id="rNom" required minlength="2" maxlength="200" placeholder="Nombre sintético">
-        <label>Email (normalizado)</label><input id="rEmail" type="email" required placeholder="ejemplo@test.local">
-        <label>Contraseña (min 8)</label><input id="rPass" type="password" required minlength="8">
-        <label>Experiencia</label><input id="rExp" placeholder="logística, etc. (opcional)">
-        <button type="submit">Registrar</button>
+        <label for="rNom">Nombre</label><input id="rNom" required minlength="2" maxlength="200" placeholder="Nombre sintético">
+        <label for="rEmail">Email (normalizado)</label><input id="rEmail" type="email" required placeholder="ejemplo@test.local">
+        <label for="rPass">Contraseña (min 8)</label><input id="rPass" type="password" required minlength="8">
+        <label for="rExp">Experiencia</label><input id="rExp" placeholder="logística, etc. (opcional)">
+        <button type="submit" aria-label="Registrar persona">Registrar</button>
         <p id="msgReg" role="status" aria-live="polite" style="margin:.5rem 0 0; font-size:.85rem;"></p>
       </form>
     </section>
@@ -60,13 +60,13 @@
     <section class="card" aria-label="Autenticación">
       <h2>2. Acceso (individuo / org)</h2>
       <form id="formLogin" onsubmit="login(event)">
-        <label>Email</label><input id="lEmail" type="email" required placeholder="email@ejemplo.org">
-        <label>Contraseña</label><input id="lPass" type="password" required>
-        <button type="submit">Iniciar sesión</button>
+        <label for="lEmail">Email</label><input id="lEmail" type="email" required placeholder="email@ejemplo.org">
+        <label for="lPass">Contraseña</label><input id="lPass" type="password" required>
+        <button type="submit" aria-label="Iniciar sesión">Iniciar sesión</button>
         <p id="msgLog" role="status" aria-live="polite" style="margin:.5rem 0 0; font-size:.85rem;"></p>
       </form>
       <div id="tokenArea" style="margin-top:.75rem; display:none;">
-        <label>Token (guardar en navegador)</label>
+        <label for="tokenInput">Token (guardar en navegador)</label>
         <input id="tokenInput" readonly style="background:#1E293B; border-color:#38BDF8;">
       </div>
     </section>
@@ -75,11 +75,11 @@
     <section class="card" aria-label="Problema colectivo">
       <h2>3. Crear Problema Colectivo</h2>
       <form id="formProblema" onsubmit="crearProblema(event)">
-        <label>Descripción (min 10)</label><textarea id="pDesc" rows="2" required minlength="10" placeholder="Problema sintético..."></textarea>
-        <label>Origen datos</label>
+        <label for="pDesc">Descripción (min 10)</label><textarea id="pDesc" rows="2" required minlength="10" placeholder="Problema sintético..."></textarea>
+        <label for="pOrigen">Origen datos</label>
         <select id="pOrigen"><option value="synthetic_pilot">synthetic_pilot</option></select>
-        <button type="submit">Crear problema</button>
-        <p id="msgProb" style="margin:.5rem 0 0; font-size:.85rem;"></p>
+        <button type="submit" aria-label="Crear problema colectivo">Crear problema</button>
+        <p id="msgProb" role="status" aria-live="polite" style="margin:.5rem 0 0; font-size:.85rem;"></p>
       </form>
     </section>
 
@@ -87,31 +87,63 @@
     <section class="card" aria-label="Iniciativa">
       <h2>4. Iniciativa (responsable persona)</h2>
       <form id="formIniciativa" onsubmit="crearIniciativa(event)">
-        <label>Necesidad ID</label><input id="iNec" type="number" required placeholder="ID de necesidad">
-        <label>Problema ID (opcional)</label><input id="iProb" type="number" placeholder="ID problema colectivo">
-        <label>Título</label><input id="iTit" required placeholder="Título iniciativa">
-        <label>Descripción</label><textarea id="iDesc" rows="2" required></textarea>
-        <label>Criterios (min 5)</label><input id="iCriterios" required minlength="5" placeholder="Criterio sintético mínimo">
-        <label>Responsable ID (tu persona)</label><input id="iResp" type="number" required>
-        <button type="submit">Crear iniciativa</button>
-        <p id="msgIni" style="margin:.5rem 0 0; font-size:.85rem;"></p>
+        <label for="iNec">Necesidad ID</label><input id="iNec" type="number" required placeholder="ID de necesidad">
+        <label for="iProb">Problema ID (opcional)</label><input id="iProb" type="number" placeholder="ID problema colectivo">
+        <label for="iTit">Título</label><input id="iTit" required placeholder="Título iniciativa">
+        <label for="iDesc">Descripción</label><textarea id="iDesc" rows="2" required></textarea>
+        <label for="iCriterios">Criterios (min 5)</label><input id="iCriterios" required minlength="5" placeholder="Criterio sintético mínimo">
+        <label for="iResp">Responsable ID (tu persona)</label><input id="iResp" type="number" required>
+        <button type="submit" aria-label="Crear iniciativa">Crear iniciativa</button>
+        <p id="msgIni" role="status" aria-live="polite" style="margin:.5rem 0 0; font-size:.85rem;"></p>
       </form>
     </section>
 
     <!-- Descubrir -->
     <section class="card" aria-label="Descubrimiento">
+      <h2>5. Descubrir coincidencias</h2>
+      <button onclick="descubrir()" aria-label="Descubrir coincidencias de necesidades">Descubrir coincidencias</button>
+      <pre id="outMatching" style="margin-top:.5rem;" aria-live="polite"></pre>
+    </section>
+
+    <!-- Invitación -->
+    <section class="card" aria-label="Invitación">
       <h2>6. Invitación / Participación</h2>
-    <form id="formInv" onsubmit="invitar(event)">
-      <label>Problema ID</label><input id="invProb" type="number" required placeholder="Problema colectivo ID">
-      <label>Persona ID (participante)</label><input id="invPersona" type="number" required placeholder="Persona ID">
-      <label>Mensaje (opcional)</label><input id="invMsg" placeholder="Invitación sintética">
-      <button type="submit">Enviar invitación</button>
-      <p id="msgInv" style="margin:.5rem 0 0; font-size:.85rem;"></p>
-    </form>
-    <button onclick="aceptar(event)" style="margin-top:.25rem;">Aceptar participación</button>
-    <pre id="outInv" style="margin-top:.5rem;"></pre>
-      <button onclick="listarProblemas()">Listar problemas accesibles</button>
-      <pre id="outProblemas" style="margin-top:.5rem;"></pre>
+      <form id="formInv" onsubmit="invitar(event)">
+        <label for="invProb">Problema ID</label><input id="invProb" type="number" required placeholder="Problema colectivo ID">
+        <label for="invPersona">Persona ID (participante)</label><input id="invPersona" type="number" required placeholder="Persona ID">
+        <label for="invMsg">Mensaje (opcional)</label><input id="invMsg" placeholder="Invitación sintética">
+        <button type="submit" aria-label="Enviar invitación">Enviar invitación</button>
+        <p id="msgInv" role="status" aria-live="polite" style="margin:.5rem 0 0; font-size:.85rem;"></p>
+      </form>
+      <button onclick="aceptar(event)" style="margin-top:.25rem;" aria-label="Aceptar participación">Aceptar participación</button>
+      <pre id="outInv" style="margin-top:.5rem;" aria-live="polite"></pre>
+    </section>
+
+    <!-- Listar -->
+    <section class="card" aria-label="Listado">
+      <h2>7. Listar problemas</h2>
+      <button onclick="listarProblemas()" aria-label="Listar problemas accesibles">Listar problemas accesibles</button>
+      <pre id="outProblemas" style="margin-top:.5rem;" aria-live="polite"></pre>
+    </section>
+
+    <!-- Historial -->
+    <section class="card" aria-label="Historial">
+      <h2>8. Historial de iniciativa</h2>
+      <form id="formHist" onsubmit="verHistorial(event)">
+        <label for="hIni">Iniciativa ID</label><input id="hIni" type="number" required placeholder="ID iniciativa">
+        <button type="submit" aria-label="Ver historial">Ver historial</button>
+      </form>
+      <pre id="outHist" style="margin-top:.5rem;" aria-live="polite"></pre>
+    </section>
+
+    <!-- Exportar -->
+    <section class="card" aria-label="Exportación">
+      <h2>9. Exportar expediente</h2>
+      <form id="formExp" onsubmit="exportar(event)">
+        <label for="eIni">Iniciativa ID</label><input id="eIni" type="number" required placeholder="ID iniciativa">
+        <button type="submit" aria-label="Exportar expediente">Exportar</button>
+      </form>
+      <pre id="outExp" style="margin-top:.5rem;" aria-live="polite"></pre>
     </section>
   </div>
 
@@ -180,10 +212,15 @@ async function crearIniciativa(e) {
   setMsg('msgIni', r.ok ? `OK — iniciativa id=${r.data.id}, responsable=${r.data.responsable_tipo}` : `Error ${r.status}: ${JSON.stringify(r.data)}`);
 }
 
+async function descubrir() {
+  const r = await get('/matching/necesidades-relacionadas');
+  document.getElementById('outMatching').textContent = JSON.stringify(r.data, null, 2);
+}
+
 async function invitar(e) {
   e.preventDefault();
   if (!token) return setMsg('msgInv','Primero inicia sesión', false);
-  const r = await post(`/problemas-colectivos/${document.getElementById('invProb').value}/invitaciones`, {persona_id: +document.getElementById('invPersona').value, mensaje: document.getElementById('invMsg').value||''});
+  const r = await post(`/problemas-colectivos/${document.getElementById('invProb').value}/invitaciones`, {persona_id: +document.getElementById('invPersona').value, mensaje: document.getElementById('invMsg').value||null});
   setMsg('msgInv', r.ok ? `OK — ${JSON.stringify(r.data)}` : `Error ${r.status}`);
   document.getElementById('outInv').textContent = JSON.stringify(r.data||{}, null, 2);
 }
@@ -198,6 +235,34 @@ async function aceptar(e) {
 async function listarProblemas() {
   const r = await get('/problemas-colectivos');
   document.getElementById('outProblemas').textContent = JSON.stringify(r.data, null, 2);
+}
+
+async function registrarDecision(e) {
+  e.preventDefault();
+  if (!token) return setMsg('msgDec','Primero inicia sesión', false);
+  const r = await post(`/iniciativas/${document.getElementById('dIni').value}/decisiones`, {tipo_decision: document.getElementById('dTipo').value, alternativa_elegida: document.getElementById('dAlt').value, motivo: document.getElementById('dMotivo').value, version_metodologia: document.getElementById('dVer').value});
+  setMsg('msgDec', r.ok ? `OK — decisión id=${r.data.id}` : `Error ${r.status}: ${JSON.stringify(r.data)}`);
+}
+
+async function registrarActividad(e) {
+  e.preventDefault();
+  if (!token) return setMsg('msgAct','Primero inicia sesión', false);
+  const r = await post(`/iniciativas/${document.getElementById('aIni').value}/actividades`, {tipo_actividad: document.getElementById('aTipo').value, descripcion: document.getElementById('aDesc').value});
+  setMsg('msgAct', r.ok ? `OK — actividad id=${r.data.id}` : `Error ${r.status}: ${JSON.stringify(r.data)}`);
+}
+
+async function verHistorial(e) {
+  e.preventDefault();
+  if (!token) return;
+  const r = await get(`/iniciativas/${document.getElementById('hIni').value}/historial`);
+  document.getElementById('outHist').textContent = JSON.stringify(r.data, null, 2);
+}
+
+async function exportar(e) {
+  e.preventDefault();
+  if (!token) return;
+  const r = await get(`/exportar/iniciativa/${document.getElementById('eIni').value}`);
+  document.getElementById('outExp').textContent = JSON.stringify(r.data, null, 2);
 }
 </script>
 </body>
