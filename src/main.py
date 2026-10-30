@@ -922,12 +922,12 @@ def get_problema_colectivo(
     # 404 también para problemas existentes pero no accesibles: no se
     # confirma la existencia de recursos de otras organizaciones.
     if problema is None or not _problema_visible(
-        problema, user["organizacion_id"]
+        problema, user
     ):
         raise HTTPException(
             status_code=404, detail="Problema colectivo no encontrado"
         )
-    return _problema_dto(problema, user["organizacion_id"])
+    return _problema_dto(problema, user)
 
 
 @app.post(
@@ -943,7 +943,7 @@ def cambiar_estado_problema_colectivo(
     problema = db.get(ProblemaColectivo, problema_id)
     # Solo el propietario puede validar/cerrar. No hay roles por problema
     # definidos todavía; se documenta como limitación.
-    if problema is None or problema.organizacion_id != user["organizacion_id"]:
+    if problema is None or not _problema_visible(problema, user):
         raise HTTPException(
             status_code=404, detail="Problema colectivo no encontrado"
         )
