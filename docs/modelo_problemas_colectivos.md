@@ -1,6 +1,6 @@
-# Modelo de Problemas Colectivos — Trama Abierta v0.6
+# Modelo de Problemas Colectivos — Poolar v0.6
 
-Referencia: `docs/vision_y_proposito.md`; `trama_abierta_mvp/src/core/contracts.py`; `trama_abierta_mvp/src/core/models.py`.
+Referencia: `docs/vision_y_proposito.md`; `poolar_mvp/src/core/contracts.py`; `poolar_mvp/src/core/models.py`.
 Estado: Definido en contratos y modelos; pendiente verificación completa con datos de piloto.
 
 ---
@@ -66,6 +66,6 @@ Iniciativa ── genera ──► EventoAuditoria (1:N, con trazabilidad)
 
 ---
 
-## Por qué esto diferencia a Trama Abierta
+## Por qué esto diferencia a Poolar
 
 No se trata solo de "agrupar necesidades similares" por categoría o ubicación. Se trata de permitre que varias personas u organizaciones **validen que comparten un problema** antes de decidir actuar juntos, y de conservar evidencia de cómo llegó esa validación (evidencias, criterios, decisiones de rechazo o corrección, resultados). Esto es lo que convierte una coincidencia potencial en una acción colectiva informada.

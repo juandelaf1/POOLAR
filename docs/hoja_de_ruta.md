@@ -1,4 +1,4 @@
-# Hoja de Ruta — Trama Abierta MVP v0.6
+# Hoja de Ruta — Poolar MVP v0.6
 
 Fecha: 29 octubre 2026
 Estado: Entregado; no producción.
@@ -30,11 +30,11 @@ Estado: Entregado; no producción.
 - [x] Seguridad transversal (`src/core/security.py`)
 - [x] ADR LangGraph vs CrewAI (`docs/adr_langgraph_crewai.md`)
 - [x] ADR LangSmith vs Langfuse (`docs/adr_langsmith_langfuse.md`)
-- [x] Logo (`assets/logo_trama_abierta.svg`) y badges en README
+- [x] Logo (`assets/logo_poolar.svg`) y badges en README
 
 ## Pendiente (documentado, no bloqueante para este MVP)
 
-- [ ] PostgreSQL real (`TRAMA_TEST_POSTGRES_URL`)
+- [ ] PostgreSQL real (`POOLAR_TEST_POSTGRES_URL`)
 - [ ] Integración con repos auditados (`P0`/`P1` corregidos)
 - [ ] Proceso de consentimiento para datos reales
 - [ ] Canal físico de invitación / consentimiento verificado

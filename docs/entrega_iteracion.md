@@ -1,4 +1,4 @@
-# Entrega de Iteración — Trama Abierta MVP v0.6
+# Entrega de Iteración — Poolar MVP v0.6
 Estado: **Prototipo funcional, no producción**.
 
 ## Entregables
@@ -16,7 +16,7 @@ Estado: **Prototipo funcional, no producción**.
 11. `docs/vision_y_proposito.md` — actualizado con contexto individual pendiente
 12. `README.md` — referencias actualizadas a `modelo_autorizacion.md` y `modelo_problemas_colectivos.md`
 13. `interfaz/index.html` — interfaz funcional conectada a API
-14. `assets/logo_trama_abierta.svg` — logo del proyecto
+14. `assets/logo_poolar.svg` — logo del proyecto
 15. `docs/hoja_de_ruta.md` — hoja de ruta con pendientes
 16. `docs/logs_cambios.md` — registro de cambios
 17. `docs/cierre_iteracion.md` — estado de entrega
@@ -36,18 +36,18 @@ Estado: **Prototipo funcional, no producción**.
 
 - Dockerfile + docker-compose.yml creados y verificados.
 - Alembic configurado con migración inicial.
-- conftest.py actualizado para soportar PostgreSQL real vía `TRAMA_TEST_POSTGRES_URL`.
+- conftest.py actualizado para soportar PostgreSQL real vía `POOLAR_TEST_POSTGRES_URL`.
 - P0/P1 fixes aplicados (autorización individual, credenciales JSON).
 - Interfaz `interfaz/index.html` conectada a API.
 - Catálogo de herramientas (`docs/cat_herramientas.md`).
 - Escenario de logística compartida (`docs/demo/escenario_logistica.md`).
 - CI workflow con PostgreSQL service (`.github/workflows/ci.yml`).
 - Pruebas: 31 passed, 1 skipped (PostgreSQL pendiente de servidor).
-- Repo subido a GitHub (`juandelaf1/TRAMA-ABIERTA`, commit `1b7c17d`).
+- Repo subido a GitHub (`juandelaf1/poolar`, commit `1b7c17d`).
 
 ## Pendiente de infraestructura (documentado)
 
-- PostgreSQL real (`TRAMA_TEST_POSTGRES_URL` no disponible en este entorno).
+- PostgreSQL real (`POOLAR_TEST_POSTGRES_URL` no disponible en este entorno).
 - Pruebas E2E con Playwright.
 - Consentimiento formal para datos reales.
 - Accesibilidad WCAG.
@@ -67,4 +67,4 @@ Estado: **Prototipo funcional, no producción**.
 
 ## Notas
 
-Los repositorios auditados (`Anexo_Risk`, `EnRuta`, `CASE`) no se modificaron; se mantienen como referencias bloqueadas (`P0`/`P1` no corregidos en ellos, pero `TRAMA_ABIERTA_SECRET_KEY` sin clave fija y `PBKDF2-SHA256` evitan heredar los problemas de seguridad de los candidatos).
+Los repositorios auditados (`Anexo_Risk`, `EnRuta`, `CASE`) no se modificaron; se mantienen como referencias bloqueadas (`P0`/`P1` no corregidos en ellos, pero `POOLAR_SECRET_KEY` sin clave fija y `PBKDF2-SHA256` evitan heredar los problemas de seguridad de los candidatos).

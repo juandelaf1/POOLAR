@@ -1,13 +1,13 @@
-# Preparación para Kubernetes — Trama Abierta
+# Preparación para Kubernetes — Poolar
 
 ## Estado
 Documentado; no desplegado. Docker Compose es el entorno principal de desarrollo.
 
 ## Objetivo
-Preparar la arquitectura para que Trama Abierta pueda desplegarse en Kubernetes en el futuro sin reescribir el núcleo.
+Preparar la arquitectura para que Poolar pueda desplegarse en Kubernetes en el futuro sin reescribir el núcleo.
 
 ## Separación de cargas (futuro)
-- API de Trama Abierta (Deployment).
+- API de Poolar (Deployment).
 - Workers de tareas asíncronas (Deployment futuro).
 - Ejecución del Agent Harness (Deployment futuro).
 - Procesos de ingestión (Job/CronJob).
@@ -32,20 +32,20 @@ Preparar la arquitectura para que Trama Abierta pueda desplegarse en Kubernetes 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: trama-api
+  name: poolar-api
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: trama-api
+      app: poolar-api
   template:
     metadata:
       labels:
-        app: trama-api
+        app: poolar-api
     spec:
       containers:
-      - name: trama-api
-        image: trama_abierta:latest
+      - name: poolar-api
+        image: poolar:latest
         ports:
         - containerPort: 8000
         env:
@@ -54,7 +54,7 @@ spec:
             secretKeyRef:
               name: trama-secrets
               key: database-url
-        - name: TRAMA_ABIERTA_SECRET_KEY
+        - name: POOLAR_SECRET_KEY
           valueFrom:
             secretKeyRef:
               name: trama-secrets

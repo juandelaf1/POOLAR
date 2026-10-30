@@ -8,9 +8,9 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
-SECRET_KEY = os.getenv("TRAMA_ABIERTA_SECRET_KEY")
+SECRET_KEY = os.getenv("POOLAR_SECRET_KEY")
 if not SECRET_KEY:
-    raise RuntimeError("TRAMA_ABIERTA_SECRET_KEY no configurada; no iniciar sin secreto aleatorio de entorno")
+    raise RuntimeError("POOLAR_SECRET_KEY no configurada; no iniciar sin secreto aleatorio de entorno")
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60

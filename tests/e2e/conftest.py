@@ -1,4 +1,4 @@
-"""Configuración de Playwright E2E para Trama Abierta."""
+"""Configuración de Playwright E2E para Poolar."""
 import os
 import sys
 import time
@@ -11,8 +11,8 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-os.environ.setdefault("TRAMA_ABIERTA_SECRET_KEY", "test-only-secret-key-not-for-production-0123456789abcdef")
-os.environ.setdefault("TRAMA_DEMO_MODE", "true")
+os.environ.setdefault("POOLAR_SECRET_KEY", "test-only-secret-key-not-for-production-0123456789abcdef")
+os.environ.setdefault("POOLAR_DEMO_MODE", "true")
 
 
 @pytest.fixture(scope="session")

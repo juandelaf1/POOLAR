@@ -1,19 +1,19 @@
-"""Límites de seguridad para el Agent Harness de Trama Abierta."""
+"""Límites de seguridad para el Agent Harness de Poolar."""
 import os
 import time
 from typing import Dict, Any, Optional
 from collections import defaultdict
 
 # Límites configurables por entorno
-MAX_ITERATIONS = int(os.getenv("TRAMA_HARNESS_MAX_ITERATIONS", "10"))
-MAX_TOOL_CALLS = int(os.getenv("TRAMA_HARNESS_MAX_TOOL_CALLS", "50"))
-TIMEOUT_SECONDS = int(os.getenv("TRAMA_HARNESS_TIMEOUT", "300"))
-TOKEN_BUDGET = int(os.getenv("TRAMA_HARNESS_TOKEN_BUDGET", "4096"))
-COST_BUDGET = float(os.getenv("TRAMA_HARNESS_COST_BUDGET", "0.10"))
-MAX_RETRIES = int(os.getenv("TRAMA_HARNESS_MAX_RETRIES", "3"))
-RETRY_DELAY = float(os.getenv("TRAMA_HARNESS_RETRY_DELAY", "1.0"))
-RATE_LIMIT_WINDOW = int(os.getenv("TRAMA_HARNESS_RATE_LIMIT_WINDOW", "60"))
-RATE_LIMIT_MAX = int(os.getenv("TRAMA_HARNESS_RATE_LIMIT_MAX", "30"))
+MAX_ITERATIONS = int(os.getenv("POOLAR_HARNESS_MAX_ITERATIONS", "10"))
+MAX_TOOL_CALLS = int(os.getenv("POOLAR_HARNESS_MAX_TOOL_CALLS", "50"))
+TIMEOUT_SECONDS = int(os.getenv("POOLAR_HARNESS_TIMEOUT", "300"))
+TOKEN_BUDGET = int(os.getenv("POOLAR_HARNESS_TOKEN_BUDGET", "4096"))
+COST_BUDGET = float(os.getenv("POOLAR_HARNESS_COST_BUDGET", "0.10"))
+MAX_RETRIES = int(os.getenv("POOLAR_HARNESS_MAX_RETRIES", "3"))
+RETRY_DELAY = float(os.getenv("POOLAR_HARNESS_RETRY_DELAY", "1.0"))
+RATE_LIMIT_WINDOW = int(os.getenv("POOLAR_HARNESS_RATE_LIMIT_WINDOW", "60"))
+RATE_LIMIT_MAX = int(os.getenv("POOLAR_HARNESS_RATE_LIMIT_MAX", "30"))
 
 # Tracking de ejecuciones
 _execution_tracking: Dict[str, Dict[str, Any]] = defaultdict(lambda: {

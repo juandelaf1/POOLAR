@@ -1,4 +1,4 @@
-# Logs de Cambios — Trama Abierta MVP v0.6
+# Logs de Cambios — Poolar MVP v0.6
 Formato: fecha breve / archivo / cambio / justificación
 
 - 2026-10-28 / src/main.py / Endpoint `/personas/registro` agregado / Registro individual controlado, datos sintéticos

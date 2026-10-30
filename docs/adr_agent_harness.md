@@ -7,7 +7,7 @@ Aceptado (harness propio mínimo, con interfaces para LangGraph).
 Implementar un Agent Harness propio y ligero en `src/core/agent_harness/`, con interfaces intercambiables para incorporar LangGraph cuando sea necesario. No instalar LangGraph, CrewAI ni Deep Agents en esta iteración.
 
 ## Razones
-- Trama Abierta necesita control explícito sobre permisos, autorización y aprobaciones.
+- Poolar necesita control explícito sobre permisos, autorización y aprobaciones.
 - Un framework genérico no sustituye el modelo de autorización propio.
 - El harness propio permite separar contexto, herramientas, políticas, aprobaciones y estado.
 - LangGraph se evaluará cuando aparezcan flujos duraderos que realmente lo necesiten.

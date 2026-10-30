@@ -1,7 +1,7 @@
-# Cierre de Iteración — Trama Abierta MVP v0.6
+# Cierre de Iteración — Poolar MVP v0.6
 Fecha: 28 octubre 2026
 Estado: Entregado; no producción.
-Repo independiente: trama_abierta_mvp/ (sin modificar repos auditados).
+Repo independiente: poolar_mvp/ (sin modificar repos auditados).
 
 ## Código completado
 - Registro individual (`POST /personas/registro`) funcional.
@@ -23,7 +23,7 @@ Repo independiente: trama_abierta_mvp/ (sin modificar repos auditados).
 - `docs/registro_individual.md`: restricciones de registro individual.
 
 ## Bloqueos / pendientes
-- PostgreSQL: código y migración listos; ejecución pendiente (`TRAMA_TEST_POSTGRES_URL` no disponible en este entorno).
+- PostgreSQL: código y migración listos; ejecución pendiente (`POOLAR_TEST_POSTGRES_URL` no disponible en este entorno).
 - Integración con `Anexo_Risk`/`EnRuta`/`CASE`: bloqueada hasta `P0`/`P1` corregidos (no se intentó por diseño independiente).
 - Datos reales: bloqueados hasta proceso de consentimiento documentado.
 

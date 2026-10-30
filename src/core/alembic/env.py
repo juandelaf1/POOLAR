@@ -1,4 +1,4 @@
-"""Alembic environment for Trama Abierta."""
+"""Alembic environment for Poolar."""
 from logging.config import fileConfig
 import os
 import sys

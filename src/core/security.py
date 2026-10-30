@@ -1,4 +1,4 @@
-"""Controles de seguridad transversales para Trama Abierta.
+"""Controles de seguridad transversales para Poolar.
 
 - Rate limiting por usuario/IP.
 - Validación de argumentos.
@@ -14,13 +14,13 @@ import logging
 from typing import Dict, Any, Optional
 from collections import defaultdict
 
-logger = logging.getLogger("trama_abierta.security")
+logger = logging.getLogger("poolar.security")
 
 
 # Rate limiting por usuario (en memoria, por proceso)
 _rate_limits: Dict[str, list] = defaultdict(list)
 _rate_limit_window = 60  # segundos
-_rate_limit_max = int(os.getenv("TRAMA_RATE_LIMIT", "60"))  # requests por ventana
+_rate_limit_max = int(os.getenv("POOLAR_RATE_LIMIT", "60"))  # requests por ventana
 
 
 def check_rate_limit(user_id: str, endpoint: str) -> bool:

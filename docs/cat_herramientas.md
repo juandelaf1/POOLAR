@@ -1,4 +1,4 @@
-# Catálogo de Herramientas Operativas — Trama Abierta v0.6
+# Catálogo de Herramientas Operativas — Poolar v0.6
 Estado: MVP independiente; no producción; datos sintéticos (`synthetic_pilot`).
 
 ## 1. Descubrimiento de posibilidades (`matching`)

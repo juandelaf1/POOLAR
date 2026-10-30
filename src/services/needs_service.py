@@ -1,4 +1,4 @@
-"""Servicios operativos de Trama Abierta — herramientas de necesidades."""
+"""Servicios operativos de Poolar — herramientas de necesidades."""
 from sqlalchemy.orm import Session
 from src.core.models import Necesidad, Persona
 

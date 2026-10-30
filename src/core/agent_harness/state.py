@@ -1,4 +1,4 @@
-"""Gestión de estado para el Agent Harness de Trama Abierta.
+"""Gestión de estado para el Agent Harness de Poolar.
 
 Diferencia entre:
 - Estado oficial del dominio (PostgreSQL).

@@ -1,4 +1,4 @@
-# Decisiones técnicas — MVP Trama Abierta v0.6
+# Decisiones técnicas — MVP Poolar v0.6
 
 - Monolito modular (`FastAPI`, `PostgreSQL` objetivo, `SQLAlchemy`, `Pydantic v2`); no microservicios.
 - Contratos (`contracts.py`) basados en `AGENTS.md` (`Organización`, `Necesidad`, `Recurso`, `Iniciativa`, `Decisión`, `EventoAuditoría`, `ProcedenciaDatos`) y `v0.5`.

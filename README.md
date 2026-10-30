@@ -1,7 +1,7 @@
-# Trama Abierta — Infraestructura de Cooperación
+# Poolar — Infraestructura de Cooperación
 
 <p align="center">
-  <img src="assets/TRAMA-ABIERTA-banner.jpg" alt="Trama Abierta" width="100%">
+  <img src="assets/poolar-banner.jpg" alt="Poolar" width="100%">
 </p>
 
 <p align="center">
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="#-que-es-trama-abierta">Qué es</a> ·
+  <a href="#-que-es-poolar">Qué es</a> ·
   <a href="#-como-funciona">Cómo funciona</a> ·
   <a href="#-arquitectura">Arquitectura</a> ·
   <a href="#-modelo-de-dominio">Dominio</a> ·
@@ -21,7 +21,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/estado-prototipo%20no%20producci%C3%B3n-blue?logo=shield" alt="Estado">
   <img src="https://img.shields.io/badge/version-v0.6--mvp-blue?logo=tag" alt="Versión">
-  <img src="https://img.shields.io/github/actions/workflow/status/juandelaf1/TRAMA-ABIERTA/ci.yml?label=CI&logo=github" alt="CI">
+  <img src="https://img.shields.io/github/actions/workflow/status/juandelaf1/poolar/ci.yml?label=CI&logo=github" alt="CI">
   <img src="https://img.shields.io/badge/datos-synthetic__pilot-7C3AED?logo=database" alt="Datos">
   <img src="https://img.shields.io/badge/auth-PBKDF2--SHA256%20%2B%20JWT-2563EB?logo=lock" alt="Auth">
   <img src="https://img.shields.io/badge/postgresql-en%20CI%20y%20Compose-orange?logo=postgresql" alt="PostgreSQL">
@@ -29,14 +29,14 @@
 </p>
 
 <p align="center">
-  <strong>Topics:</strong> trama-abierta, cooperacion, open-infrastructure, collective-problems, fastapi, sqlalchemy, postgresql, python, docker, agent-harness, matching, consent, accessibility
+  <strong>Topics:</strong> poolar, cooperacion, open-infrastructure, collective-problems, fastapi, sqlalchemy, postgresql, python, docker, agent-harness, matching, consent, accessibility
 </p>
 
 ---
 
 ## Índice
 
-- [Qué es Trama Abierta](#-que-es-trama-abierta)
+- [Qué es Poolar](#-que-es-poolar)
 - [El problema que resuelve](#-el-problema-que-resuelve)
 - [Cómo funciona](#-como-funciona)
 - [Arquitectura](#-arquitectura)
@@ -53,9 +53,9 @@
 
 ---
 
-## Qué es Trama Abierta
+## Qué es Poolar
 
-**Trama Abierta** es una infraestructura abierta, modular e interoperable para la cooperación colectiva.
+**Poolar** es una infraestructura abierta, modular e interoperable para la cooperación colectiva.
 
 No es una red social, ni un gestor de tareas, ni un portal de anuncios. Es la capa que permite a personas, comunidades, asociaciones, cooperativas, pequeñas empresas e instituciones:
 
@@ -84,13 +84,13 @@ Personas y organizaciones tienen necesidades, conocimientos y recursos dispersos
 - **Coordinación**: asignar responsabilidades y ejecutar.
 - **Trazabilidad**: registrar lo que se hizo y lo que se aprendió.
 
-Trama Abierta proporciona las herramientas operativas para ejecutar este proceso de forma abierta, transparente y reutilizable.
+Poolar proporciona las herramientas operativas para ejecutar este proceso de forma abierta, transparente y reutilizable.
 
 ---
 
 ## Cómo funciona
 
-El ciclo operativo de Trama Abierta es:
+El ciclo operativo de Poolar es:
 
 ```
 Necesidad → Descubrimiento → Problema Colectivo → Capacidades y recursos → Alternativas → Decisión → Ejecución → Resultados → Aprendizaje reutilizable
@@ -421,14 +421,14 @@ cp .env.example .env
 ```
 
 Variables requeridas:
-- `TRAMA_ABIERTA_SECRET_KEY` — secreto aleatorio para JWT (obligatorio, sin valor por defecto)
+- `POOLAR_SECRET_KEY` — secreto aleatorio para JWT (obligatorio, sin valor por defecto)
 - `DATABASE_URL` — URL de conexión a la base de datos
 
 Variables opcionales:
-- `TRAMA_DEMO_MODE` — `true`/`false` (false por defecto)
+- `POOLAR_DEMO_MODE` — `true`/`false` (false por defecto)
 - `CORS_ALLOW_ORIGINS` — orígenes permitidos para CORS
-- `TRAMA_MODEL_PROVIDER` — proveedor de modelos (null por defecto)
-- `TRAMA_TEST_POSTGRES_URL` — URL de PostgreSQL para tests de integración
+- `POOLAR_MODEL_PROVIDER` — proveedor de modelos (null por defecto)
+- `POOLAR_TEST_POSTGRES_URL` — URL de PostgreSQL para tests de integración
 
 ### Instalación (desarrollo local)
 
@@ -558,5 +558,5 @@ MIT License. Ver [`LICENSE`](LICENSE).
 ---
 
 <p align="center">
-  <sub>Trama Abierta — Infraestructura abierta de cooperación. Datos sintéticos hasta consentimiento formal.</sub>
+  <sub>Poolar — Infraestructura abierta de cooperación. Datos sintéticos hasta consentimiento formal.</sub>
 </p>

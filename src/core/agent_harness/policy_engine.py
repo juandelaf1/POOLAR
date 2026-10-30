@@ -1,4 +1,4 @@
-"""Motor de políticas del Agent Harness de Trama Abierta.
+"""Motor de políticas del Agent Harness de Poolar.
 
 Verifica permisos, autorización y reglas de dominio antes de ejecutar
 cualquier herramienta. La autorización se comprueba en el momento de

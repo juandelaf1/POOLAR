@@ -1,4 +1,4 @@
-# Modelo de Autorización — Trama Abierta v0.6
+# Modelo de Autorización — Poolar v0.6
 
 Estado: **definido en código y documentado; no verificado con usuario real**.
 Referencia: `docs/vision_y_proposito.md`; `docs/modelo_problemas_colectivos.md`.
@@ -51,7 +51,7 @@ En el MVP:
   - P0 (`Anexo_Risk`): confirmado; no integrado.
   - P1 (`EnRuta`): confirmado; `SECRET_KEY` requiere entorno.
   - Autorización individual: implementada en datos (`Persona` con `hashed_password`) y en `auth.py`, pero pendiente de endpoint público completo (`POST /personas/registro`) y de flujo completo de iniciativa con `responsable_tipo = individuo`.
-  - Migración PostgreSQL: pendiente (`tests/test_problema_colectivo.py` tiene `test_migracion_postgresql` con `skipif` si `TRAMA_TEST_POSTGRES_URL` no está configurada).
+  - Migración PostgreSQL: pendiente (`tests/test_problema_colectivo.py` tiene `test_migracion_postgresql` con `skipif` si `POOLAR_TEST_POSTGRES_URL` no está configurada).
   - Datos sintéticos: obligatorio (`origen_datos = synthetic_pilot`). El piloto real requiere proceso de consentimiento y licencia verificada.
   - No producción: no se afirma impacto verificado ni impacto real.
 
@@ -61,7 +61,7 @@ En el MVP:
 
 - Última ejecución: **30 passed, 1 skipped** (`tests/test_problema_colectivo.py`).
 - `tests/test_auth_isolation.py`: 3 passed (token expiration, hash, synthetic tag).
-- `tests/conftest.py`: configuración de base efímera con `TRAMA_ABIERTA_SECRET_KEY` y `DATABASE_URL` locales; sin credenciales reales.
+- `tests/conftest.py`: configuración de base efímera con `POOLAR_SECRET_KEY` y `DATABASE_URL` locales; sin credenciales reales.
 - Nuevas pruebas de seguridad añadidas:
   - `test_rechaza_necesidad_inexistente`
   - `test_no_puede_ver_problema_de_otra_org`
@@ -76,10 +76,10 @@ En el MVP:
 ## Estado de PostgreSQL
 
 - Servicio PostgreSQL: **no disponible en esta iteración**.
-- Prueba de integración (`test_migracion_postgresql`): marcada con `skipif` (`TRAMA_TEST_POSTGRES_URL`).
+- Prueba de integración (`test_migracion_postgresql`): marcada con `skipif` (`POOLAR_TEST_POSTGRES_URL`).
 - Migración SQLite (`002_problemas_colectivos.sqlite.sql`) validada con `sqlite3` y `pytest`.
 - Dependencias (`psycopg2-binary`) presentes en `requirements.txt`; no se ejecutan sin servicio.
-- Recomendación: ejecutar `tests/` con `TRAMA_TEST_POSTGRES_URL=postgresql://...` cuando el servicio esté disponible para validar integridad N:M y restricciones (`ON DELETE CASCADE`, `CHECK`) en PostgreSQL.
+- Recomendación: ejecutar `tests/` con `POOLAR_TEST_POSTGRES_URL=postgresql://...` cuando el servicio esté disponible para validar integridad N:M y restricciones (`ON DELETE CASCADE`, `CHECK`) en PostgreSQL.
 
 ---
 

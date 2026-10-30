@@ -1,4 +1,4 @@
-"""Registro de herramientas tipadas para el Agent Harness de Trama Abierta."""
+"""Registro de herramientas tipadas para el Agent Harness de Poolar."""
 from typing import Optional, List, Dict, Any, Callable
 from dataclasses import dataclass, field
 from enum import Enum

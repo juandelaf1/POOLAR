@@ -1,4 +1,4 @@
-"""Contratos versionados de Trama Abierta MVP v0.6.
+"""Contratos versionados de Poolar MVP v0.6.
 
 Entidades de dominio y DTOs de API. Los DTOs públicos no incluyen datos
 personales (email, contacto, DNI) ni campos internos de autenticación.

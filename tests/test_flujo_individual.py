@@ -1,4 +1,4 @@
-# Flujo end-to-end individual — Trama Abierta MVP v0.6
+# Flujo end-to-end individual — Poolar MVP v0.6
 # Datos sintéticos obligatorios (synthetic_pilot); sin datos reales.
 from fastapi.testclient import TestClient
 

@@ -1,4 +1,4 @@
-"""Pruebas E2E del flujo colectivo de Trama Abierta con Playwright (navegador real)."""
+"""Pruebas E2E del flujo colectivo de Poolar con Playwright (navegador real)."""
 import uuid
 import pytest
 
@@ -29,7 +29,7 @@ class TestFlujoColectivoE2E:
         """La interfaz carga correctamente con elementos esenciales."""
         page.goto(f"{base_url}/interfaz/index.html")
         page.wait_for_load_state("networkidle")
-        assert "Trama Abierta" in page.title()
+        assert "Poolar" in page.title()
         assert page.locator("header h1").is_visible()
         assert page.locator("#formRegistro").is_visible()
         assert page.locator("#formLogin").is_visible()

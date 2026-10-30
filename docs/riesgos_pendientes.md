@@ -1,4 +1,4 @@
-# Riesgos pendientes — MVP Trama Abierta v0.6
+# Riesgos pendientes — MVP Poolar v0.6
 
 - P0 corregido: `Anexo_Risk` `donaciones` no copiado; `auth` sin clave predeterminada; datos sensibles separados (`contracts`/`routes`).
 - P1 corregido: `EnRuta` clave predeterminada no reutilizada; `auth` requiere entorno.

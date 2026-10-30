@@ -1,4 +1,4 @@
-"""Capa de acceso a modelos desacoplada de la lógica de Trama Abierta.
+"""Capa de acceso a modelos desacoplada de la lógica de Poolar.
 
 Implementa un adaptador propio mínimo. Sustituible por LiteLLM si se necesitan
 múltiples proveedores, presupuestos centralizados o integraciones complejas.
@@ -6,8 +6,8 @@ múltiples proveedores, presupuestos centralizados o integraciones complejas.
 Diseño:
 - Interfaz estable: `ModelProvider.generate(prompt, context, config)`
 - Implementación por defecto: `NullProvider` (no llama a ningún modelo).
-- Configuración por entorno: `TRAMA_MODEL_PROVIDER`, `TRAMA_MODEL_NAME`,
-  `TRAMA_MODEL_TIMEOUT`, `TRAMA_MODEL_MAX_TOKENS`.
+- Configuración por entorno: `POOLAR_MODEL_PROVIDER`, `POOLAR_MODEL_NAME`,
+  `POOLAR_MODEL_TIMEOUT`, `POOLAR_MODEL_MAX_TOKENS`.
 - Límites de coste y consumo configurables.
 - Reintentos controlados con backoff exponencial.
 - Fallbacks cuando son seguros (proveedor no disponible).
@@ -21,21 +21,21 @@ import logging
 from typing import Optional, Dict, Any
 from dataclasses import dataclass, field
 
-logger = logging.getLogger("trama_abierta.model_provider")
+logger = logging.getLogger("poolar.model_provider")
 
 
 @dataclass
 class ModelConfig:
     """Configuración del proveedor de modelos."""
-    provider: str = os.getenv("TRAMA_MODEL_PROVIDER", "null")
-    model_name: str = os.getenv("TRAMA_MODEL_NAME", "default")
-    timeout_seconds: float = float(os.getenv("TRAMA_MODEL_TIMEOUT", "30"))
-    max_tokens: int = int(os.getenv("TRAMA_MODEL_MAX_TOKENS", "1024"))
-    max_retries: int = int(os.getenv("TRAMA_MODEL_MAX_RETRIES", "3"))
-    retry_delay: float = float(os.getenv("TRAMA_MODEL_RETRY_DELAY", "1.0"))
-    cost_limit_per_request: float = float(os.getenv("TRAMA_MODEL_COST_LIMIT", "0.01"))
-    quota_per_user: int = int(os.getenv("TRAMA_MODEL_QUOTA", "100"))
-    fallback_enabled: bool = os.getenv("TRAMA_MODEL_FALLBACK", "true").lower() == "true"
+    provider: str = os.getenv("POOLAR_MODEL_PROVIDER", "null")
+    model_name: str = os.getenv("POOLAR_MODEL_NAME", "default")
+    timeout_seconds: float = float(os.getenv("POOLAR_MODEL_TIMEOUT", "30"))
+    max_tokens: int = int(os.getenv("POOLAR_MODEL_MAX_TOKENS", "1024"))
+    max_retries: int = int(os.getenv("POOLAR_MODEL_MAX_RETRIES", "3"))
+    retry_delay: float = float(os.getenv("POOLAR_MODEL_RETRY_DELAY", "1.0"))
+    cost_limit_per_request: float = float(os.getenv("POOLAR_MODEL_COST_LIMIT", "0.01"))
+    quota_per_user: int = int(os.getenv("POOLAR_MODEL_QUOTA", "100"))
+    fallback_enabled: bool = os.getenv("POOLAR_MODEL_FALLBACK", "true").lower() == "true"
 
 
 @dataclass

@@ -1,4 +1,4 @@
-# Consentimiento y Privacidad — Trama Abierta
+# Consentimiento y Privacidad — Poolar
 
 ## Estado
 Documentado; no implementado como flujo automatizado. Bloquea datos reales hasta definir proceso.

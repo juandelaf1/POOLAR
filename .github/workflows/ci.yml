@@ -1,4 +1,4 @@
-name: Trama Abierta CI
+name: Poolar CI
 
 on:
   push:
@@ -31,12 +31,12 @@ jobs:
     - name: Run migrations
       env:
         DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_test
-        TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
+        POOLAR_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
       run: alembic upgrade head
     - name: Verify migration revision
       env:
         DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_test
-        TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
+        POOLAR_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
       run: |
         alembic current
         alembic heads
@@ -51,8 +51,8 @@ jobs:
     - name: Run tests
       env:
         DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_test
-        TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
-        TRAMA_TEST_POSTGRES_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_test
+        POOLAR_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
+        POOLAR_TEST_POSTGRES_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_test
       run: python -m pytest tests/ -q --tb=short --ignore=tests/e2e
 
   test-e2e:
@@ -82,12 +82,12 @@ jobs:
     - name: Run migrations
       env:
         DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_e2e
-        TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
+        POOLAR_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
       run: alembic upgrade head
     - name: Run E2E tests
       env:
         DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_e2e
-        TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
-        TRAMA_TEST_POSTGRES_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_e2e
-        TRAMA_DEMO_MODE: "true"
+        POOLAR_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
+        POOLAR_TEST_POSTGRES_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_e2e
+        POOLAR_DEMO_MODE: "true"
       run: python -m pytest tests/e2e/ -q --tb=short

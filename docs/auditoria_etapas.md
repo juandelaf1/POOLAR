@@ -1,8 +1,8 @@
-# Auditoría de Etapas — Trama Abierta MVP v0.6
+# Auditoría de Etapas — Poolar MVP v0.6
 
 Fecha de referencia: 28 octubre 2026
 Estado: Prototipo funcional; no producción.
-Repo: `trama_abierta_mvp/` independiente (no copia/modify de repos auditados).
+Repo: `poolar_mvp/` independiente (no copia/modify de repos auditados).
 
 ---
 
@@ -27,7 +27,7 @@ Repo: `trama_abierta_mvp/` independiente (no copia/modify de repos auditados).
 ## Etapa 4 — Auth y seguridad (PBKDF2, sin claves predeterminadas)
 - **Archivo:** `src/core/auth.py`, `requirements.txt`
 - **Estado:** Implementado, probado.
-- **Resultado:** `pbkdf2_sha256`; `SECRET_KEY` obligatorio; `TRAMA_ABIERTA_SECRET_KEY` efímero en pruebas.
+- **Resultado:** `pbkdf2_sha256`; `SECRET_KEY` obligatorio; `POOLAR_SECRET_KEY` efímero en pruebas.
 - **Verificación:** `test_auth_isolation.py`; ausencia de `bcrypt` frágil.
 
 ## Etapa 5 — Autorización dual (individual / organización)

@@ -1,4 +1,4 @@
-"""Módulo de migraciones para Trama Abierta."""
+"""Módulo de migraciones para Poolar."""
 import sys
 import os
 

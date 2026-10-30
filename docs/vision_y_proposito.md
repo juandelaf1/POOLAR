@@ -1,13 +1,13 @@
-# Visión y Propósito — Trama Abierta
+# Visión y Propósito — Poolar
 
 **Fecha:** 28 de octubre de 2026  
 **Versión:** 0.6 (MVP)
 
 ---
 
-## Qué es Trama Abierta
+## Qué es Poolar
 
-Trama Abierta es una **infraestructura abierta, modular e interoperable** que permite a personas, comunidades, asociaciones, pequeñas empresas, cooperativas e instituciones:
+Poolar es una **infraestructura abierta, modular e interoperable** que permite a personas, comunidades, asociaciones, pequeñas empresas, cooperativas e instituciones:
 
 1. **Identificar problemas compartidos** — incluso cuando quienes los sufren no se conocen entre sí.
 2. **Reunir necesidades y capacidades** — agregar demandas, descubrir recursos disponibles y entender la escala real del problema.
@@ -16,8 +16,8 @@ Trama Abierta es una **infraestructura abierta, modular e interoperable** que pe
 
 No es una única aplicación monolítica, sino un **ecosistema de tres niveles**:
 
-- **Trama Core** — núcleo común reutilizable (organizaciones, necesidades, problemas colectivos, recursos, iniciativas, decisiones, auditoría, procedencia, exportación).
-- **Trama Iniciativas** — primera aplicación orientada al usuario para gestionar un proceso colectivo de extremo a extremo.
+- **Poolar Core** — núcleo común reutilizable (organizaciones, necesidades, problemas colectivos, recursos, iniciativas, decisiones, auditoría, procedencia, exportación).
+- **Poolar Iniciativas** — primera aplicación orientada al usuario para gestionar un proceso colectivo de extremo a extremo.
 - **Aplicaciones especializadas** — módulos futuros para logística, infraestructura, compras, emergencias, análisis territorial, etc.
 
 ---
@@ -87,7 +87,7 @@ Un ecosistema donde personas y organizaciones puedan:
 
 ---
 
-## Qué NO es Trama Abierta
+## Qué NO es Poolar
 
 - Una promesa de que la tecnología, la IA o los datos resuelvan solos problemas políticos o sociales.
 - Una única cooperativa global que controle todas las iniciativas o todos los datos.
@@ -101,6 +101,6 @@ Un ecosistema donde personas y organizaciones puedan:
 ## Estado actual
 
 - **Fase:** MVP v0.6 — primer flujo funcional verificable (compra colaborativa).
-- **Repositorio:** `trama_abierta_mvp/` (independiente, no integra código de proyectos auditados hasta resolver riesgos).
+- **Repositorio:** `poolar_mvp/` (independiente, no integra código de proyectos auditados hasta resolver riesgos).
 - **Documentación:** este archivo + `definicion_producto.md`, `modelo_problemas_colectivos.md`, `arquitectura.md`, `plan_mvp_y_piloto.md`, `decisiones_tecnicas.md`, `riesgos_pendientes.md`, `diferencial_y_analisis_mercado.md`.
-- **Auditoría previa:** documentada en `../audit_trama_abierta/` (riesgos P0/P1 identificados, integración bloqueada hasta corrección verificada).
+- **Auditoría previa:** documentada en `../audit_poolar/` (riesgos P0/P1 identificados, integración bloqueada hasta corrección verificada).

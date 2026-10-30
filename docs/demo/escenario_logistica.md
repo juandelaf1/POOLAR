@@ -1,4 +1,4 @@
-# Escenario demostrativo de logística compartida — Trama Abierta v0.6
+# Escenario demostrativo de logística compartida — Poolar v0.6
 Fecha: 28 octubre 2026
 Estado: Sintético; datos identificables como tales (`synthetic_pilot`).
 
@@ -14,7 +14,7 @@ No hay tal ruta creada ni realizado ahorro real. Todo es ejemplos documentables 
 
 ## Datos sintéticos obligatorios
 Todos los registros se etiquetan como `origen_datos = synthetic_pilot`.
-El flujo se ejecuta mediante las API de Trama Abierta (no salte el producto).
+El flujo se ejecuta mediante las API de Poolar (no salte el producto).
 
 ## Flujo operativo ejecutado
 1. Registrar necesidades P1, P2, O4.
@@ -33,7 +33,7 @@ El flujo se ejecuta mediante las API de Trama Abierta (no salte el producto).
 
 ## Requisito de reproducción local
 ```
-TRAMA_ABIERTA_SECRET_KEY=demo-key TRAMA_DEMO_MODE=true python docs/demo/escenario_logistica.py
+POOLAR_SECRET_KEY=demo-key POOLAR_DEMO_MODE=true python docs/demo/escenario_logistica.py
 ```
 El modo demo canaliza acccesos a cuentas predefinidas sintéticas.
 

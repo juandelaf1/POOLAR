@@ -1,8 +1,8 @@
-"""Configuración de pruebas de Trama Abierta MVP.
+"""Configuración de pruebas de Poolar MVP.
 
 Define un entorno efímero y aislado:
 - Secreto JWT solo para pruebas (nunca se usa en producción).
-- Base SQLite local de pruebas; PostgreSQL opcional vía `TRAMA_TEST_POSTGRES_URL`.
+- Base SQLite local de pruebas; PostgreSQL opcional vía `POOLAR_TEST_POSTGRES_URL`.
 - Limpieza de tablas antes y después de cada prueba.
 """
 import os
@@ -17,13 +17,13 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 # Soporte PostgreSQL real si está disponible, si no SQLite.
-pg_url = os.getenv("TRAMA_TEST_POSTGRES_URL")
+pg_url = os.getenv("POOLAR_TEST_POSTGRES_URL")
 if pg_url:
     os.environ["DATABASE_URL"] = pg_url
 else:
-    os.environ["DATABASE_URL"] = "sqlite:///./.pytest_trama_abierta.db"
+    os.environ["DATABASE_URL"] = "sqlite:///./.pytest_poolar.db"
 
-os.environ["TRAMA_ABIERTA_SECRET_KEY"] = (
+os.environ["POOLAR_SECRET_KEY"] = (
     "test-only-secret-key-not-for-production-0123456789abcdef"
 )
 

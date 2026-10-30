@@ -60,7 +60,7 @@
   <!-- Typography / Wordmark (Right Side) -->
   <g transform="translate(295, 0)">
     <!-- Main Title -->
-    <text x="0" y="112" class="brand-title">Trama Abierta</text>
+    <text x="0" y="112" class="brand-title">Poolar</text>
     
     <!-- Subtitle -->
     <text x="2" y="142" class="brand-subtitle">Infraestructura Participativa</text>

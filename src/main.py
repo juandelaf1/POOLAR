@@ -1,9 +1,9 @@
-"""Punto de entrada del API de Trama Abierta MVP v0.6.
+"""Punto de entrada del API de Poolar MVP v0.6.
 
 Alcance: prototipo funcional, no producción. SQLite solo para desarrollo
 controlado; PostgreSQL es la base objetivo.
 
-Autenticación: JWT con `TRAMA_ABIERTA_SECRET_KEY` obligatoria de entorno.
+Autenticación: JWT con `POOLAR_SECRET_KEY` obligatoria de entorno.
 Autorización: por organización/rol y por persona individual (`tipo` en token).
 """
 import csv
@@ -57,7 +57,7 @@ from src.services.matching_service import matching_find_related_needs
 if os.getenv("DATABASE_URL", "").startswith("sqlite"):
     Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Trama Abierta MVP", version="0.6.0")
+app = FastAPI(title="Poolar MVP", version="0.6.0")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
@@ -398,7 +398,7 @@ def create_org(
     db.add(org)
     db.flush()
     founder = OperationalUser(
-        email=f"fundador+{org.id}@trama.local",
+        email=f"fundador+{org.id}@poolar.local",
         hashed_password=hash_password(password),
         nombre="fundador",
         rol="administrador",

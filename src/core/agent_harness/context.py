@@ -1,4 +1,4 @@
-"""Contexto de ejecución para agentes de Trama Abierta."""
+"""Contexto de ejecución para agentes de Poolar."""
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 from datetime import datetime

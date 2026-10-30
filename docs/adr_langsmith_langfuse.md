@@ -7,7 +7,7 @@ Aceptado (OpenTelemetry como base, Langfuse autogestionado como plataforma princ
 Utilizar OpenTelemetry como base de instrumentación y Langfuse autogestionado como plataforma principal de observabilidad de IA.
 
 ## Razones
-- Langfuse autogestionado favorece la autonomía, la inspección y el control de los datos (alineado con la visión de Trama Abierta).
+- Langfuse autogestionado favorece la autonomía, la inspección y el control de los datos (alineado con la visión de Poolar).
 - OpenTelemetry proporciona trazas y métricas estándar, intercambiables.
 - LangSmith facilita el desarrollo y evaluación de flujos, pero depende de un proveedor externo.
 - La privacidad y el control de datos son prioritarios para un proyecto de cooperación abierta.

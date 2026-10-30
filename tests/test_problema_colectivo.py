@@ -603,7 +603,7 @@ def test_metadata_incluye_tablas_del_modelo():
 
 
 @pytest.mark.skipif(
-    not os.getenv("TRAMA_TEST_POSTGRES_URL"),
+    not os.getenv("POOLAR_TEST_POSTGRES_URL"),
     reason=(
         "Sin servidor PostgreSQL disponible. La migración objetivo "
         "PostgreSQL sigue pendiente y se documenta en riesgos_pendientes.md."
@@ -611,7 +611,7 @@ def test_metadata_incluye_tablas_del_modelo():
 )
 def test_migracion_postgresql():  # pragma: no cover - requiere servidor real
     """Reservado para cuando exista servidor PostgreSQL y migración objetivo."""
-    assert os.getenv("TRAMA_TEST_POSTGRES_URL")
+    assert os.getenv("POOLAR_TEST_POSTGRES_URL")
 
 
 # ---------------------------------------------------------------------------

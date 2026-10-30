@@ -1,4 +1,4 @@
-"""Sistema de aprobaciones humanas para el Agent Harness de Trama Abierta."""
+"""Sistema de aprobaciones humanas para el Agent Harness de Poolar."""
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, field
 from datetime import datetime

@@ -1,4 +1,4 @@
-# Accesibilidad — Trama Abierta (WCAG 2.1 AA)
+# Accesibilidad — Poolar (WCAG 2.1 AA)
 
 ## Estado
 Guía base; no implementado completamente.

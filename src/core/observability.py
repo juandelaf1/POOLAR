@@ -1,4 +1,4 @@
-"""Observabilidad desacoplada para Trama Abierta.
+"""Observabilidad desacoplada para Poolar.
 
 Soporta:
 - Sin observabilidad (por defecto).
@@ -16,7 +16,7 @@ import logging
 from typing import Optional, Dict, Any
 from enum import Enum
 
-logger = logging.getLogger("trama_abierta.observability")
+logger = logging.getLogger("poolar.observability")
 
 
 class ObservabilityProvider(str, Enum):
@@ -29,12 +29,12 @@ class ObservabilityAdapter:
     """Adaptador de observabilidad desacoplado."""
 
     def __init__(self):
-        self.provider = ObservabilityProvider(os.getenv("TRAMA_OBSERVABILITY_PROVIDER", "none"))
-        self.enabled = os.getenv("TRAMA_OBSERVABILITY_ENABLED", "false").lower() == "true"
+        self.provider = ObservabilityProvider(os.getenv("POOLAR_OBSERVABILITY_PROVIDER", "none"))
+        self.enabled = os.getenv("POOLAR_OBSERVABILITY_ENABLED", "false").lower() == "true"
         self.langsmith_api_key = os.getenv("LANGSMITH_API_KEY", "")
-        self.langsmith_project = os.getenv("LANGSMITH_PROJECT", "trama-abierta")
+        self.langsmith_project = os.getenv("LANGSMITH_PROJECT", "poolar")
         self.langsmith_endpoint = os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
-        self.redact_sensitive = os.getenv("TRAMA_OBSERVABILITY_REDACT", "true").lower() == "true"
+        self.redact_sensitive = os.getenv("POOLAR_OBSERVABILITY_REDACT", "true").lower() == "true"
 
     def is_enabled(self) -> bool:
         return self.enabled and self.provider != ObservabilityProvider.NONE

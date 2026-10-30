@@ -1,4 +1,4 @@
-"""Initial schema with all Trama Abierta entities."""
+"""Initial schema with all Poolar entities."""
 from alembic import op
 import sqlalchemy as sa
 
