@@ -7,6 +7,24 @@ import pytest
 class TestFlujoColectivoE2E:
     """Recorrido completo desde el navegador. Tests independientes."""
 
+    def _register_and_login(self, page, base_url, email=None):
+        """Helper: registra y loguea un usuario, devuelve el email."""
+        if email is None:
+            email = f"e2e_{uuid.uuid4().hex[:8]}@test.local"
+        page.goto(f"{base_url}/interfaz/index.html")
+        page.wait_for_load_state("networkidle")
+        page.fill("#rNom", "Persona E2E")
+        page.fill("#rEmail", email)
+        page.fill("#rPass", "secret123")
+        page.click("button:has-text('Registrar')")
+        page.wait_for_timeout(2000)
+        # Login
+        page.fill("#lEmail", email)
+        page.fill("#lPass", "secret123")
+        page.click("button:has-text('Iniciar')")
+        page.wait_for_timeout(2000)
+        return email
+
     def test_pagina_carga(self, page, base_url):
         """La interfaz carga correctamente con elementos esenciales."""
         page.goto(f"{base_url}/interfaz/index.html")
@@ -31,9 +49,15 @@ class TestFlujoColectivoE2E:
 
     def test_login_individuo(self, page, base_url):
         """Login de individuo con credenciales válidas."""
+        unique_email = f"e2e_{uuid.uuid4().hex[:8]}@test.local"
         page.goto(f"{base_url}/interfaz/index.html")
         page.wait_for_load_state("networkidle")
-        page.fill("#lEmail", "e2e@test.local")
+        page.fill("#rNom", "Persona E2E")
+        page.fill("#rEmail", unique_email)
+        page.fill("#rPass", "secret123")
+        page.click("button:has-text('Registrar')")
+        page.wait_for_timeout(2000)
+        page.fill("#lEmail", unique_email)
         page.fill("#lPass", "secret123")
         page.click("button:has-text('Iniciar')")
         page.wait_for_timeout(2000)
@@ -42,9 +66,15 @@ class TestFlujoColectivoE2E:
 
     def test_crear_problema(self, page, base_url):
         """Crear problema colectivo desde la interfaz."""
+        unique_email = f"e2e_{uuid.uuid4().hex[:8]}@test.local"
         page.goto(f"{base_url}/interfaz/index.html")
         page.wait_for_load_state("networkidle")
-        page.fill("#lEmail", "e2e@test.local")
+        page.fill("#rNom", "Persona E2E")
+        page.fill("#rEmail", unique_email)
+        page.fill("#rPass", "secret123")
+        page.click("button:has-text('Registrar')")
+        page.wait_for_timeout(2000)
+        page.fill("#lEmail", unique_email)
         page.fill("#lPass", "secret123")
         page.click("button:has-text('Iniciar')")
         page.wait_for_timeout(2000)
@@ -56,9 +86,15 @@ class TestFlujoColectivoE2E:
 
     def test_descubrimiento(self, page, base_url):
         """Descubrir problemas accesibles."""
+        unique_email = f"e2e_{uuid.uuid4().hex[:8]}@test.local"
         page.goto(f"{base_url}/interfaz/index.html")
         page.wait_for_load_state("networkidle")
-        page.fill("#lEmail", "e2e@test.local")
+        page.fill("#rNom", "Persona E2E")
+        page.fill("#rEmail", unique_email)
+        page.fill("#rPass", "secret123")
+        page.click("button:has-text('Registrar')")
+        page.wait_for_timeout(2000)
+        page.fill("#lEmail", unique_email)
         page.fill("#lPass", "secret123")
         page.click("button:has-text('Iniciar')")
         page.wait_for_timeout(2000)
