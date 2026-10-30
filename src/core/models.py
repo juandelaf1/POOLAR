@@ -256,6 +256,27 @@ class Decision(Base):
     iniciativa = relationship("Iniciativa")
 
 
+class ApprovalRequest(Base):
+    """Solicitud de aprobación persistida en base de datos."""
+    __tablename__ = "approval_requests"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    approval_id = Column(String(100), nullable=False, unique=True, index=True)
+    execution_id = Column(String(200), nullable=False, index=True)
+    tool_name = Column(String(200), nullable=False)
+    inputs = Column(Text, nullable=False, default="{}")
+    proposed_by = Column(Integer, nullable=True)
+    status = Column(String(20), nullable=False, default="pendiente")
+    reason = Column(Text, nullable=True)
+    approved_by = Column(Integer, nullable=True)
+    approved_at = Column(DateTime, nullable=True)
+    rejected_by = Column(Integer, nullable=True)
+    rejected_at = Column(DateTime, nullable=True)
+    rejection_reason = Column(Text, nullable=True)
+    expires_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+
 class EventoAuditoria(Base):
     __tablename__ = "eventos_auditoria"
 

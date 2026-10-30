@@ -54,18 +54,49 @@ class AutomationEvaluator:
         ]
 
     def evaluate(self, proposal: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
-        """Evalúa una propuesta y retorna ruta, riesgo y justificación."""
-        risk_level = RiskLevel.LOW
+        """Evalúa propuesta con precedencia estricta: REJECT > HUMAN_REVIEW > AUTO_APPROVE.
+        Una regla posterior NUNCA puede rebajar una decisión más restrictiva."""
+        # Precedencia estricta para rutas (más restrictiva = mayor valor)
+        route_precedence = {
+            AutomationRoute.REJECT: 3,
+            AutomationRoute.HUMAN_REVIEW: 2,
+            AutomationRoute.AUTO_APPROVE: 1,
+        }
+        # Precedencia para riesgo (más restrictivo = mayor valor)
+        risk_precedence = {
+            RiskLevel.CRITICAL: 4,
+            RiskLevel.HIGH: 3,
+            RiskLevel.MEDIUM: 2,
+            RiskLevel.LOW: 1,
+        }
         route = AutomationRoute.AUTO_APPROVE
+        risk_level = RiskLevel.LOW
         reasons = []
 
         for rule in self.rules:
             result = rule(proposal, context, risk_level)
-            if result["risk_level"] != risk_level:
-                risk_level = result["risk_level"]
-            if result["route"] != route:
-                route = result["route"]
+            result_route = result.get("route")
+            if isinstance(result_route, str):
+                result_route = AutomationRoute(result_route)
+            result_risk = result.get("risk_level")
+            if isinstance(result_risk, str):
+                result_risk = RiskLevel(result_risk)
+            # Precedencia: nunca rebajar la restricción actual
+            if result_route is not None and route_precedence[result_route] > route_precedence[route]:
+                route = result_route
+            if result_risk is not None and risk_precedence[result_risk] > risk_precedence[risk_level]:
+                risk_level = result_risk
             reasons.extend(result.get("reasons", []))
+
+        # Garantía final: datos reales sin consentimiento nunca permiten AUTO_APPROVE
+        origen = proposal.get("origen_datos", "synthetic_pilot")
+        if origen != "synthetic_pilot":
+            if route == AutomationRoute.AUTO_APPROVE:
+                route = AutomationRoute.HUMAN_REVIEW
+                reasons.append("Datos reales requieren revisión humana (garantía de precedencia)")
+            if risk_level == RiskLevel.LOW:
+                risk_level = RiskLevel.MEDIUM
+                reasons.append("Datos reales elevan riesgo mínimo")
 
         return {
             "route": route.value,
@@ -93,17 +124,28 @@ class AutomationEvaluator:
         return {"risk_level": risk_level, "route": AutomationRoute.AUTO_APPROVE, "reasons": []}
 
     def _rule_authority(self, proposal, context, risk_level):
-        """Regla: el actor debe tener autoridad para la acción."""
-        actor_type = context.get("actor_type", "persona")
-        actor_rol = context.get("actor_rol", "individuo")
+        """Regla: el actor debe tener autoridad explícita para la acción."""
+        actor_type = context.get("actor_type", "")
+        actor_rol = context.get("actor_rol", "")
         action = proposal.get("action", "")
-        # Organizaciones con rol administrador tienen mayor autoridad
+        # Sin identidad o contexto suficiente: rechazo seguro
+        if not actor_type or not actor_rol or actor_type == "desconocido":
+            return {"risk_level": RiskLevel.HIGH, "route": AutomationRoute.REJECT, "reasons": ["Identidad o contexto insuficiente para autorización"]}
+        # Datos reales sin consentimiento formal verificable: revisión humana
+        origen = proposal.get("origen_datos", "synthetic_pilot")
+        if origen != "synthetic_pilot":
+            # Datos reales requieren verificación; nunca AUTO_APPROVE
+            if actor_rol == "administrador" and actor_type == "organizacion":
+                return {"risk_level": RiskLevel.MEDIUM, "route": AutomationRoute.HUMAN_REVIEW, "reasons": ["Datos reales requieren revisión humana (actor autorizado pero sin consentimiento verificado)"]}
+            return {"risk_level": RiskLevel.HIGH, "route": AutomationRoute.REJECT, "reasons": ["Actor sin autoridad para datos reales sin consentimiento formal"]}
+        # Actor organizativo con rol administrador: autorización pero sujeto a otras reglas
         if actor_type == "organizacion" and actor_rol == "administrador":
-            return {"risk_level": risk_level, "route": AutomationRoute.AUTO_APPROVE, "reasons": ["actor autorizado (admin)"]}
-        # Personas individuales tienen autoridad sobre sus propios recursos
-        if actor_type == "individuo":
-            return {"risk_level": risk_level, "route": AutomationRoute.AUTO_APPROVE, "reasons": ["actor autorizado (individuo)"]}
-        return {"risk_level": RiskLevel.HIGH, "route": AutomationRoute.REJECT, "reasons": ["actor sin autoridad"]}
+            return {"risk_level": risk_level, "route": AutomationRoute.AUTO_APPROVE, "reasons": ["Actor autorizado (admin org)"]}
+        # Actor individual con rol definido: autorización pero sujeto a otras reglas
+        if actor_type == "individuo" and actor_rol in ("individuo", "responsable"):
+            return {"risk_level": risk_level, "route": AutomationRoute.AUTO_APPROVE, "reasons": ["Actor autorizado (individuo)"]}
+        # Actor sin autoridad reconocida
+        return {"risk_level": RiskLevel.HIGH, "route": AutomationRoute.REJECT, "reasons": ["Actor sin autoridad reconocida para la acción"]}
 
     def _rule_invitation_consent(self, proposal, context, risk_level):
         """Regla: las invitaciones requieren consentimiento del destinatario."""
@@ -115,12 +157,15 @@ class AutomationEvaluator:
         return {"risk_level": risk_level, "route": AutomationRoute.AUTO_APPROVE, "reasons": []}
 
     def check_authority(self, actor_id: int, actor_type: str, action: str) -> bool:
-        """Verifica si el actor tiene autoridad para la acción."""
-        if actor_type == "individuo":
-            return True  # Individuos tienen autoridad sobre sus propios recursos
-        if actor_type == "organizacion":
-            return True  # Organizaciones tienen autoridad sobre sus recursos
-        return False
+        """Verifica si el actor tiene autoridad explícita para la acción."""
+        if not actor_id or not actor_type:
+            return False
+        # Actor desconocido o sin rol definido: no autorizado
+        if actor_type not in ("individuo", "organizacion"):
+            return False
+        # Para acciones sensibles, se requiere verificación adicional (no solo tipo)
+        # Esta verificación básica garantiza que el actor exista y tenga tipo reconocido
+        return True
 
 
 # Instancia global
