@@ -43,3 +43,15 @@ Necesidad → Descubrimiento → Problema Colectivo → Capacidades y recursos �
 - PostgreSQL es la base objetivo; SQLite solo para desarrollo controlado.
 - Migraciones reproducibles con Alembic.
 - CI con PostgreSQL real y Playwright E2E.
+
+## Estado / Historial
+
+- **Fase E2E completada**: 5/5 tests Playwright + Chromium pasando (navegador real, independientes, emails únicos).
+- **Suite backend**: 41 passed, 1 skipped (PostgreSQL pendiente de servidor).
+- **Infraestructura**: Dockerfile, docker-compose, Alembic, CI workflow con PostgreSQL service.
+- **Seguridad**: P0/P1 corregidos, autorización dual (individuo/org), credenciales JSON tipado.
+- **Matching determinista**: Filtros de categoría, territorio, capacidades. Score basado en criterios.
+
+## Siguiente intención
+
+Preparar el repositorio para despliegues locales orquestados y pulido de experiencia de usuario en el frontend.

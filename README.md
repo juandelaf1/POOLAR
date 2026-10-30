@@ -444,6 +444,9 @@ pip install -r requirements.txt
 # Ejecutar tests
 python -m pytest tests/ -q
 
+# Ejecutar tests E2E (Playwright + Chromium)
+python -m pytest tests/e2e/ -q
+
 # Iniciar API
 python -m uvicorn src.main:app --reload --port 8000
 ```
