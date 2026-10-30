@@ -11,7 +11,6 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-# Aislar configuración de E2E
 os.environ.setdefault("TRAMA_ABIERTA_SECRET_KEY", "test-only-secret-key-not-for-production-0123456789abcdef")
 os.environ.setdefault("TRAMA_DEMO_MODE", "true")
 

@@ -40,6 +40,14 @@ jobs:
       run: |
         alembic current
         alembic heads
+        # Verify revision matches
+        CURRENT=$(alembic current 2>/dev/null | grep -oP '\w+' | head -1)
+        HEADS=$(alembic heads 2>/dev/null | grep -oP '\w+' | head -1)
+        if [ "$CURRENT" != "$HEADS" ]; then
+          echo "Migration mismatch: current=$CURRENT heads=$HEADS"
+          exit 1
+        fi
+        echo "Migration revision verified: $CURRENT == $HEADS"
     - name: Run tests
       env:
         DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_test
@@ -76,20 +84,6 @@ jobs:
         DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_e2e
         TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
       run: alembic upgrade head
-    - name: Start API server
-      env:
-        DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_e2e
-        TRAMA_ABIERTA_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
-        TRAMA_DEMO_MODE: "true"
-      run: |
-        python -m uvicorn src.main:app --host 127.0.0.1 --port 8000 &
-        for i in $(seq 1 30); do
-          if curl -sf http://127.0.0.1:8000/health > /dev/null; then
-            echo "Server ready"
-            break
-          fi
-          sleep 1
-        done
     - name: Run E2E tests
       env:
         DATABASE_URL: postgresql+psycopg2://trama:trama-test-password@localhost:5432/trama_e2e
