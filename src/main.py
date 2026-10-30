@@ -648,6 +648,8 @@ def create_problema_colectivo(
 
     # Validación de origen de datos: solo synthetic_pilot permitido en MVP
     if payload.origen_datos is not OrigenDatos.synthetic_pilot:
+        # En el futuro, cuando exista proceso de consentimiento, se permitirá
+        # real_pilot con metadato de consentimiento válido.
         raise HTTPException(
             status_code=403,
             detail=(
