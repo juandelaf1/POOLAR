@@ -1,7 +1,7 @@
 # Trama Abierta — Infraestructura de Cooperación
 
 <p align="center">
-  <img src="assets/logo_trama_abierta.svg" alt="Trama Abierta" width="800">
+  <img src="assets/TRAMA-ABIERTA-banner.jpg" alt="Trama Abierta" width="100%">
 </p>
 
 <p align="center">
@@ -26,6 +26,10 @@
   <img src="https://img.shields.io/badge/auth-PBKDF2--SHA256%20%2B%20JWT-2563EB?logo=lock" alt="Auth">
   <img src="https://img.shields.io/badge/postgresql-en%20CI%20y%20Compose-orange?logo=postgresql" alt="PostgreSQL">
   <img src="https://img.shields.io/badge/licencia-MIT-10B981?logo=license" alt="Licencia">
+</p>
+
+<p align="center">
+  <strong>Topics:</strong> trama-abierta, cooperacion, open-infrastructure, collective-problems, fastapi, sqlalchemy, postgresql, python, docker, agent-harness, matching, consent, accessibility
 </p>
 
 ---
