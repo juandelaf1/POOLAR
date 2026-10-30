@@ -61,6 +61,14 @@ Necesidad → Descubrimiento → Problema Colectivo → Capacidades y recursos �
 - Escenario de logística compartida documentado.
 - PostgreSQL 16 verificado localmente (suite completa 29/29 tests pasando contra PostgreSQL real).
 - Capa de búsqueda semántica (SemanticSearchPort) implementada con servicio local y tests unitarios.
+- **P0 Gobernanza y Human-in-the-Loop COMPLETADO** (commit `ad16c29`):
+  - Precedencia estricta: `REJECT > HUMAN_REVIEW > AUTO_APPROVE`
+  - Modelo `approval_requests` persistente (SQLAlchemy + Alembic `7462b4e_approval`)
+  - 10 tests de regresión (`tests/test_governance_regresion.py`) — todos passing
+  - Datos reales (`real_pilot`) nunca permiten `AUTO_APPROVE`; riesgo mínimo elevado a `MEDIUM`
+  - Actor sin rol reconocido (`actor_rol` vacío/desconocido) → `REJECT`
+  - Operaciones sensibles (`create_decision`, `export_data`, `accept_invitation`, `change_state`) → `HUMAN_REVIEW`
+  - `ApprovalManager` con contrato de persistencia y no reutilización (`approve` requiere `PENDING`)
 
 ### Siguiente intención principal (Sprint actual)
 Pulido de UI/UX en `interfaz/index.html` y accesibilidad WCAG.

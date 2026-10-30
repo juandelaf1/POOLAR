@@ -26,6 +26,9 @@ Documentado; no implementado como flujo automatizado. Bloquea datos reales hasta
 - No hay política de retención definida.
 - No hay derecho de acceso/portabilidad automatizado.
 - No hay DPO (Data Protection Officer) asignado.
+- **Estado P0 (commit `ad16c29`):** `ApprovalManager` (modelo `approval_requests`) creado y persistente en PostgreSQL (`7462b4e_approval`), pero **no integrado aún en `main.py`** para bloqueo de ejecución; la gobernanza opera en `evaluate()` (pre-acción) pero no impide la ejecución de la operación hasta aprobación humana en el flujo completo.
+- **Estado repos auditados:** 11 repositorios (CASE, EnRuta, DashLogistics, FitFamily, etc.) permanecen bloqueados hasta que sus P0/P1 sean corregidos; Poolar es independiente.
+- **Estado datos reales:** La API rechaza `real_pilot` (`HTTP 403`) cuando no hay consentimiento; la gobernanza (`AutomationEvaluator`) garantiza `REJECT` o `HUMAN_REVIEW` para datos reales sin contexto formal, pero no hay registro de consentimiento en base de datos aún.
 
 ## Referencias
 - GDPR (Reglamento General de Protección de Datos).

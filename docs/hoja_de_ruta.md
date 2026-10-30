@@ -36,6 +36,7 @@ Estado: Entregado; no producción.
 
 - [x] PostgreSQL 16 verificado localmente (suite 29/29 passing contra PostgreSQL real)
 - [x] Búsqueda semántica (SemanticSearchPort + tests unitarios) implementada
+- [x] P0 Gobernanza y Human-in-the-Loop COMPLETADO (commit `ad16c29`): precedencia estricta, modelo `approval_requests`, 10 tests regresión
 - [ ] Integración con repos auditados (`P0`/`P1` corregidos)
 - [ ] Proceso de consentimiento para datos reales
 - [ ] Canal físico de invitación / consentimiento verificado
