@@ -275,6 +275,9 @@ class ApprovalRequest(Base):
     rejection_reason = Column(Text, nullable=True)
     expires_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
+    executed_at = Column(DateTime, nullable=True)
+    execution_result = Column(Text, nullable=True)
+    execution_error = Column(Text, nullable=True)
 
 
 class EventoAuditoria(Base):

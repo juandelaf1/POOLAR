@@ -646,7 +646,6 @@ def list_recursos(
 # ---------------------------------------------------------------------------
 @app.post(
     "/problemas-colectivos",
-    response_model=ProblemaColectivoResponse,
     status_code=201,
 )
 def create_problema_colectivo(
@@ -714,11 +713,29 @@ def create_problema_colectivo(
         {"action": "create_problema_colectivo", "origen_datos": payload.origen_datos.value},
         {"actor_type": user.get("tipo"), "actor_rol": user.get("rol", "individuo"), "is_destinatario": False},
     )
-    gov_result = _handle_governance(db, governance, user, {"action": "create_problema_colectivo", "origen_datos": payload.origen_datos.value})
+    data = {
+        "version": 1,
+        "action": "create_problema_colectivo",
+        "origen_datos": payload.origen_datos.value,
+        "descripcion": payload.descripcion,
+        "evidencias": payload.evidencias,
+        "necesidades_asociadas": payload.necesidades_asociadas,
+        "personas_participantes": payload.personas_participantes,
+        "organizaciones_participantes": payload.organizaciones_participantes,
+        "user": {
+            "tipo": tipo,
+            "user_id": user.get("user_id") or user.get("persona_id"),
+            "persona_id": user.get("persona_id"),
+            "organizacion_id": org_id,
+        },
+    }
+
+    gov_result = _handle_governance(db, governance, user, data)
     if "approval_id" in gov_result:
-        # HUMAN_REVIEW: no ejecutar efecto de negocio; devolver solicitud pendiente
-        return {"status": "pending_review", "approval_id": gov_result["approval_id"], "nota": "Revisión humana pendiente. El problema colectivo NO se creó aún.", "governance_route": governance["route"], "governance_reasons": governance["reasons"], "synthetic_pilot": payload.origen_datos.value == "synthetic_pilot"}
-    # AUTO_APPROVE: continuar ejecución (REJECT ya lanza HTTPException)
+        return {"status": "pending_review", "approval_id": gov_result["approval_id"], "nota": "Revision humana pendiente. El problema colectivo NO se creo aun.", "governance_route": governance["route"], "governance_reasons": governance["reasons"], "synthetic_pilot": payload.origen_datos.value == "synthetic_pilot"}
+    # AUTO_APPROVE: ejecutar via servicio compartido
+    from src.services.problema_colectivo_service import execute_create_problema_colectivo
+    return execute_create_problema_colectivo(db, data, data["user"])
 
     personas_derivadas = {
         need.persona_id for need in necesidades if need.persona_id is not None
@@ -981,7 +998,8 @@ def cambiar_estado_problema_colectivo(
         {"action": "cambiar_estado_problema_colectivo", "origen_datos": "synthetic_pilot"},
         {"actor_type": user.get("tipo"), "actor_rol": user.get("rol", "individuo"), "is_destinatario": False},
     )
-    gov_result = _handle_governance(db, governance, user, {"action": "cambiar_estado_problema_colectivo", "origen_datos": "synthetic_pilot"})
+    data_ce = {"version": 1, "action": "cambiar_estado_problema_colectivo", "origen_datos": "synthetic_pilot", "problema_id": problema_id, "nuevo_estado": payload.estado.value if hasattr(payload.estado, "value") else payload.estado, "user": {"tipo": user.get("tipo"), "user_id": user.get("user_id") or user.get("persona_id"), "persona_id": user.get("persona_id"), "organizacion_id": user.get("organizacion_id")}}
+    gov_result = _handle_governance(db, governance, user, data_ce)
     if "approval_id" in gov_result:
         return {"status": "pending_review", "approval_id": gov_result["approval_id"], "nota": "Revisión humana pendiente. El cambio de estado NO se aplicó aún.", "governance_route": governance["route"], "governance_reasons": governance["reasons"]}
 
@@ -1064,66 +1082,38 @@ def create_iniciativa(
         )
 
     # Evaluación de gobernanza
+        from src.core.ports import automation_evaluator
+    data = {
+        "version": 1,
+        "action": "create_iniciativa",
+        "origen_datos": "synthetic_pilot",
+        "necesidad_id": necesidad_id,
+        "responsable_id": responsable_id,
+        "alternativas_evaluadas": alternativas_evaluadas,
+        "criterios_decision": criterios_decision,
+        "presupuesto_estimate": presupuesto_estimate,
+        "plazo": plazo,
+        "problema_colectivo_id": problema_colectivo_id,
+        "titulo": titulo,
+        "descripcion": descripcion,
+        "user": {
+            "tipo": tipo,
+            "user_id": user.get("user_id") or user.get("persona_id"),
+            "persona_id": user.get("persona_id"),
+            "organizacion_id": org_id,
+        },
+    }
     from src.core.ports import automation_evaluator
     governance = automation_evaluator.evaluate(
         {"action": "create_iniciativa", "origen_datos": "synthetic_pilot"},
         {"actor_type": user.get("tipo"), "actor_rol": user.get("rol", "individuo"), "is_destinatario": False},
     )
-    gov_result = _handle_governance(db, governance, user, {"action": "create_iniciativa", "origen_datos": "synthetic_pilot"})
+    gov_result = _handle_governance(db, governance, user, data)
     if "approval_id" in gov_result:
-        return {"status": "pending_review", "approval_id": gov_result["approval_id"], "nota": "Revisión humana pendiente. La iniciativa NO se creó aún.", "governance_route": governance["route"], "governance_reasons": governance["reasons"]}
+        return {"status": "pending_review", "approval_id": gov_result["approval_id"], "nota": "Revision humana pendiente. La iniciativa NO se creo aun.", "governance_route": governance["route"], "governance_reasons": governance["reasons"]}
+    from src.services.iniciativa_service import execute_create_iniciativa
+    return execute_create_iniciativa(db, data, data["user"])
 
-    problema = None
-    if problema_colectivo_id is not None:
-        problema = db.get(ProblemaColectivo, problema_colectivo_id)
-        if problema is None or not _problema_visible(problema, user if tipo == "individuo" else org_id):
-            raise HTTPException(
-                status_code=404, detail="Problema colectivo no encontrado"
-            )
-
-    resp_tipo = "persona" if user.get("tipo") == "individuo" else "organizacion"
-    resp_id = user.get("persona_id") if user.get("tipo") == "individuo" else org_id
-    iniciativa = Iniciativa(
-        necesidad_id=necesidad_id,
-        problema_colectivo_id=problema_colectivo_id,
-        responsable_id=resp_id,
-        responsable_tipo=resp_tipo,
-        titulo=titulo,
-        descripcion=descripcion,
-        alternativas_evaluadas=alternativas_evaluadas,
-        criterios_decision=criterios_decision,
-        presupuesto_estimate=presupuesto_estimate,
-        plazo=plazo,
-        estado="propuesta",
-    )
-    db.add(iniciativa)
-    db.flush()
-    _registrar_evento(
-        db,
-        "iniciativa",
-        iniciativa.id,
-        "inicio",
-        user,
-        justificacion="Iniciativa propuesta",
-    )
-    db.commit()
-    db.refresh(iniciativa)
-    return {
-        "id": iniciativa.id,
-        "necesidad_id": iniciativa.necesidad_id,
-        "problema_colectivo_id": iniciativa.problema_colectivo_id,
-        "titulo": iniciativa.titulo,
-        "descripcion": iniciativa.descripcion,
-        "alternativas_evaluadas": iniciativa.alternativas_evaluadas,
-        "criterios_decision": iniciativa.criterios_decision,
-        "presupuesto_estimate": iniciativa.presupuesto_estimate,
-        "plazo": iniciativa.plazo,
-        "estado": iniciativa.estado,
-        "responsable_id": iniciativa.responsable_id,
-        "responsable_tipo": iniciativa.responsable_tipo,
-        "fecha_creacion": iniciativa.fecha_creacion,
-        "fecha_actualizacion": iniciativa.fecha_actualizacion,
-    }
 
 
 @app.get("/iniciativas/{iniciativa_id}")
@@ -1178,38 +1168,13 @@ def create_decision(
         {"action": "create_decision", "origen_datos": "synthetic_pilot"},
         {"actor_type": user.get("tipo"), "actor_rol": user.get("rol", "individuo"), "is_destinatario": False},
     )
-    gov_result = _handle_governance(db, governance, user, {"action": "create_decision", "origen_datos": "synthetic_pilot"})
+    data_cd = {"version": 1, "action": "create_decision", "origen_datos": "synthetic_pilot", "iniciativa_id": iniciativa_id, "tipo_decision": tipo_decision, "alternativa_elegida": alternativa_elegida, "motivo": motivo, "responsable_decision": responsable_decision, "version_metodologia": version_metodologia, "factors": factors, "user": {"tipo": user.get("tipo"), "user_id": user.get("user_id") or user.get("persona_id"), "persona_id": user.get("persona_id"), "organizacion_id": user.get("organizacion_id")}}
+    gov_result = _handle_governance(db, governance, user, data_cd)
     if "approval_id" in gov_result:
         return {"status": "pending_review", "approval_id": gov_result["approval_id"], "nota": "Revisión humana pendiente. La decisión NO se creó aún.", "governance_route": governance["route"], "governance_reasons": governance["reasons"]}
 
-    decision = Decision(
-        iniciativa_id=iniciativa_id,
-        tipo_decision=tipo_decision,
-        alternativa_elegida=alternativa_elegida,
-        motivo=motivo,
-        responsable_decision=responsable_decision,
-        version_metodologia=version_metodologia,
-        factors=factors,
-    )
-    db.add(decision)
-    db.flush()
-    _registrar_evento(
-        db,
-        "decision",
-        decision.id,
-        "resultado",
-        user,
-        justificacion=motivo,
-        dato_nuevo=alternativa_elegida,
-    )
-    db.commit()
-    db.refresh(decision)
-    return {
-        "id": decision.id,
-        "iniciativa_id": decision.iniciativa_id,
-        "version_metodologia": decision.version_metodologia,
-        "alternativa_elegida": decision.alternativa_elegida,
-    }
+    from src.services.decision_service import execute_create_decision
+    return execute_create_decision(db, data_cd, data_cd["user"])
 
 
 ENTIDADES_AUDITABLES = {
@@ -1421,35 +1386,12 @@ def create_decision_for_initiative(
         {"action": "create_decision_for_initiative", "origen_datos": "synthetic_pilot"},
         {"actor_type": user.get("tipo"), "actor_rol": user.get("rol", "individuo"), "is_destinatario": False},
     )
-    gov_result = _handle_governance(db, governance, user, {"action": "create_decision_for_initiative", "origen_datos": "synthetic_pilot"})
+    data_cdi = {"version": 1, "action": "create_decision_for_initiative", "origen_datos": "synthetic_pilot", "iniciativa_id": iniciativa_id, "tipo_decision": tipo_decision, "alternativa_elegida": alternativa_elegida, "motivo": motivo, "version_metodologia": version_metodologia, "factors": factors, "user": {"tipo": user.get("tipo"), "user_id": user.get("user_id") or user.get("persona_id"), "persona_id": user.get("persona_id"), "organizacion_id": user.get("organizacion_id")}}
+    gov_result = _handle_governance(db, governance, user, data_cdi)
     if "approval_id" in gov_result:
         return {"status": "pending_review", "approval_id": gov_result["approval_id"], "nota": "Revisión humana pendiente. La decisión NO se creó aún.", "governance_route": governance["route"], "governance_reasons": governance["reasons"]}
-    tipo = user.get("tipo")
-    responsable = user.get("persona_id") if tipo == "individuo" else user.get("organizacion_id")
-    decision = Decision(
-        iniciativa_id=iniciativa_id,
-        tipo_decision=tipo_decision,
-        alternativa_elegida=alternativa_elegida,
-        motivo=motivo,
-        responsable_decision=responsable,
-        version_metodologia=version_metodologia,
-        factors=factors,
-    )
-    db.add(decision)
-    db.flush()
-    _registrar_evento(db, "decision", decision.id, "resultado", user, justificacion=motivo)
-    db.commit()
-    db.refresh(decision)
-    return {
-        "id": decision.id,
-        "iniciativa_id": decision.iniciativa_id,
-        "tipo_decision": decision.tipo_decision,
-        "alternativa_elegida": decision.alternativa_elegida,
-        "motivo": decision.motivo,
-        "responsable_decision": decision.responsable_decision,
-        "version_metodologia": decision.version_metodologia,
-        "fecha": decision.fecha,
-    }
+    from src.services.decision_service import execute_create_decision_for_initiative
+    return execute_create_decision_for_initiative(db, data_cdi, data_cdi["user"])
 
 
 # ---------------------------------------------------------------------------
@@ -1621,3 +1563,173 @@ def export_iniciativa(
         "synthetic": True,
         "nota": NOTA_SINTETICA,
     })
+
+
+# ---------------------------------------------------------------------------
+# P0.4: registro de handler reanudable para create_problema_colectivo
+# ---------------------------------------------------------------------------
+try:
+    from src.core.agent_harness.handlers import register_handler
+    from src.services.problema_colectivo_service import execute_create_problema_colectivo
+
+    def _handler_create_problema_colectivo(db, inputs):
+        user = inputs.get("user", {})
+        return execute_create_problema_colectivo(db, inputs, user)
+
+    register_handler("create_problema_colectivo", _handler_create_problema_colectivo)
+except Exception:
+    pass
+
+# ---------------------------------------------------------------------------
+# P0.4: Endpoints de aprobacion
+# ---------------------------------------------------------------------------
+from src.core.agent_harness.approvals import approval_manager, ApprovalStatus
+
+
+@app.get("/approvals/pending")
+def list_pending_approvals(db: Session = Depends(get_db), user=Depends(get_current_user)):
+    reqs = approval_manager.list_pending()
+    result = []
+    for r in reqs:
+        result.append({
+            "approval_id": r.approval_id,
+            "execution_id": r.execution_id,
+            "tool_name": r.tool_name,
+            "status": r.status,
+            "proposed_by": r.proposed_by,
+            "reason": r.reason,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+            "expires_at": r.expires_at.isoformat() if r.expires_at else None,
+        })
+    return result
+
+
+@app.get("/approvals/{approval_id}")
+def get_approval(approval_id: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    req = approval_manager.get(approval_id)
+    if req is None:
+        raise HTTPException(status_code=404, detail="Aprobacion no encontrada")
+    return {
+        "approval_id": req.approval_id,
+        "execution_id": req.execution_id,
+        "tool_name": req.tool_name,
+        "status": req.status,
+        "proposed_by": req.proposed_by,
+        "approved_by": req.approved_by,
+        "approved_at": req.approved_at.isoformat() if req.approved_at else None,
+        "rejected_by": req.rejected_by,
+        "rejected_at": req.rejected_at.isoformat() if req.rejected_at else None,
+        "rejection_reason": req.rejection_reason,
+        "executed_at": req.executed_at.isoformat() if req.executed_at else None,
+        "execution_result": req.execution_result,
+        "execution_error": req.execution_error,
+        "expires_at": req.expires_at.isoformat() if req.expires_at else None,
+    }
+
+
+@app.post("/approvals/{approval_id}/approve")
+def approve_approval(approval_id: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    actor_id = user.get("user_id") or user.get("persona_id")
+    if actor_id is None:
+        raise HTTPException(status_code=403, detail="Actor no identificado")
+    req = approval_manager.get(approval_id)
+    if req is None:
+        raise HTTPException(status_code=404, detail="Aprobacion no encontrada")
+    if req.proposed_by is not None and req.proposed_by == actor_id:
+        raise HTTPException(status_code=403, detail="No puede aprobar su propia solicitud")
+    try:
+        result = approval_manager.approve(approval_id, actor_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {
+        "approval_id": result.approval_id,
+        "status": result.status,
+        "executed_at": result.executed_at.isoformat() if result.executed_at else None,
+        "execution_result": result.execution_result,
+        "execution_error": result.execution_error,
+    }
+
+
+@app.post("/approvals/{approval_id}/reject")
+def reject_approval(approval_id: str, reason: str = "", db: Session = Depends(get_db), user=Depends(get_current_user)):
+    actor_id = user.get("user_id") or user.get("persona_id")
+    if actor_id is None:
+        raise HTTPException(status_code=403, detail="Actor no identificado")
+    req = approval_manager.get(approval_id)
+    if req is None:
+        raise HTTPException(status_code=404, detail="Aprobacion no encontrada")
+    if req.proposed_by is not None and req.proposed_by == actor_id:
+        raise HTTPException(status_code=403, detail="No puede rechazar su propia solicitud")
+    try:
+        result = approval_manager.reject(approval_id, actor_id, reason)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"approval_id": result.approval_id, "status": result.status}
+
+
+try:
+    from src.core.agent_harness.handlers import register_handler
+    from src.services.iniciativa_service import execute_create_iniciativa
+
+    def _handler_create_iniciativa(db, inputs):
+        user = inputs.get("user", {})
+        return execute_create_iniciativa(db, inputs, user)
+
+    register_handler("create_iniciativa", _handler_create_iniciativa)
+except Exception:
+    pass
+
+
+# Handler para cambiar_estado (reanudacion completa)
+try:
+    from src.core.agent_harness.handlers import register_handler
+    from src.services.problema_colectivo_service import execute_cambiar_estado_problema
+
+    def _handler_cambiar_estado(db, inputs):
+        user = inputs.get("user", {})
+        return execute_cambiar_estado_problema(db, inputs, user)
+
+    from src.core.agent_harness import handlers as _h
+    _h.RESUMABLE_HANDLERS["cambiar_estado_problema_colectivo"] = _handler_cambiar_estado
+except Exception:
+    pass
+
+# Placeholders honestos para las operaciones aun no implementadas
+for _name in ("create_decision", "create_decision_for_initiative"):
+    try:
+        from src.core.agent_harness import handlers as _h
+
+        def _not_impl(db, inputs, _n=_name):
+            raise NotImplementedError("Handler de reanudacion no implementado para " + _n)
+
+        _h.RESUMABLE_HANDLERS[_name] = _not_impl
+    except Exception:
+        pass
+
+
+try:
+    from src.core.agent_harness.handlers import register_handler
+    from src.services.decision_service import execute_create_decision
+
+    def _handler_create_decision(db, inputs):
+        user = inputs.get("user", {})
+        return execute_create_decision(db, inputs, user)
+
+    from src.core.agent_harness import handlers as _h
+    _h.RESUMABLE_HANDLERS["create_decision"] = _handler_create_decision
+except Exception:
+    pass
+
+
+try:
+    from src.core.agent_harness.handlers import register_handler
+    from src.services.decision_service import execute_create_decision_for_initiative
+
+    def _handler_create_decision_for_initiative(db, inputs):
+        user = inputs.get("user", {})
+        return execute_create_decision_for_initiative(db, inputs, user)
+
+    from src.core.agent_harness import handlers as _h
+    _h.RESUMABLE_HANDLERS["create_decision_for_initiative"] = _handler_create_decision_for_initiative
+except Exception:
+    pass

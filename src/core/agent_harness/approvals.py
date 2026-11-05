@@ -37,6 +37,9 @@ class ApprovalRequest:
         rejected_at: Optional[datetime] = None,
         rejection_reason: str = "",
         expires_at: Optional[datetime] = None,
+        executed_at: Optional[datetime] = None,
+        execution_result: Optional[str] = None,
+        execution_error: Optional[str] = None,
     ):
         self.approval_id = approval_id
         self.execution_id = execution_id
@@ -52,6 +55,9 @@ class ApprovalRequest:
         self.rejection_reason = rejection_reason
         self.expires_at = expires_at
         self.created_at = datetime.utcnow()
+        self.executed_at = executed_at
+        self.execution_result = execution_result
+        self.execution_error = execution_error
 
 
 class ApprovalManager:
@@ -121,6 +127,9 @@ class ApprovalManager:
                 rejected_at=req_db.rejected_at,
                 rejection_reason=req_db.rejection_reason,
                 expires_at=req_db.expires_at,
+                executed_at=req_db.executed_at,
+                execution_result=req_db.execution_result,
+                execution_error=req_db.execution_error,
             )
 
     def list_pending(self) -> List[ApprovalRequest]:
@@ -165,21 +174,14 @@ class ApprovalManager:
             req_db.approved_at = datetime.utcnow()
             session.commit()
             session.refresh(req_db)
-        return ApprovalRequest(
-            approval_id=req_db.approval_id,
-            execution_id=req_db.execution_id,
-            tool_name=req_db.tool_name,
-            inputs=json.loads(req_db.inputs) if req_db.inputs else {},
-            proposed_by=req_db.proposed_by,
-            status=req_db.status,
-            reason=req_db.reason,
-            approved_by=req_db.approved_by,
-            approved_at=req_db.approved_at,
-            rejected_by=req_db.rejected_by,
-            rejected_at=req_db.rejected_at,
-            rejection_reason=req_db.rejection_reason,
-            expires_at=req_db.expires_at,
-        )
+
+            try:
+                self._execute_approved(session, req_db)
+            except Exception as exc:
+                req_db.execution_error = str(exc)
+                session.commit()
+                raise
+        return self.get(approval_id)
 
     def reject(self, approval_id: str, rejected_by: int, reason: str = "") -> ApprovalRequest:
         with self._session() as session:
@@ -200,21 +202,6 @@ class ApprovalManager:
             req_db.rejection_reason = reason
             session.commit()
             session.refresh(req_db)
-        return ApprovalRequest(
-            approval_id=req_db.approval_id,
-            execution_id=req_db.execution_id,
-            tool_name=req_db.tool_name,
-            inputs=json.loads(req_db.inputs) if req_db.inputs else {},
-            proposed_by=req_db.proposed_by,
-            status=req_db.status,
-            reason=req_db.reason,
-            approved_by=req_db.approved_by,
-            approved_at=req_db.approved_at,
-            rejected_by=req_db.rejected_by,
-            rejected_at=req_db.rejected_at,
-            rejection_reason=req_db.rejection_reason,
-            expires_at=req_db.expires_at,
-        )
 
     def is_expired(self, approval_id: str) -> bool:
         with self._session() as session:
@@ -225,6 +212,36 @@ class ApprovalManager:
                 return False
             return datetime.utcnow() > req_db.expires_at
 
+
+
+    def _execute_approved(self, session, req_db):
+        from src.core.agent_harness.handlers import get_handler
+        import json as _json
+        handler = get_handler(req_db.tool_name)
+        if handler is None:
+            return
+        if req_db.executed_at is not None:
+            return
+        inputs = _json.loads(req_db.inputs) if req_db.inputs else {}
+        result = handler(session, inputs)
+        req_db.execution_result = _json.dumps(result, default=str)
+        req_db.executed_at = datetime.utcnow()
+        req_db.status = "ejecutada"
+        session.commit()
+
+    def execute_approved(self, approval_id):
+        with self._session() as session:
+            req_db = session.query(ApprovalRequestDB).filter(
+                ApprovalRequestDB.approval_id == approval_id
+            ).with_for_update().first()
+            if req_db is None:
+                raise ValueError("Aprobacion no encontrada")
+            if req_db.status not in (ApprovalStatus.APPROVED, "ejecutada"):
+                raise ValueError("Estado no permite ejecucion")
+            if req_db.executed_at is not None:
+                return self.get(approval_id)
+            self._execute_approved(session, req_db)
+        return self.get(approval_id)
 
 # Gestor global de aprobaciones (persistente)
 approval_manager = ApprovalManager()
