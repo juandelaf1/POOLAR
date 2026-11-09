@@ -71,3 +71,17 @@ def validate_action_request(tool_name: str, inputs: dict, *, actor: Optional[dic
     if inputs is not None and not isinstance(inputs, dict):
         issues.append("inputs debe ser dict")
     return issues
+
+
+def policy_warnings(tool_name: str) -> List[str]:
+    """Advertencias declarativas (no bloqueantes) para gobernanza/observabilidad."""
+    w: List[str] = []
+    name = (tool_name or "").strip()
+    if not name:
+        return w
+    if name not in ACTION_POLICIES:
+        w.append(f"acción '{name}' sin política declarativa explícita")
+    p = get_action_policy(name)
+    if p.requires_human_review and not p.resumable and name in EXPECTED_RESUMABLE_TOOLS:
+        w.append(f"acción '{name}' crítica esperada como reanudable")
+    return w

@@ -15,3 +15,5 @@ sources:
         description: Iniciativas (metadatos redactados)
       - name: decisiones
         description: Decisiones (metadatos redactados)
+      - name: necesidades
+        description: Necesidades (metadatos redactados, sin vínculo personal)

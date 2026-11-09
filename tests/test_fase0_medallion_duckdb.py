@@ -13,3 +13,5 @@ def test_medallion_duckdb_runs(tmp_path):
     assert len(out["mart_hitl_summary"]) >= 1
     statuses = {r["status"] for r in out["mart_hitl_summary"]}
     assert "ejecutada" in statuses or "pendiente" in statuses
+    assert out.get("raw_counts", {}).get("iniciativas") == 2
+    assert out.get("raw_counts", {}).get("necesidades") == 1

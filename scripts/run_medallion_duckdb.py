@@ -13,6 +13,14 @@ import duckdb
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def _load_if_exists(con, raw_dir: Path, name: str):
+    p = raw_dir / f"{name}.jsonl"
+    if not p.exists():
+        return
+    g = str(p).replace("\\", "/")
+    con.execute(f"create or replace view raw_{name} as select * from read_json_auto('{g}');")
+
+
 def run(raw_dir: Path, db_path: Path) -> dict:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect(str(db_path))
@@ -21,6 +29,8 @@ def run(raw_dir: Path, db_path: Path) -> dict:
         create or replace view raw_approval_requests as
         select * from read_json_auto('{raw_glob}');
     """)
+    for n in ["eventos_auditoria", "problemas_colectivos", "iniciativas", "decisiones", "necesidades"]:
+        _load_if_exists(con, raw_dir, n)
     con.execute("""
         create or replace view stg_approval_requests as
         select
@@ -41,8 +51,21 @@ def run(raw_dir: Path, db_path: Path) -> dict:
     """)
     rows = con.execute("select * from mart_hitl_summary order by tool_name, status").fetchall()
     cols = [d[0] for d in con.description]
+    result = {"ok": True, "db": str(db_path), "mart_hitl_summary": [dict(zip(cols, r)) for r in rows]}
+    # Resumen operativo adicional (sintético/redactado)
+    try:
+        extra = {}
+        for name in ["problemas_colectivos", "iniciativas", "decisiones", "necesidades"]:
+            try:
+                c = con.execute(f"select count(*) from raw_{name}").fetchone()[0]
+                extra[name] = int(c)
+            except Exception:
+                pass
+        result["raw_counts"] = extra
+    except Exception:
+        pass
     con.close()
-    return {"ok": True, "db": str(db_path), "mart_hitl_summary": [dict(zip(cols, r)) for r in rows]}
+    return result
 
 
 def main():

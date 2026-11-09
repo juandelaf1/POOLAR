@@ -1,0 +1,2 @@
+{"_idempotency_key":"i1","_provenance":{"synthetic_safe":true,"entity":"iniciativa"},"id":1,"estado":"en_planificacion","organizacion_id":1,"problema_colectivo_id":1,"titulo":"[REDACTED]"}
+{"_idempotency_key":"i2","_provenance":{"synthetic_safe":true,"entity":"iniciativa"},"id":2,"estado":"aprobada","organizacion_id":1,"problema_colectivo_id":2,"titulo":"[REDACTED]"}

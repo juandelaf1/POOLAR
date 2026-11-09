@@ -28,3 +28,9 @@ def test_known_governed_actions_declared():
         assert p.tool_name == name
         assert p.requires_human_review is True
 
+
+def test_policy_warnings_non_blocking():
+    from src.core.agent_harness.action_policies import policy_warnings
+    assert any("sin política" in w for w in policy_warnings("accion_desconocida_xyz"))
+    assert policy_warnings("create_iniciativa") == []
+

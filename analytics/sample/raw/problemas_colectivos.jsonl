@@ -1,0 +1,2 @@
+{"_idempotency_key":"p1","_provenance":{"synthetic_safe":true,"entity":"problema_colectivo"},"id":1,"estado":"propuesto","organizacion_id":1,"origen_datos":"sintetico","fecha_creacion":"2026-10-01T10:00:00Z","descripcion":"[REDACTED]"}
+{"_idempotency_key":"p2","_provenance":{"synthetic_safe":true,"entity":"problema_colectivo"},"id":2,"estado":"validado","organizacion_id":1,"origen_datos":"sintetico","fecha_creacion":"2026-10-05T10:00:00Z","descripcion":"[REDACTED]"}

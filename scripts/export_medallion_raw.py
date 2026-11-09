@@ -33,7 +33,7 @@ if not os.getenv("DATABASE_URL") and not os.getenv("POOLAR_TEST_POSTGRES_URL"):
     os.environ["DATABASE_URL"] = "sqlite:///./poolar.db"
 
 from src.core.database import SessionLocal  # noqa: E402
-from src.core.models import ApprovalRequest, Decision, EventoAuditoria, Iniciativa, ProblemaColectivo  # noqa: E402
+from src.core.models import ApprovalRequest, Decision, EventoAuditoria, Iniciativa, Necesidad, ProblemaColectivo  # noqa: E402
 from src.core.security import sanitize_for_log  # noqa: E402
 
 
@@ -146,6 +146,19 @@ def export_all(out_dir: Path) -> dict:
                 "motivo": sanitize_for_log(d.motivo) if getattr(d, "motivo", None) else None,
             })
         stats["decisiones"] = _write_jsonl(out_dir / "decisiones.jsonl", decisiones, "decision")
+
+        necesidades = []
+        for n in s.query(Necesidad).all():
+            necesidades.append({
+                "id": n.id,
+                "organizacion_id": getattr(n, "organizacion_id", None),
+                "estado": getattr(n, "estado", None),
+                "visibilidad": getattr(n, "visibilidad", None),
+                "fecha_creacion": getattr(n, "fecha_creacion", None),
+                "titulo": sanitize_for_log(n.titulo) if getattr(n, "titulo", None) else None,
+                "descripcion": sanitize_for_log(n.descripcion) if getattr(n, "descripcion", None) else None,
+            })
+        stats["necesidades"] = _write_jsonl(out_dir / "necesidades.jsonl", necesidades, "necesidad")
     return stats
 
 
