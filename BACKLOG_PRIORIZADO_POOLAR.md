@@ -31,15 +31,24 @@
 
 ---
 
-## Fase 1 — Contratos POOLAR↔CASE y mecanismo común (P1)
+## Principio de arquitectura modular (transversal)
+- **POOLAR = núcleo gobernado/orquestador:** identidad/tenant, permisos, HITL/aprobaciones, auditoría, ejecución autorizada. Conserva **autoridad final**.
+- **Módulos = productos separados y componibles** (CASE **y otros proyectos individuales/integraciones**): cada uno **autoejecutable** de forma independiente (propio ciclo de vida, config, tests, datos de prueba, interfaz/contrato) y **componible** con POOLAR (y entre sí solo vía contratos/orquestación gobernada).
+- **Integración por capacidad, no por acoplamiento de repos:** unidad = capacidad; un módulo expone capacidades declaradas (`ModuleManifest`) y retorna resultados/propuestas (`CapabilityResult`/`DecisionProposal`/`EvidenceEnvelope`), **nunca** autoridad de ejecución ni acceso directo a BD de POOLAR.
+- **Aislamiento:** sin acceso BD compartida, sin secretos cruzados, sin bypass de HITL/tenant; fallos/timeouts degradan seguro. Datos reales solo con puertas (consentimiento/procedencia/licencia).
+- **Regla:** no integrar módulos externos antes de **F0-13**; primero contratos/mocks/sintético, luego adaptadores validados.
 
-| ID | Capacidad / ítem | Dep. | Criterios de aceptación verificables | Evidencia requerida | Estado |
+## Fase 1 - Contratos modulares, mecanismo común y adaptadores (P1)
+
+| ID | Capacidad / Ítem | Dep. | Criterios de aceptación verificables | Evidencia requerida | Estado |
 |---|---|---|---|---|---|
-| C1-01 | Contratos versionados | F0-13 | Esquemas/versionado para `ModuleManifest`, `ActorContext`, `ExecutionRequest`, `EvidenceEnvelope`, `CapabilityResult`, `DecisionProposal`, `ApprovalRecord`; validados por tests. | Módulos Pydantic/JSON Schema + tests de compatibilidad. | OPEN |
-| C1-02 | Adaptador CASE (una vía) | C1-01 | CASE expuesto como lib versionada **o** adaptador HTTP interno (una vía estable); timeouts/fallos/errores recuperables manejados. | Código adaptador + tests contrato/fallo/timeout. | OPEN |
-| C1-03 | Autoridad conservada en POOLAR | C1-02 | Salida CASE = **propuesta**; POOLAR valida actor/tenant/permiso/consentimiento; HITL/aprobación y ejecución solo bajo política POOLAR; audit trail con correlación. | Tests: ninguna ejecución sin aprobación requerida; no autoaprobación; mapeo de `DecisionProposal`. | OPEN |
-| C1-04 | Datos sintéticos + provider mock CASE | C1-02 | Primera integración sin datos reales, provider mock, dominios de prueba, etiquetado explícito. | Fixtures sintéticas + tests E2E controlados. | OPEN |
-| C1-05 | Mecanismo común validado | C1-01,F0-13 | Modelo/flujo común de **necesidades, capacidades, recursos y soluciones** con evidencia/procedencia y estados; coherente con multi-tenant/HITL. | Diseño + API/servicios + tests + docs. | OPEN |
+| C1-01 | Contratos versionados (genéricos de módulo) | F0-13 | `ModuleManifest`, `ActorContext`, `ExecutionRequest`, `EvidenceEnvelope`, `CapabilityResult`, `DecisionProposal`, `ApprovalRecord`; válidos para **cualquier** módulo (CASE u otros); tests. | Pydantic/JSON Schema + tests compat. | **PARTIAL** (stubs `contracts_case.py`; generalizar) |
+| C1-02 | Registro/descubrimiento de módulos y capacidades | C1-01 | Catálogo declarativo (manifest), versiones, capacidades, permisos, health; selección por capacidad; sin ejecución implícita. | Contrato + tests. | OPEN |
+| C1-03 | Adaptador CASE (primera integración, una vía) | C1-01 | Lib versionada o adaptador HTTP interno estable; timeouts/fallos recuperables; salida = **propuesta**. | Adaptador + tests. | **PARTIAL** (mock `case_mock.py`) |
+| C1-04 | Adaptadores para otros proyectos/módulos (patrón repetible) | C1-01,C1-02 | Plantilla/SDK; cada módulo integrable por mismo patrón (**autoejecutable aislado + compuesto**); CASE no es caso especial. | Plantilla + ≥1 adaptador no-CASE mock/sintético. | OPEN |
+| C1-05 | Autoridad conservada en POOLAR (todos los módulos) | C1-03,C1-04 | Salidas = propuestas/resultados; POOLAR valida actor/tenant/permiso/consentimiento; HITL/ejecución solo bajo política; auditoría correlacionada. | Tests: sin ejecución sin aprobación; no autoaprobación. | OPEN |
+| C1-06 | Datos sintéticos + providers mock (por módulo) | C1-01 | Sin datos reales; providers mock por módulo; etiquetado explícito. | Fixtures + E2E controlados. | **PARTIAL** (CASE; generalizar) |
+| C1-07 | Mecanismo común validado | C1-01,F0-13 | Flujo común **necesidades, capacidades, recursos y soluciones** con evidencia/procedencia/estados; multi-tenant/HITL/composición. | Diseño + API/servicios + tests. | OPEN |
 
 ---
 
@@ -73,9 +82,9 @@
 
 ---
 
-## Secuencia inmediata recomendada (próxima sesión/iteración)
-1. **F0-10/F0-12** en entorno con PostgreSQL: aplicar `0004`, ejecutar `test_fase0_p04_concurrency_pg.py`, corregir hasta evidencia de 1 efecto.
-2. **F0-04/F0-05/F0-09**: cerrar roles, casos persona/legacy, y reanudación/fallo por cada handler.
-3. **F0-06/F0-07**: pruebas de fallo/reinicio; outbox solo cuando exista efecto externo real.
-4. **C1-01/C1-02/C1-03**: contratos + adaptador CASE como propuesta (mock/sintético), autoridad en POOLAR.
-5. **L2-01**: selección de capacidades para logística rural (capability-first).
+## Secuencia inmediata recomendada (actualizada)
+1. **F0-13 cierre formal (externo):** PR/merge + CI verde, habilitar job PG con secrets gestionados, evidencia E2E/fault-injection restante. (F0-10/F0-12 revalidados 0004+0005; suite Fase 0+capacidad **83 passed**).
+2. **Producto core sobre gobernanza:** completar capacidades del flujo (`actividades`, participantes, historial/export, invitaciones/membresía) con actor+scope+HITL y E2E por capacidad.
+3. **C1-01/C1-02 (post F0-13):** generalizar contratos modulares + registro de módulos/capacidades (CASE y otros proyectos como módulos **autoejecutables aislados + componibles**).
+4. **C1-03/C1-04/C1-05/C1-06:** adaptadores (CASE + ≥1 no-CASE) proposal-only, mocks/sintético, autoridad siempre en POOLAR.
+5. **L2/S3/R4:** pilotos por capacidad (logística rural, CO2e auditable, recursos), sin acoplamiento de repos y con puertas de datos/licencia.
