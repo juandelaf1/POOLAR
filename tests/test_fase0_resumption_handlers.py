@@ -32,11 +32,13 @@ def _approver_actor_same_org(proposer_email="admin@a.org", approver_email="appro
         proposer = s.query(OperationalUser).filter_by(email=proposer_email).first()
         if proposer is None:
             proposer = s.query(OperationalUser).first()
-        approver = OperationalUser(
-            email=approver_email, hashed_password=hash_password("secret123"),
-            nombre="Approver", rol="administrador", organizacion_id=proposer.organizacion_id,
-        )
-        s.add(approver); s.commit(); s.refresh(approver)
+        approver = s.query(OperationalUser).filter_by(email=approver_email).first()
+        if approver is None:
+            approver = OperationalUser(
+                email=approver_email, hashed_password=hash_password("secret123"),
+                nombre="Approver", rol="administrador", organizacion_id=proposer.organizacion_id,
+            )
+            s.add(approver); s.commit(); s.refresh(approver)
         return approver, {"tipo": "organizacion", "user_id": approver.id, "persona_id": None,
                           "organizacion_id": approver.organizacion_id, "rol": approver.rol}
 

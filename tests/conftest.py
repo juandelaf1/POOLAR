@@ -92,11 +92,19 @@ def reset_db():
 def _crear_organizacion(db_session, nombre: str, email: str):
     from src.core.auth import hash_password
     from src.core.models import OperationalUser, Organizacion
-    organizacion = Organizacion(
-        nombre=nombre, tipo_organizacion="cooperativa", contacto_publico=email,
-    )
-    db_session.add(organizacion)
-    db_session.flush()
+    existing = db_session.query(OperationalUser).filter_by(email=email).first()
+    if existing:
+        org = db_session.get(Organizacion, existing.organizacion_id)
+        if org is None:
+            org = db_session.query(Organizacion).first()
+        return {"org_id": org.id if org else existing.organizacion_id, "user_id": existing.id, "email": email, "password": "secret123"}
+    organizacion = db_session.query(Organizacion).filter_by(nombre=nombre).first()
+    if organizacion is None:
+        organizacion = Organizacion(
+            nombre=nombre, tipo_organizacion="cooperativa", contacto_publico=email,
+        )
+        db_session.add(organizacion)
+        db_session.flush()
     usuario = OperationalUser(
         email=email, hashed_password=hash_password("secret123"),
         nombre=f"Admin {nombre}", rol="administrador",
