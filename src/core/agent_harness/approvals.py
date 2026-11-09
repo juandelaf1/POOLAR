@@ -258,6 +258,11 @@ class ApprovalManager:
                 raise _forbidden_or_hidden(req_db, act)
             return _dto(req_db)
 
+    def is_expired(self, approval_id: str) -> bool:
+        with self._session() as session:
+            req_db = session.query(ApprovalRequestDB).filter(ApprovalRequestDB.approval_id == approval_id).first()
+            return bool(req_db and req_db.expires_at is not None and _utcnow() > req_db.expires_at)
+
     def list_pending(self, *, actor: Optional[Dict[str, Any]] = None) -> List[ApprovalRequest]:
         act = _actor_context(actor)
         with self._session() as session:

@@ -11,14 +11,27 @@ from src.core.ports import automation_evaluator, AutomationRoute, AutomationRout
 from src.core.database import SessionLocal, engine
 from src.core.models import OperationalUser, ApprovalRequest as ApprovalRequestDB
 
-def _pg_available():
-    return bool(os.getenv("POOLAR_TEST_POSTGRES_URL")) and "postgresql" in os.getenv("DATABASE_URL", "postgresql")
+# Estos tests requieren PostgreSQL de prueba. CI/local debe definir POOLAR_TEST_POSTGRES_URL.
+pytestmark = pytest.mark.skipif(
+    not os.getenv("POOLAR_TEST_POSTGRES_URL"),
+    reason="No hay POOLAR_TEST_POSTGRES_URL (PostgreSQL de prueba)",
+)
 
 
 @pytest.fixture(autouse=True)
-def _require_pg():
-    if not os.getenv("POOLAR_TEST_POSTGRES_URL"):
-        pytest.skip("No hay POOLAR_TEST_POSTGRES_URL (PostgreSQL de prueba)")
+def _register_test_handlers():
+    """Handlers no-op para tools genéricas usadas en tests de persistencia (approve ejecuta handler)."""
+    from src.core.agent_harness.handlers import RESUMABLE_HANDLERS
+
+    def _noop(session, inputs):
+        return {"ok": True, "inputs": inputs}
+
+    names = ("t", "test_tool", "test_op", "op_sensible")
+    for name in names:
+        RESUMABLE_HANDLERS.setdefault(name, _noop)
+    yield
+    for name in names:
+        RESUMABLE_HANDLERS.pop(name, None)
 
 
 def _org_p01():
