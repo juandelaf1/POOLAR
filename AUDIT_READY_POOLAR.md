@@ -17,7 +17,7 @@ python -m ruff check src --select=E9,F63,F7,F82
 .\scripts\check_fase0.ps1   # suite canónica ampliada
 python -m pytest -q --rootdir=.   # repo completo (ver notas PG)
 ```
-**Evidencia local (2026-11-09):** suite canónica ampliada **103 passed**. Repo completo en entorno sin PG: **178 passed, 1 xfailed, 24 skipped** esperables (tests PG-only skip); sin fallos funcionales en lógica no-PG. (Si aparecen fallos en p01/PG race, confirmar que no hay `POOLAR_TEST_POSTGRES_URL` y que la DB es SQLite de prueba.)
+**Evidencia local (2026-11-09):** suite canónica ampliada **104 passed**. Repo completo en entorno sin PG: **179 passed, 1 xfailed, 24 skipped** esperables (tests PG-only skip); sin fallos funcionales en lógica no-PG. (Si aparecen fallos en p01/PG race, confirmar que no hay `POOLAR_TEST_POSTGRES_URL` y que la DB es SQLite de prueba.)
 
 **PG real (solo con env local, sin compartir secretos):**
 ```powershell
