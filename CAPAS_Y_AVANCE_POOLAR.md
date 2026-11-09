@@ -30,7 +30,10 @@
 | 2026-11-08 | PG real (Neon desechable) | `alembic upgrade head` hasta 0004; carrera 2 aprobadores, 1 efecto, `executed_at`. | `test_fase0_p04_concurrency_pg.py` → **1 passed (11.07s)**. F0-10/F0-12 DONE (base). |
 | 2026-11-08 | tests/conftest, approvals, scope tests, backlog | Harness SQLite: `reset_db` por borrado de datos (estable). Persona HTTP scope + retiro propio seguro. 0005 unicidad parcial idempotency **aplicada en Neon (desechable, 2026-11-09)**; carrera PG **1 passed (10.15s)** revalidada. | **59 passed** en 1 corrida (suites Fase 0/gobernanza + guards F0-09 + retiro propio): `test_fase0_approvals_scope`, `test_fase0_decision_failclosed`, `test_fase0_resumption_handlers`, `test_fase0_handlers_registry`, `test_governance_regresion`, `test_p03_http_governance`, `test_p04_resumption`. |
 
-## 4) Decisiones / gaps abiertos (no improvisar)
+## 4) Gobernanza / decisiones / gaps abiertos
+
+> Ver `GOBERNANZA_POOLAR.md` (modelo operativo, matriz, HITL, POOLAR↔CASE).
+
 
 - **HITL personal (individuo) — política profesional adoptada (fail-closed):** el proponente puede **ver y retirar** (sin ejecución). **Aprobación/ejecución por terceros no permitida** sin autoridad de gobernanza explícita diseñada; preserva autonomía, privacidad y aislamiento tenant/personal. Autoaprobación bloqueada.
 - **Efectos externos:** no identificados; si aparecen → outbox + idempotencia receptora + recuperación (F0-07).

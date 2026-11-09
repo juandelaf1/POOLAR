@@ -238,9 +238,7 @@ class ApprovalManager:
                 ApprovalRequestDB.status == ApprovalStatus.PENDING
             )
             if act:
-                if not _can_manage_approvals(act) and act.get("tipo") != "individuo":
-                    raise HTTPException(status_code=403, detail="Sin permiso para consultar aprobaciones")
-                # Filtrar por ámbito
+                # Lectura/listado en scope (separado de gestionar/aprobar). Fail-closed por ámbito.
                 if act.get("tipo") == "organizacion" and act.get("organizacion_id") is not None:
                     q = q.filter(ApprovalRequestDB.organizacion_id == act.get("organizacion_id"))
                 elif act.get("tipo") == "individuo" and act.get("actor_id") is not None:

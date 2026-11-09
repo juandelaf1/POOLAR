@@ -28,7 +28,7 @@ def test_role_matrix_same_org(db_session, org_a):
     for rol in allowed:
         uid += 1
         aa = _mk(org, uid, rol)
-        # no es proponente -> puede gestionar en scope
+        # lectura en scope + capacidad de gestionar (aprobación probada en otros tests)
         got = approval_manager.get(req.approval_id, actor=aa)
         assert got.approval_id == req.approval_id
 
@@ -36,5 +36,10 @@ def test_role_matrix_same_org(db_session, org_a):
     for rol in denied:
         uid += 1
         aa = _mk(org, uid, rol)
+        # lectura en scope permitida; gestión/aprobación denegada
+        got = approval_manager.get(req2.approval_id, actor=aa)
+        assert got.approval_id == req2.approval_id
         with pytest.raises(Exception):
             approval_manager.approve(req2.approval_id, approved_by=uid, actor=aa)
+        with pytest.raises(Exception):
+            approval_manager.reject(req2.approval_id, rejected_by=uid, reason="x", actor=aa)
