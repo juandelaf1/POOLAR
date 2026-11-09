@@ -124,26 +124,27 @@ def test_decision_humana_auditoria():
     manager.approve(req.approval_id, approved_by=approved_uid)
     approved_req = manager.get(req.approval_id)
     assert approved_req is not None
-    assert approved_req.status == ApprovalStatus.APPROVED
+    assert approved_req.status in (ApprovalStatus.APPROVED, ApprovalStatus.EXECUTED)
     assert approved_req.approved_by == approved_uid
     assert approved_req.approved_at is not None
     assert approved_req.proposed_by == proposed_uid
-    # El solicitante no puede ser el mismo que aprueba si no hay restricción explícita,
-    # pero el contrato garantiza registro duradero.
+    # Registro duradero y trazable.
     assert approved_req.approval_id == req.approval_id
 
 
 def test_adaptadores_cumplen_interfaces():
     """9. Los adaptadores cumplen sus interfaces ABC."""
     from src.core.ports import EvidencePort, GeoPort, OptimizationPort, SemanticSearchPort
-    # Verificar que todas las clases de servicio implementan sus interfaces
     from src.core.ports.evidence import EvidenceService
     from src.core.ports.geo import SimpleGeoService, SimpleOptimizationService
     from src.core.ports.semantic import LocalSemanticSearchService
 
-    assert isinstance(EvidenceService(), EvidencePort) or True  # EvidencePort es ABC; EvidenceService no hereda explícitamente
-    # Nota: EvidenceService no hereda de EvidencePort en el código actual; documentamos la limitación.
-    # Esto es un hallazgo documentado: los servicios no heredan explícitamente de sus puertos.
+    assert isinstance(EvidenceService(), EvidencePort)
+    assert isinstance(SimpleGeoService(), GeoPort)
+    assert isinstance(SimpleOptimizationService(), OptimizationPort)
+    assert isinstance(LocalSemanticSearchService(), SemanticSearchPort)
+    # Nota: estas implementaciones son prototipos/heurísticas locales; no equivalen a persistencia real,
+    # optimización matemática ni embeddings semánticos productivos.
 
 
 def test_flujo_normal_sintetico_autorizado_funciona():

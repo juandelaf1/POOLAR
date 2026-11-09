@@ -1,0 +1,44 @@
+name: Fase 0 checks (Poolar)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  fase0:
+    runs-on: ubuntu-latest
+    env:
+      POOLAR_SECRET_KEY: test-only-secret-key-not-for-production-0123456789abcdef
+      DATABASE_URL: sqlite:///./.ci_poolar.db
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Compile
+        run: python -m compileall -q src tests
+      - name: Fase 0 / gobernanza (SQLite)
+        run: |
+          python -m pytest tests/test_fase0_role_matrix.py tests/test_fase0_approvals_scope.py tests/test_fase0_decision_failclosed.py tests/test_fase0_resumption_handlers.py tests/test_fase0_handlers_registry.py tests/test_governance_regresion.py tests/test_p03_http_governance.py tests/test_p04_resumption.py -q --rootdir=.
+
+  fase0-pg-real:
+    if: false # habilitar manualmente en entorno con secretos gestionados (Neon/PG desechable)
+    runs-on: ubuntu-latest
+    env:
+      POOLAR_SECRET_KEY: ${{ secrets.POOLAR_SECRET_KEY_TEST }}
+      POOLAR_TEST_POSTGRES_URL: ${{ secrets.POOLAR_TEST_POSTGRES_URL }}
+      DATABASE_URL: ${{ secrets.POOLAR_TEST_POSTGRES_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements.txt
+      - run: python -m alembic -c alembic.ini upgrade head
+      - run: python -m pytest tests/test_fase0_p04_concurrency_pg.py -q --rootdir=.

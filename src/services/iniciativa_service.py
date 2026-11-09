@@ -21,7 +21,7 @@ def _registrar_evento(db, *args, **kwargs):
     return _re(db, *args, **kwargs)
 
 
-def execute_create_iniciativa(db: Session, data: Dict[str, Any], user: Dict[str, Any]) -> dict:
+def execute_create_iniciativa(db: Session, data: Dict[str, Any], user: Dict[str, Any], *, commit: bool = True) -> dict:
     tipo = user.get("tipo")
     if tipo == "individuo":
         org_id = None
@@ -72,6 +72,9 @@ def execute_create_iniciativa(db: Session, data: Dict[str, Any], user: Dict[str,
     db.add(iniciativa)
     db.flush()
     _registrar_evento(db, "iniciativa", iniciativa.id, "inicio", user, justificacion="Iniciativa propuesta")
-    db.commit()
-    db.refresh(iniciativa)
+    if commit:
+        db.commit()
+        db.refresh(iniciativa)
+    else:
+        db.flush()
     return {"id": iniciativa.id, "necesidad_id": iniciativa.necesidad_id, "problema_colectivo_id": iniciativa.problema_colectivo_id, "responsable_id": iniciativa.responsable_id, "responsable_tipo": iniciativa.responsable_tipo, "titulo": iniciativa.titulo, "descripcion": iniciativa.descripcion, "alternativas_evaluadas": iniciativa.alternativas_evaluadas, "criterios_decision": iniciativa.criterios_decision, "presupuesto_estimate": iniciativa.presupuesto_estimate, "plazo": iniciativa.plazo, "estado": iniciativa.estado, "fecha_creacion": iniciativa.fecha_creacion, "fecha_actualizacion": iniciativa.fecha_actualizacion}

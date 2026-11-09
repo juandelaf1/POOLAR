@@ -4,7 +4,7 @@ Verifica permisos, autorización y reglas de dominio antes de ejecutar
 cualquier herramienta. La autorización se comprueba en el momento de
 ejecutar la herramienta, no solo al preparar el prompt.
 """
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Callable
 from src.core.agent_harness.context import ExecutionContext
 from src.core.agent_harness.tool_registry import ToolDefinition, ToolType
 

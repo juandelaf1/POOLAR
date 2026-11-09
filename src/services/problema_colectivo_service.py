@@ -23,18 +23,23 @@ def _problema_dto(problema, user_ctx):
     return _pd(problema, user_ctx)
 
 
+def _problema_visible(problema, user_ctx):
+    from src.main import _problema_visible as _pv
+    return _pv(problema, user_ctx)
+
+
 def _registrar_evento(db, *args, **kwargs):
     from src.main import _registrar_evento as _re
     return _re(db, *args, **kwargs)
 
 
-def execute_create_problema_colectivo(db: Session, data: Dict[str, Any], user: Dict[str, Any]) -> dict:
+def execute_create_problema_colectivo(db: Session, data: Dict[str, Any], user: Dict[str, Any], *, commit: bool = True) -> dict:
     """Valida y crea un Problema Colectivo. Idempotente a nivel de efecto.
 
     `data` debe contener las claves del payload original (descripcion, evidencias,
     necesidades_asociadas, personas_participantes, organizaciones_participantes,
     origen_datos) y `user` el contexto del actor (tipo, user_id, persona_id,
-    organizacion_id).
+    organizacion_id). `commit=False` deja la transacción bajo control del llamador.
     """
     tipo = user.get("tipo")
     if tipo == "individuo":
@@ -100,12 +105,15 @@ def execute_create_problema_colectivo(db: Session, data: Dict[str, Any], user: D
     db.add(problema)
     db.flush()
     _registrar_evento(db, "problema_colectivo", problema.id, "inicio", user, justificacion="Problema colectivo creado")
-    db.commit()
-    db.refresh(problema)
+    if commit:
+        db.commit()
+        db.refresh(problema)
+    else:
+        db.flush()
     return _problema_dto(problema, org_id)
 
 
-def execute_cambiar_estado_problema(db, data, user):
+def execute_cambiar_estado_problema(db, data, user, *, commit: bool = True):
     from src.core.contracts import ProblemaColectivoEstado, TRANSICIONES_PROBLEMA_COLECTIVO
     problema_id = data.get("problema_id")
     nuevo_estado_raw = data.get("nuevo_estado")
@@ -129,6 +137,9 @@ def execute_cambiar_estado_problema(db, data, user):
     anterior = problema.estado
     problema.estado = nuevo_estado.value if hasattr(nuevo_estado, "value") else nuevo_estado
     _registrar_evento(db, "problema_colectivo", problema.id, "cambio_estado", user, justificacion="Cambio de estado reanudado", dato_anterior=anterior, dato_nuevo=problema.estado)
-    db.commit()
-    db.refresh(problema)
+    if commit:
+        db.commit()
+        db.refresh(problema)
+    else:
+        db.flush()
     return _problema_dto(problema, user.get("organizacion_id"))

@@ -1,4 +1,5 @@
 """Servicio de invitaciones y consentimiento persistente."""
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from src.core.models import Persona, ProblemaColectivo, Invitacion, EventoAuditoria
 
@@ -60,7 +61,6 @@ def invitations_accept(
         raise ValueError(f"Invitación en estado '{invitacion.estado}', no se puede aceptar")
     invitacion.estado = "aceptada"
     invitacion.fecha_respuesta = invitacion.fecha_respuesta or invitacion.fecha_respuesta
-    from sqlalchemy.sql import func
     invitacion.fecha_respuesta = func.now()
     db.commit()
     problema = db.get(ProblemaColectivo, invitacion.problema_colectivo_id)

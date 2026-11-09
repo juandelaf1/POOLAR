@@ -80,12 +80,18 @@ def _handle_governance(db: Session, governance: dict, user: dict, proposal: dict
         raise HTTPException(status_code=403, detail="Propuesta rechazada por política de gobernanza")
     if governance["requires_human_review"]:
         from src.core.agent_harness.approvals import approval_manager
+        actor_id = user.get("user_id") or user.get("persona_id")
         req = approval_manager.create(
             execution_id=execution_id or str(__import__("uuid").uuid4()),
             tool_name=proposal.get("action", "unknown"),
             inputs=proposal,
-            proposed_by=user.get("user_id") or user.get("persona_id"),
+            proposed_by=actor_id,
             reason="Requiere revisión humana por política de gobernanza",
+            organizacion_id=user.get("organizacion_id"),
+            proposer_type=user.get("tipo"),
+            proposer_actor_id=actor_id,
+            correlation_id=execution_id or None,
+            actor=user,
         )
         return {"status": "pending_review", "approval_id": req.approval_id, "note": "Solicitud persistida; aprobación humana requerida antes de ejecución."}
     return {"status": "approved", "note": "Auto-aprobado por gobernanza"}
@@ -976,10 +982,7 @@ def get_problema_colectivo(
     return _problema_dto(problema, user)
 
 
-@app.post(
-    "/problemas-colectivos/{problema_id}/estado",
-    response_model=ProblemaColectivoResponse,
-)
+@app.post("/problemas-colectivos/{problema_id}/estado")
 def cambiar_estado_problema_colectivo(
     problema_id: int,
     payload: ProblemaColectivoEstadoUpdate,
@@ -1003,40 +1006,8 @@ def cambiar_estado_problema_colectivo(
     if "approval_id" in gov_result:
         return {"status": "pending_review", "approval_id": gov_result["approval_id"], "nota": "Revisión humana pendiente. El cambio de estado NO se aplicó aún.", "governance_route": governance["route"], "governance_reasons": governance["reasons"]}
 
-    estado_actual = ProblemaColectivoEstado(problema.estado)
-    permitidos = TRANSICIONES_PROBLEMA_COLECTIVO[estado_actual]
-    if payload.estado not in permitidos:
-        raise HTTPException(
-            status_code=409,
-            detail=(
-                f"Transición no permitida: {estado_actual.value} → "
-                f"{payload.estado.value}"
-            ),
-        )
-    if (
-        payload.estado is ProblemaColectivoEstado.validado
-        and not (problema.evidencias or "").strip()
-    ):
-        raise HTTPException(
-            status_code=422,
-            detail="Para validar el problema se requiere evidencia registrada",
-        )
-
-    anterior = problema.estado
-    problema.estado = payload.estado.value
-    _registrar_evento(
-        db,
-        "problema_colectivo",
-        problema.id,
-        "cambio_estado",
-        user,
-        justificacion=payload.justificacion or "Cambio de estado",
-        dato_anterior=anterior,
-        dato_nuevo=problema.estado,
-    )
-    db.commit()
-    db.refresh(problema)
-    return _problema_dto(problema, user["organizacion_id"])
+    from src.services.problema_colectivo_service import execute_cambiar_estado_problema
+    return execute_cambiar_estado_problema(db, data_ce, data_ce["user"], commit=True)
 
 
 # ---------------------------------------------------------------------------
@@ -1566,19 +1537,15 @@ def export_iniciativa(
 
 
 # ---------------------------------------------------------------------------
-# P0.4: registro de handler reanudable para create_problema_colectivo
-# ---------------------------------------------------------------------------
-try:
-    from src.core.agent_harness.handlers import register_handler
-    from src.services.problema_colectivo_service import execute_create_problema_colectivo
+# P0.4/Fase 0: handler reanudable create_problema_colectivo (registro determinista)
+from src.core.agent_harness import handlers as _approval_handlers
+from src.services.problema_colectivo_service import execute_create_problema_colectivo as _exec_problema
 
-    def _handler_create_problema_colectivo(db, inputs):
-        user = inputs.get("user", {})
-        return execute_create_problema_colectivo(db, inputs, user)
+def _handler_create_problema_colectivo(db, inputs):
+    user = inputs.get("user", {})
+    return _exec_problema(db, inputs, user, commit=False)
 
-    register_handler("create_problema_colectivo", _handler_create_problema_colectivo)
-except Exception:
-    pass
+_approval_handlers.RESUMABLE_HANDLERS["create_problema_colectivo"] = _handler_create_problema_colectivo
 
 # ---------------------------------------------------------------------------
 # P0.4: Endpoints de aprobacion
@@ -1588,7 +1555,7 @@ from src.core.agent_harness.approvals import approval_manager, ApprovalStatus
 
 @app.get("/approvals/pending")
 def list_pending_approvals(db: Session = Depends(get_db), user=Depends(get_current_user)):
-    reqs = approval_manager.list_pending()
+    reqs = approval_manager.list_pending(actor=user)
     result = []
     for r in reqs:
         result.append({
@@ -1597,6 +1564,7 @@ def list_pending_approvals(db: Session = Depends(get_db), user=Depends(get_curre
             "tool_name": r.tool_name,
             "status": r.status,
             "proposed_by": r.proposed_by,
+            "organizacion_id": getattr(r, "organizacion_id", None),
             "reason": r.reason,
             "created_at": r.created_at.isoformat() if r.created_at else None,
             "expires_at": r.expires_at.isoformat() if r.expires_at else None,
@@ -1606,7 +1574,7 @@ def list_pending_approvals(db: Session = Depends(get_db), user=Depends(get_curre
 
 @app.get("/approvals/{approval_id}")
 def get_approval(approval_id: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    req = approval_manager.get(approval_id)
+    req = approval_manager.get(approval_id, actor=user)
     if req is None:
         raise HTTPException(status_code=404, detail="Aprobacion no encontrada")
     return {
@@ -1615,6 +1583,7 @@ def get_approval(approval_id: str, db: Session = Depends(get_db), user=Depends(g
         "tool_name": req.tool_name,
         "status": req.status,
         "proposed_by": req.proposed_by,
+        "organizacion_id": getattr(req, "organizacion_id", None),
         "approved_by": req.approved_by,
         "approved_at": req.approved_at.isoformat() if req.approved_at else None,
         "rejected_by": req.rejected_by,
@@ -1632,13 +1601,10 @@ def approve_approval(approval_id: str, db: Session = Depends(get_db), user=Depen
     actor_id = user.get("user_id") or user.get("persona_id")
     if actor_id is None:
         raise HTTPException(status_code=403, detail="Actor no identificado")
-    req = approval_manager.get(approval_id)
-    if req is None:
-        raise HTTPException(status_code=404, detail="Aprobacion no encontrada")
-    if req.proposed_by is not None and req.proposed_by == actor_id:
-        raise HTTPException(status_code=403, detail="No puede aprobar su propia solicitud")
     try:
-        result = approval_manager.approve(approval_id, actor_id)
+        result = approval_manager.approve(approval_id, actor_id, actor=user)
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return {
@@ -1655,81 +1621,48 @@ def reject_approval(approval_id: str, reason: str = "", db: Session = Depends(ge
     actor_id = user.get("user_id") or user.get("persona_id")
     if actor_id is None:
         raise HTTPException(status_code=403, detail="Actor no identificado")
-    req = approval_manager.get(approval_id)
-    if req is None:
-        raise HTTPException(status_code=404, detail="Aprobacion no encontrada")
-    if req.proposed_by is not None and req.proposed_by == actor_id:
-        raise HTTPException(status_code=403, detail="No puede rechazar su propia solicitud")
     try:
-        result = approval_manager.reject(approval_id, actor_id, reason)
+        result = approval_manager.reject(approval_id, actor_id, reason, actor=user)
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return {"approval_id": result.approval_id, "status": result.status}
 
 
-try:
-    from src.core.agent_harness.handlers import register_handler
-    from src.services.iniciativa_service import execute_create_iniciativa
-
-    def _handler_create_iniciativa(db, inputs):
-        user = inputs.get("user", {})
-        return execute_create_iniciativa(db, inputs, user)
-
-    register_handler("create_iniciativa", _handler_create_iniciativa)
-except Exception:
-    pass
-
-
-# Handler para cambiar_estado (reanudacion completa)
-try:
-    from src.core.agent_harness.handlers import register_handler
-    from src.services.problema_colectivo_service import execute_cambiar_estado_problema
-
-    def _handler_cambiar_estado(db, inputs):
-        user = inputs.get("user", {})
-        return execute_cambiar_estado_problema(db, inputs, user)
-
-    from src.core.agent_harness import handlers as _h
-    _h.RESUMABLE_HANDLERS["cambiar_estado_problema_colectivo"] = _handler_cambiar_estado
-except Exception:
-    pass
-
-# Placeholders honestos para las operaciones aun no implementadas
-for _name in ("create_decision", "create_decision_for_initiative"):
-    try:
-        from src.core.agent_harness import handlers as _h
-
-        def _not_impl(db, inputs, _n=_name):
-            raise NotImplementedError("Handler de reanudacion no implementado para " + _n)
-
-        _h.RESUMABLE_HANDLERS[_name] = _not_impl
-    except Exception:
-        pass
+# Fase 0: registro determinista de handlers reanudables (sin silenciamiento de fallos críticos)
+from src.core.agent_harness import handlers as _h
+from src.services.decision_service import (
+    execute_create_decision as _exec_decision,
+    execute_create_decision_for_initiative as _exec_decision_for_initiative,
+)
+from src.services.iniciativa_service import execute_create_iniciativa as _exec_iniciativa
+from src.services.problema_colectivo_service import (
+    execute_cambiar_estado_problema as _exec_cambiar_estado,
+    execute_create_problema_colectivo as _exec_problema2,  # noqa: F401 (referencia explícita)
+)
 
 
-try:
-    from src.core.agent_harness.handlers import register_handler
-    from src.services.decision_service import execute_create_decision
-
-    def _handler_create_decision(db, inputs):
-        user = inputs.get("user", {})
-        return execute_create_decision(db, inputs, user)
-
-    from src.core.agent_harness import handlers as _h
-    _h.RESUMABLE_HANDLERS["create_decision"] = _handler_create_decision
-except Exception:
-    pass
+def _handler_create_iniciativa(db, inputs):
+    return _exec_iniciativa(db, inputs, inputs.get("user", {}), commit=False)
 
 
-try:
-    from src.core.agent_harness.handlers import register_handler
-    from src.services.decision_service import execute_create_decision_for_initiative
+def _handler_cambiar_estado(db, inputs):
+    return _exec_cambiar_estado(db, inputs, inputs.get("user", {}), commit=False)
 
-    def _handler_create_decision_for_initiative(db, inputs):
-        user = inputs.get("user", {})
-        return execute_create_decision_for_initiative(db, inputs, user)
 
-    from src.core.agent_harness import handlers as _h
-    _h.RESUMABLE_HANDLERS["create_decision_for_initiative"] = _handler_create_decision_for_initiative
-except Exception:
-    pass
+def _handler_create_decision(db, inputs):
+    return _exec_decision(db, inputs, inputs.get("user", {}), commit=False)
+
+
+def _handler_create_decision_for_initiative(db, inputs):
+    return _exec_decision_for_initiative(db, inputs, inputs.get("user", {}), commit=False)
+
+
+for _tool, _fn in {
+    "create_iniciativa": _handler_create_iniciativa,
+    "cambiar_estado_problema_colectivo": _handler_cambiar_estado,
+    "create_decision": _handler_create_decision,
+    "create_decision_for_initiative": _handler_create_decision_for_initiative,
+}.items():
+    _h.RESUMABLE_HANDLERS[_tool] = _fn

@@ -257,7 +257,7 @@ class Decision(Base):
 
 
 class ApprovalRequest(Base):
-    """Solicitud de aprobación persistida en base de datos."""
+    """Solicitud de aprobación persistida en base de datos (Fase 0: scoping/ejecución)."""
     __tablename__ = "approval_requests"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -266,6 +266,15 @@ class ApprovalRequest(Base):
     tool_name = Column(String(200), nullable=False)
     inputs = Column(Text, nullable=False, default="{}")
     proposed_by = Column(Integer, nullable=True)
+    # Ámbito de autorización (Fase 0). Nullable por compatibilidad con filas legacy.
+    organizacion_id = Column(Integer, nullable=True, index=True)
+    proposer_type = Column(String(30), nullable=True)  # organizacion | individuo
+    proposer_actor_id = Column(Integer, nullable=True)
+    resource_type = Column(String(100), nullable=True)
+    resource_id = Column(String(100), nullable=True)
+    policy_id = Column(String(100), nullable=True)
+    correlation_id = Column(String(200), nullable=True)
+    idempotency_key = Column(String(200), nullable=True, index=True)
     status = Column(String(20), nullable=False, default="pendiente")
     reason = Column(Text, nullable=True)
     approved_by = Column(Integer, nullable=True)

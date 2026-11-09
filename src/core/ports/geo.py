@@ -64,7 +64,7 @@ class OptimizationPort(ABC):
         ...
 
 
-class SimpleGeoService:
+class SimpleGeoService(GeoPort):
     """Implementación simple de GeoPort (sin dependencias externas).
 
     Usa fórmula de Haversine para distancia. No requiere PostGIS.
@@ -97,7 +97,7 @@ class SimpleGeoService:
         )
 
 
-class SimpleOptimizationService:
+class SimpleOptimizationService(OptimizationPort):
     """Implementación simple de OptimizationPort."""
 
     def calculate_route(self, origin: GeoPoint, destination: GeoPoint) -> Dict[str, Any]:

@@ -56,7 +56,7 @@ class SemanticSearchPort(ABC):
         ...
 
 
-class LocalSemanticSearchService:
+class LocalSemanticSearchService(SemanticSearchPort):
     """Implementación local (mock/adaptador) de SemanticSearchPort.
 
     Usa embeddings simples basados en hash para pruebas y desarrollo sin
@@ -75,7 +75,7 @@ class LocalSemanticSearchService:
             entity_id=entity_id,
             vector=vector,
             model=model,
-            created_at=str(__import__("datetime").datetime.utcnow()),
+            created_at=str(__import__("datetime").datetime.now(__import__("datetime").timezone.utc)),
         )
 
     def search(self, query: str, entity_types: Optional[List[str]] = None,

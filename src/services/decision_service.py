@@ -16,7 +16,7 @@ def _registrar_evento(db, *args, **kwargs):
     return _re(db, *args, **kwargs)
 
 
-def execute_create_decision(db: Session, data: Dict[str, Any], user: Dict[str, Any]) -> dict:
+def execute_create_decision(db: Session, data: Dict[str, Any], user: Dict[str, Any], *, commit: bool = True) -> dict:
     iniciativa_id = data.get("iniciativa_id")
     iniciativa = db.get(Iniciativa, iniciativa_id)
     if iniciativa is None or not _puede_gestionar_iniciativa(iniciativa, user):
@@ -34,8 +34,11 @@ def execute_create_decision(db: Session, data: Dict[str, Any], user: Dict[str, A
     db.add(decision)
     db.flush()
     _registrar_evento(db, "decision", decision.id, "resultado", user, justificacion=data.get("motivo"), dato_nuevo=data.get("alternativa_elegida"))
-    db.commit()
-    db.refresh(decision)
+    if commit:
+        db.commit()
+        db.refresh(decision)
+    else:
+        db.flush()
     return {
         "id": decision.id,
         "iniciativa_id": decision.iniciativa_id,
@@ -43,19 +46,11 @@ def execute_create_decision(db: Session, data: Dict[str, Any], user: Dict[str, A
         "alternativa_elegida": decision.alternativa_elegida,
     }
 
-def execute_create_decision_for_initiative(db, data, user):
+def execute_create_decision_for_initiative(db, data, user, *, commit: bool = True):
     iniciativa_id = data.get("iniciativa_id")
-    from src.core.models import Iniciativa
     iniciativa = db.get(Iniciativa, iniciativa_id)
-    if iniciativa is None:
+    if iniciativa is None or not _puede_gestionar_iniciativa(iniciativa, user):
         raise HTTPException(status_code=404, detail="Iniciativa no encontrada")
-    # revalidar gestion
-    try:
-        from src.main import _puede_gestionar_iniciativa
-        if not _puede_gestionar_iniciativa(iniciativa, user):
-            raise HTTPException(status_code=404, detail="Iniciativa no encontrada")
-    except Exception:
-        pass
 
     tipo = user.get("tipo")
     responsable = user.get("persona_id") if tipo == "individuo" else user.get("organizacion_id")
@@ -71,8 +66,11 @@ def execute_create_decision_for_initiative(db, data, user):
     db.add(decision)
     db.flush()
     _registrar_evento(db, "decision", decision.id, "resultado", user, justificacion=data.get("motivo"))
-    db.commit()
-    db.refresh(decision)
+    if commit:
+        db.commit()
+        db.refresh(decision)
+    else:
+        db.flush()
     return {
         "id": decision.id,
         "iniciativa_id": decision.iniciativa_id,

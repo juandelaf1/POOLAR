@@ -23,3 +23,24 @@ def get_handler(tool_name: str) -> Optional[Callable[[Session, dict], dict]]:
 
 def is_resumable(tool_name: str) -> bool:
     return tool_name in RESUMABLE_HANDLERS
+
+
+# Operaciones que el producto declara reanudables vía HITL (Fase 0). Mantener alineado con governance/endpoints.
+EXPECTED_RESUMABLE_TOOLS = {
+    "create_problema_colectivo",
+    "create_iniciativa",
+    "cambiar_estado_problema_colectivo",
+    "create_decision",
+    "create_decision_for_initiative",
+}
+
+
+def validate_resumable_handlers(expected=None) -> dict:
+    """Valida registro determinista (F0-08). No lanza por defecto; devuelve informe."""
+    expected = set(expected or EXPECTED_RESUMABLE_TOOLS)
+    missing = sorted(t for t in expected if t not in RESUMABLE_HANDLERS)
+    placeholders = sorted(
+        t for t, fn in RESUMABLE_HANDLERS.items()
+        if getattr(fn, "__name__", "") == "_not_impl"
+    )
+    return {"ok": not missing and not placeholders, "missing": missing, "placeholders": placeholders, "registered": sorted(RESUMABLE_HANDLERS)}

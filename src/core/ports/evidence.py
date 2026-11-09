@@ -98,8 +98,8 @@ class EvidencePort(ABC):
         ...
 
 
-class EvidenceService:
-    """Servicio de evidencias con validación."""
+class EvidenceService(EvidencePort):
+    """Servicio de evidencias con validación (implementa EvidencePort)."""
 
     def __init__(self):
         self._evidences: Dict[int, Evidence] = {}

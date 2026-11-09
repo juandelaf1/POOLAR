@@ -5,10 +5,9 @@ los efectos correctos: REJECT, HUMAN_REVIEW, AUTO_APPROVE.
 """
 import os
 import pytest
-from fastapi.testclient import TestClient
 from unittest.mock import patch
 
-# Asegurar entorno de pruebas
+# Entorno de pruebas (conftest controla DB/secret; mantener compat si se ejecuta aislado)
 os.environ.setdefault("POOLAR_SECRET_KEY", "test-only-secret-key-not-for-production-0123456789abcdef")
 os.environ.setdefault("DATABASE_URL", "sqlite:///./.pytest_poolar.db")
 
@@ -17,31 +16,10 @@ from src.core.ports import AutomationRoute, automation_evaluator
 
 
 @pytest.fixture
-def client():
-    with TestClient(app) as c:
-        yield c
-
-
-@pytest.fixture
-def org_a(client, db_session):
-    from src.core.auth import hash_password
-    from src.core.models import OperationalUser, Organizacion
-    org = Organizacion(nombre="Org A", tipo_organizacion="cooperativa", contacto_publico="a@a.org")
-    db_session.add(org)
-    db_session.flush()
-    user = OperationalUser(email="a@a.org", hashed_password=hash_password("secret123"), nombre="Admin A", rol="administrador", organizacion_id=org.id)
-    db_session.add(user)
-    db_session.commit()
-    db_session.refresh(org)
-    db_session.refresh(user)
-    return {"org_id": org.id, "user_id": user.id, "email": "a@a.org", "password": "secret123"}
-
-
-@pytest.fixture
-def headers_a(client, org_a):
-    resp = client.post("/auth/token", json={"email": org_a["email"], "password": org_a["password"]})
-    assert resp.status_code == 200
-    return {"Authorization": f"Bearer {resp.json()['access_token']}"}
+def necesidad_a(client, headers_a):
+    resp = client.post("/necesidades", params={"titulo": "Necesidad test", "descripcion": "descripcion suficiente", "visibilidad": "privada"}, headers=headers_a)
+    assert resp.status_code == 201
+    return resp.json()["id"]
 
 
 @pytest.fixture
@@ -219,14 +197,23 @@ def test_http_aprobacion_posterior_no_ejecuta_efecto(client, headers_a, necesida
     assert resp.status_code in (200, 201)
     approval_id = resp.json()["approval_id"]
 
-    # Aprobar la solicitud
+    # Aprobar la solicitud con un usuario distinto del proponente (misma org, rol autorizado)
     from src.core.agent_harness.approvals import approval_manager
     from src.core.database import SessionLocal
+    from src.core.auth import hash_password
     from src.core.models import OperationalUser
     with SessionLocal() as s:
-        user = s.query(OperationalUser).first()
-        user_id = user.id
-    approved = approval_manager.approve(approval_id, approved_by=user_id)
+        proposer = s.query(OperationalUser).filter_by(email="admin@a.org").first() or s.query(OperationalUser).first()
+        approver = OperationalUser(
+            email="approver-a@a.org", hashed_password=hash_password("secret123"),
+            nombre="Approver A", rol="administrador", organizacion_id=proposer.organizacion_id,
+        )
+        s.add(approver)
+        s.commit()
+        s.refresh(approver)
+        actor = {"tipo": "organizacion", "user_id": approver.id, "persona_id": None,
+                 "organizacion_id": approver.organizacion_id, "rol": approver.rol}
+    approved = approval_manager.approve(approval_id, approved_by=approver.id, actor=actor)
     _st = approved.status.value if hasattr(approved.status, "value") else approved.status
     assert _st in ("aprobada", "ejecutada"), f"Estado inesperado: {_st}"
 
@@ -259,23 +246,4 @@ def test_http_org_b_no_accede_a_necesidad_de_org_a(client, headers_b, necesidad_
     assert resp.status_code in (403, 404)
 
 
-@pytest.fixture
-def org_b(client, db_session):
-    from src.core.auth import hash_password
-    from src.core.models import OperationalUser, Organizacion
-    org = Organizacion(nombre="Org B", tipo_organizacion="cooperativa", contacto_publico="b@b.org")
-    db_session.add(org)
-    db_session.flush()
-    user = OperationalUser(email="b@b.org", hashed_password=hash_password("secret123"), nombre="Admin B", rol="administrador", organizacion_id=org.id)
-    db_session.add(user)
-    db_session.commit()
-    db_session.refresh(org)
-    db_session.refresh(user)
-    return {"org_id": org.id, "user_id": user.id, "email": "b@b.org", "password": "secret123"}
-
-
-@pytest.fixture
-def headers_b(client, org_b):
-    resp = client.post("/auth/token", json={"email": org_b["email"], "password": org_b["password"]})
-    assert resp.status_code == 200
-    return {"Authorization": f"Bearer {resp.json()['access_token']}"}
+# client, org_a, org_b, headers_a, headers_b provistos por conftest.py
