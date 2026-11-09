@@ -14,7 +14,7 @@ Remove-Item .pytest_poolar.db,.pytest_poolar.db-shm,.pytest_poolar.db-wal -Error
 python -m pytest tests/test_fase0_approvals_scope.py tests/test_fase0_decision_failclosed.py tests/test_fase0_resumption_handlers.py tests/test_fase0_handlers_registry.py tests/test_governance_regresion.py tests/test_p03_http_governance.py tests/test_p04_resumption.py -q --rootdir=.
 ```
 
-**Resultado:** **91 passed** (scope persona+retiro, aislamiento individuo↔individuo/org, guards, idempotencia, fallos/reintento por cada tool reanudable, cierre seguro de `fallida_reintentable`).
+**Resultado:** **98 passed** (scope persona+retiro, aislamiento individuo↔individuo/org, guards, idempotencia, fallos/reintento por cada tool reanudable, cierre seguro de `fallida_reintentable`).
 
 Incluye (además de lo previo): scope HTTP persona/individuo (lista/detalle, no autoaprobación, **retiro/rechazo propio** seguro), aislamiento org↔personal, y test de idempotencia `cambiar_estado`.
 
@@ -55,7 +55,7 @@ python -m pytest tests/test_fase0_p04_concurrency_pg.py -q --rootdir=.
 | Ítem | Estado |
 |---|---|
 | Aplicar `0005` en Neon / revalidar PG con 0005 | **Hecho (2026-11-09, Neon desechable, env local):** 0005 aplicada + `test_fase0_p04_concurrency_pg.py` 1 passed (10.15s). Revalidar de nuevo solo si cambian aprobaciones/concurrencia/PG. |
-| Suite completa repo (SQLite) | **159 passed, 14 skipped, 1 xfailed** (57s). `test_p04_concurrency.py` marcado xfail (legacy; evidencia válida en `test_fase0_p04_concurrency_pg.py` PG real). Sin lint/typecheck configurados en repo. |
+| Suite completa repo (SQLite) | **166 passed, 14 skipped, 1 xfailed** (57s). `test_p04_concurrency.py` marcado xfail (legacy; evidencia válida en `test_fase0_p04_concurrency_pg.py` PG real). Sin lint/typecheck configurados en repo. |
 | Matriz completa F0-04 (lectura/aprobación/admin, política HITL personal para *aprobar/ejecutar* por tercero, E2E por acciones gobernadas para individuo) | Parcial |
 | F0-09 completo (todos los caminos fallo/interrupción/reinicio por handler) | Parcial |
 | F0-07 outbox/recuperación efectos externos | No aplica hasta identificar externos |
