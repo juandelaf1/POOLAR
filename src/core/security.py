@@ -57,11 +57,16 @@ def validate_input(data: Dict[str, Any], schema: Dict[str, Any]) -> list:
 
 def sanitize_for_log(text: str) -> str:
     """Redacta datos sensibles para logs y trazas."""
+    if text is None:
+        return ""
+    text = str(text)
+    # Redactar URLs de DB con credenciales
+    text = re.sub(r"postgres(ql)?(\+psycopg2)?://[^\s\"'<>]+", "postgresql://[REDACTED]", text, flags=re.IGNORECASE)
     # Redactar tokens
     text = re.sub(r"ghp_[A-Za-z0-9]+", "[REDACTED_TOKEN]", text)
     text = re.sub(r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", "[REDACTED_JWT]", text)
-    # Redactar contraseñas
-    text = re.sub(r"password[\"']?\s*[:=]\s*[\"']?[^\s\"']+", "password=[REDACTED]", text, flags=re.IGNORECASE)
+    # Redactar contraseñas/secretos en key=value
+    text = re.sub(r"(password|pwd|secret|token|api[_-]?key)[\"']?\s*[:=]\s*[\"']?[^\s\"'&,]+", r"\1=[REDACTED]", text, flags=re.IGNORECASE)
     # Redactar emails
     text = re.sub(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", "[REDACTED_EMAIL]", text)
     return text
