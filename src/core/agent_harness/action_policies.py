@@ -35,6 +35,22 @@ ACTION_POLICIES: Dict[str, ActionPolicy] = {
     for name in EXPECTED_RESUMABLE_TOOLS
 }
 
+# Acciones gobernadas conocidas (HITL/política según evaluación de riesgo; registro declarativo)
+for _name, _res in [
+    ("create_necesidad", False),
+    ("create_problema_colectivo", True),
+    ("create_iniciativa", True),
+    ("create_decision", True),
+    ("create_decision_for_initiative", True),
+    ("cambiar_estado_problema_colectivo", True),
+    ("accept_invitation", False),
+]:
+    if _name not in ACTION_POLICIES:
+        ACTION_POLICIES[_name] = ActionPolicy(
+            tool_name=_name, requires_human_review=_res, resumable=_res and _name in EXPECTED_RESUMABLE_TOOLS,
+            description="Acción gobernada declarada.",
+        )
+
 
 def get_action_policy(tool_name: str) -> ActionPolicy:
     return ACTION_POLICIES.get((tool_name or "").strip(), _DEFAULT)
