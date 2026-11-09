@@ -188,6 +188,18 @@ class ApprovalManager:
             proposer_actor_id = act.get("actor_id") or proposed_by
         if proposed_by is None:
             proposed_by = proposer_actor_id
+        # Guardrails (fail-closed): validar identidad de tool e inputs antes de persistir.
+        if not isinstance(tool_name, str) or not tool_name.strip():
+            raise ValueError("tool_name inválido")
+        tool_name = tool_name.strip()[:200]
+        if inputs is None:
+            inputs = {}
+        if not isinstance(inputs, dict):
+            raise ValueError("inputs debe ser un objeto/dict")
+        try:
+            json.dumps(inputs, default=str)
+        except Exception as exc:
+            raise ValueError(f"inputs no serializable: {exc}") from exc
         approval_id = str(uuid.uuid4())
         with self._session() as session:
             if idempotency_key:
@@ -338,8 +350,11 @@ class ApprovalManager:
         handler = get_handler(req_db.tool_name)
         inputs = json.loads(req_db.inputs) if req_db.inputs else {}
         if handler is None:
-            # Operación sin handler registrado: resolver sin efecto de negocio (compat/no-op).
-            return {"status": "no_handler", "tool_name": req_db.tool_name}
+            # Fail-closed: no marcar "ejecutada" una operación sin handler (evita efecto silencioso nulo).
+            from src.core.agent_harness.handlers import EXPECTED_RESUMABLE_TOOLS
+            if req_db.tool_name in EXPECTED_RESUMABLE_TOOLS:
+                raise RuntimeError(f"Handler no registrado para operación reanudable: {req_db.tool_name}")
+            raise RuntimeError(f"Handler no registrado para: {req_db.tool_name}")
         # Los handlers/servicios deben usar commit=False para atomicidad local.
         return handler(session, inputs)
 

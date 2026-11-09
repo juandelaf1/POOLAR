@@ -6,6 +6,7 @@ import os
 
 import pytest
 from fastapi.testclient import TestClient
+from datetime import datetime, timedelta, timezone
 
 os.environ.setdefault("POOLAR_SECRET_KEY", "test-only-secret-key-not-for-production-0123456789abcdef")
 os.environ.setdefault("DATABASE_URL", "sqlite:///./.pytest_poolar.db")
@@ -231,6 +232,28 @@ def test_individuo_no_accede_aprobacion_de_otro_individuo(db_session):
         approval_manager.get(req.approval_id, actor=actor_p2)
     with pytest.raises(Exception):
         approval_manager.approve(req.approval_id, approved_by=5011, actor=actor_p2)
+
+
+def test_expired_approval_cannot_be_approved_or_rejected(org_a, db_session):
+    """F0-09: solicitud caducada no se aprueba/rechaza (fail-closed)."""
+    from src.core.agent_harness.approvals import approval_manager
+    from src.core.models import OperationalUser
+    from src.core.auth import hash_password
+    proposer = org_a["user_id"]
+    org = org_a["org_id"]
+    actor = {"tipo": "organizacion", "user_id": proposer, "persona_id": None, "organizacion_id": org, "rol": "administrador"}
+    req = approval_manager.create("exec-exp", "test_tool", {}, proposed_by=proposer, actor=actor,
+                                  expires_at=datetime.now(timezone.utc) - timedelta(minutes=5))
+    approver = OperationalUser(email="approver-exp@a.org", hashed_password=hash_password("secret123"),
+                               nombre="A", rol="administrador", organizacion_id=org)
+    db_session.add(approver); db_session.commit(); db_session.refresh(approver)
+    aa = {"tipo": "organizacion", "user_id": approver.id, "persona_id": None, "organizacion_id": org, "rol": "administrador"}
+    with pytest.raises(Exception):
+        approval_manager.approve(req.approval_id, approved_by=approver.id, actor=aa)
+    req2 = approval_manager.create("exec-exp2", "test_tool", {}, proposed_by=proposer, actor=actor,
+                                   expires_at=datetime.now(timezone.utc) - timedelta(minutes=5))
+    with pytest.raises(Exception):
+        approval_manager.reject(req2.approval_id, rejected_by=approver.id, reason="x", actor=aa)
 
 
 def test_persona_http_puede_listar_su_aprobacion_pendiente(client):
