@@ -197,7 +197,11 @@ class ApprovalManager:
         if not isinstance(inputs, dict):
             raise ValueError("inputs debe ser un objeto/dict")
         try:
-            json.dumps(inputs, default=str)
+            raw = json.dumps(inputs, default=str)
+            if len(raw) > 262144:
+                raise ValueError("inputs excede el tamaño máximo permitido")
+        except ValueError:
+            raise
         except Exception as exc:
             raise ValueError(f"inputs no serializable: {exc}") from exc
         approval_id = str(uuid.uuid4())
@@ -324,14 +328,15 @@ class ApprovalManager:
                 req_db.status = ApprovalStatus.EXECUTED
                 session.commit()
             except Exception as exc:
+                attempt_at = _utcnow()
                 session.rollback()
-                # Registrar fallo en transacción separada (no duplicar efecto local: rollback ya lo evitó)
-                self._mark_failed(approval_id, str(exc), retryable=True)
+                # Registrar fallo preservando trazabilidad del intento (rollback no debe borrar auditoría).
+                self._mark_failed(approval_id, str(exc), retryable=True, approved_by=approved_by, approved_at=attempt_at)
                 raise
             session.refresh(req_db)
             return _dto(req_db)
 
-    def _mark_failed(self, approval_id: str, error: str, retryable: bool) -> None:
+    def _mark_failed(self, approval_id: str, error: str, retryable: bool, *, approved_by: int = None, approved_at=None) -> None:
         with self._session() as session:
             req_db = session.query(ApprovalRequestDB).filter(
                 ApprovalRequestDB.approval_id == approval_id
@@ -339,7 +344,11 @@ class ApprovalManager:
             if req_db is None:
                 return
             req_db.status = ApprovalStatus.FAILED_RETRYABLE if retryable else ApprovalStatus.FAILED_TERMINAL
-            req_db.execution_error = error
+            req_db.execution_error = (error or "")[:4000]
+            if approved_by is not None and req_db.approved_by is None:
+                req_db.approved_by = approved_by
+            if approved_at is not None and req_db.approved_at is None:
+                req_db.approved_at = approved_at
             session.commit()
 
     def _execute_approved(self, session: Session, req_db: ApprovalRequestDB):
@@ -417,7 +426,7 @@ class ApprovalManager:
                 session.commit()
             except Exception as exc:
                 session.rollback()
-                self._mark_failed(approval_id, str(exc), retryable=True)
+                self._mark_failed(approval_id, str(exc), retryable=True, approved_by=getattr(req_db, "approved_by", None), approved_at=_utcnow())
                 raise
             session.refresh(req_db)
             return _dto(req_db)

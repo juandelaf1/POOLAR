@@ -14,7 +14,7 @@ Remove-Item .pytest_poolar.db,.pytest_poolar.db-shm,.pytest_poolar.db-wal -Error
 python -m pytest tests/test_fase0_approvals_scope.py tests/test_fase0_decision_failclosed.py tests/test_fase0_resumption_handlers.py tests/test_fase0_handlers_registry.py tests/test_governance_regresion.py tests/test_p03_http_governance.py tests/test_p04_resumption.py -q --rootdir=.
 ```
 
-**Resultado:** **63 passed** (scope persona+retiro, aislamiento individuo↔individuo/org, guards, idempotencia, fallos/reintento por cada tool reanudable, cierre seguro de `fallida_reintentable`).
+**Resultado:** **65 passed** (scope persona+retiro, aislamiento individuo↔individuo/org, guards, idempotencia, fallos/reintento por cada tool reanudable, cierre seguro de `fallida_reintentable`).
 
 Incluye (además de lo previo): scope HTTP persona/individuo (lista/detalle, no autoaprobación, **retiro/rechazo propio** seguro), aislamiento org↔personal, y test de idempotencia `cambiar_estado`.
 
