@@ -197,6 +197,15 @@ class ApprovalManager:
         if not isinstance(inputs, dict):
             raise ValueError("inputs debe ser un objeto/dict")
         try:
+            from src.core.agent_harness.action_policies import validate_action_request
+            issues = validate_action_request(tool_name, inputs, actor=actor)
+            if issues:
+                raise ValueError("; ".join(issues))
+        except ValueError:
+            raise
+        except Exception:
+            pass
+        try:
             raw = json.dumps(inputs, default=str)
             if len(raw) > 262144:
                 raise ValueError("inputs excede el tamaño máximo permitido")
@@ -231,6 +240,8 @@ class ApprovalManager:
                 expires_at=expires_at,
             )
             session.add(req_db)
+            session.flush()
+            _approval_audit(session, req_db, "inicio", user_id=proposed_by, dato_nuevo=req_db.status)
             session.commit()
             session.refresh(req_db)
             return _dto(req_db)
@@ -312,6 +323,7 @@ class ApprovalManager:
                 raise ValueError(f"Aprobación en estado '{req_db.status}', no se puede aprobar")
             if req_db.expires_at is not None and _utcnow() > req_db.expires_at:
                 req_db.status = ApprovalStatus.EXPIRED
+                _approval_audit(session, req_db, "incidente", user_id=approved_by, dato_nuevo=req_db.status, justificacion="expirada")
                 session.commit()
                 raise ValueError("Aprobación caducada; no se puede aprobar")
 
@@ -326,6 +338,7 @@ class ApprovalManager:
                 req_db.execution_result = json.dumps(result, default=str) if result is not None else req_db.execution_result
                 req_db.executed_at = _utcnow()
                 req_db.status = ApprovalStatus.EXECUTED
+                _approval_audit(session, req_db, "resultado", user_id=approved_by, dato_nuevo=req_db.status)
                 session.commit()
             except Exception as exc:
                 attempt_at = _utcnow()
@@ -349,6 +362,7 @@ class ApprovalManager:
                 req_db.approved_by = approved_by
             if approved_at is not None and req_db.approved_at is None:
                 req_db.approved_at = approved_at
+            _approval_audit(session, req_db, "incidente", user_id=approved_by, dato_nuevo=req_db.status, justificacion=str(error)[:500])
             session.commit()
 
     def _execute_approved(self, session: Session, req_db: ApprovalRequestDB):
@@ -394,12 +408,14 @@ class ApprovalManager:
                 raise ValueError(f"Aprobación en estado '{req_db.status}', no se puede rechazar")
             if req_db.expires_at is not None and _utcnow() > req_db.expires_at:
                 req_db.status = ApprovalStatus.EXPIRED
+                _approval_audit(session, req_db, "incidente", user_id=rejected_by, dato_nuevo=req_db.status, justificacion="expirada")
                 session.commit()
                 raise ValueError("Aprobación caducada; no se puede rechazar")
             req_db.status = ApprovalStatus.REJECTED
             req_db.rejected_by = rejected_by
             req_db.rejected_at = _utcnow()
             req_db.rejection_reason = reason
+            _approval_audit(session, req_db, "cambio_estado", user_id=rejected_by, dato_nuevo=req_db.status, justificacion=reason or None)
             session.commit()
             session.refresh(req_db)
             return _dto(req_db)
@@ -431,5 +447,24 @@ class ApprovalManager:
             session.refresh(req_db)
             return _dto(req_db)
 
+
+
+
+def _approval_audit(session, req_db, tipo_evento: str, user_id=None, justificacion=None, dato_nuevo=None, dato_anterior=None):
+    try:
+        from src.core.models import EventoAuditoria
+        uid = user_id if user_id is not None else getattr(req_db, "proposed_by", None)
+        session.add(EventoAuditoria(
+            entidad_referencia="approval_request",
+            entidad_id=int(req_db.id),
+            tipo_evento=tipo_evento,
+            usuario_o_sistema=f"user_{uid}" if uid is not None else "system",
+            justificacion=(justificacion or f"approval:{req_db.approval_id} tool:{req_db.tool_name}")[:500],
+            dato_anterior=(str(dato_anterior)[:1000] if dato_anterior is not None else None),
+            dato_nuevo=(str(dato_nuevo)[:1000] if dato_nuevo is not None else None),
+        ))
+    except Exception:
+        # No romper flujo principal por auditoría auxiliar; el estado ya es la fuente crítica.
+        pass
 
 approval_manager = ApprovalManager()

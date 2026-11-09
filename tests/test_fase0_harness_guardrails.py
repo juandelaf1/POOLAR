@@ -75,3 +75,31 @@ def test_failure_preserves_approver_audit(org_a, db_session):
             _h.RESUMABLE_HANDLERS.pop(tool, None)
         else:
             _h.RESUMABLE_HANDLERS[tool] = prev
+
+
+def test_approval_lifecycle_emits_audit_events(org_a, db_session):
+    """Gobernanza: transiciones HITL generan EventoAuditoria (entidad approval_request)."""
+    from src.core.agent_harness import handlers as _h
+    from src.core.models import EventoAuditoria, ApprovalRequest as AR
+    tool = "test_audit_lc"
+    prev = _h.RESUMABLE_HANDLERS.get(tool)
+    _h.RESUMABLE_HANDLERS[tool] = lambda db, inputs: {"ok": True}
+    try:
+        actor = _actor(org_a["org_id"], org_a["user_id"])
+        req = approval_manager.create("e7", tool, {}, proposed_by=org_a["user_id"], actor=actor)
+        approver = OperationalUser(email="auditlc@a.org", hashed_password=hash_password("secret123"),
+                                   nombre="A", rol="administrador", organizacion_id=org_a["org_id"])
+        db_session.add(approver); db_session.commit(); db_session.refresh(approver)
+        aa = _actor(org_a["org_id"], approver.id)
+        approval_manager.approve(req.approval_id, approved_by=approver.id, actor=aa)
+        with SessionLocal() as s:
+            ar = s.query(AR).filter_by(approval_id=req.approval_id).first()
+            evs = s.query(EventoAuditoria).filter_by(entidad_referencia="approval_request", entidad_id=ar.id).all()
+        tipos = {e.tipo_evento for e in evs}
+        assert "inicio" in tipos
+        assert "resultado" in tipos
+    finally:
+        if prev is None:
+            _h.RESUMABLE_HANDLERS.pop(tool, None)
+        else:
+            _h.RESUMABLE_HANDLERS[tool] = prev
