@@ -82,9 +82,12 @@
 
 ---
 
-## Secuencia inmediata recomendada (actualizada)
+## Secuencia inmediata recomendada (actualizada, 2026-11-09)
+> Detalle ampliado en `docs/POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md` (ADRs, backlog B-001..B-008, integración de referencia).
+
 1. **F0-13 cierre formal (externo):** PR/merge + CI verde, habilitar job PG con secrets gestionados, evidencia E2E/fault-injection restante. (F0-10/F0-12 revalidados 0004+0005; suite Fase 0+capacidad **104 passed**).
-2. **Producto core sobre gobernanza:** completar capacidades del flujo (`actividades`, participantes, historial/export, invitaciones/membresía) con actor+scope+HITL y E2E por capacidad.
-3. **C1-01/C1-02 (post F0-13):** generalizar contratos modulares + registro de módulos/capacidades (CASE y otros proyectos como módulos **autoejecutables aislados + componibles**).
-4. **C1-03/C1-04/C1-05/C1-06:** adaptadores (CASE + ≥1 no-CASE) proposal-only, mocks/sintético, autoridad siempre en POOLAR.
-5. **L2/S3/R4:** pilotos por capacidad (logística rural, CO2e auditable, recursos), sin acoplamiento de repos y con puertas de datos/licencia.
+2. **B-001/B-002/B-003/B-008:** envelope común + errores, `ModuleManifest` v0, matriz authz endpoint/adapter crítica, inventario licencias/IP. Sin integrar módulos externos reales.
+3. **L1-EVAL-SYNTH (propuesto, requiere autorización):** evaluación logística gobernada sintética POOLAR→EnRuta (`logistics-l1/0.1`, `/matches/evaluate`)→SkyCast (`skycast-route-weather/0.1`), **sin ejecución operativa real**; idempotencia, correlación, procedencia, `data_status`, degradación segura.
+4. **Producto core sobre gobernanza:** completar capacidades del flujo (`actividades`, participantes, historial/export, invitaciones/membresía) con actor+scope+HITL y E2E por capacidad.
+5. **C1-01/C1-02/C1-03/C1-04/C1-05/C1-06 (post F0-13):** contratos modulares + registry; adaptadores CASE y ≥1 no-CASE **proposal-only**, mocks/sintético, autoridad siempre en POOLAR.
+6. **L2/S3/R4:** pilotos por capacidad (logística rural, CO2e auditable, recursos), sin acoplamiento de repos y con puertas de datos/licencia.

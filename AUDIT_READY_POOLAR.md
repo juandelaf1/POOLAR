@@ -42,8 +42,10 @@ python -m pytest tests/test_fase0_p04_concurrency_pg.py -q --rootdir=.
 - Tests Fase 0/capacidad: `tests/test_fase0_*`, `tests/test_e2e_*`, `tests/test_p03_http_governance.py`, `tests/test_p04_resumption.py`.
 - Modular: `src/core/contracts_modules.py`, `src/core/module_registry.py`, `src/core/adapters/*_mock.py`, `src/core/ports/module_adapter.py`, `tests/test_fase0_module_*`, `tests/test_fase0_contracts_modules.py`.
 - Backlog/docs: `BACKLOG_PRIORIZADO_POOLAR.md`, `FASE0_CHECKLIST_CIERRE.md`, `GOBERNANZA_POOLAR.md`, `CAPAS_Y_AVANCE_POOLAR.md`.
+- **Ecosistema/arquitectura (2026-11-09):** `docs/POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md` (maestro: portfolio, dominios, contratos, L1 POOLAR+EnRuta+SkyCast, ADRs/backlog), `docs/POOLAR_BENCHMARK_ARQUITECTURA_BIEN_COMUN.md` (benchmark, CORE/MODULE/CONNECTOR, seguridad/offline/sostenibilidad).
 
 ## 6) Próximos pasos (cuando haya decisión humana/infra)
-1. Abrir PR `fase0-gobernanza` → `dev`/`main`, CI verde, habilitar PG CI con secrets.
-2. Integrar primer módulo individual no-CASE por `ModuleManifest`+adaptador mock/sintético (capability-first).
-3. Post F0-13: adaptadores HTTP/lib con timeouts/fallos seguros; CASE solo proposal-only; pilotos con datos sintéticos/autorizados.
+1. Abrir PR `fase0-gobernanza` → `dev`/`main`, CI verde, habilitar PG CI con secrets (cierre formal F0-13).
+2. **L1 propuesto (no implementado):** evaluación logística gobernada con datos sintéticos POOLAR→EnRuta (`logistics-l1/0.1`)→SkyCast (`skycast-route-weather/0.1`), sin ejecución operativa real; requiere autorización explícita antes de implementar. Ver `docs/POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md`.
+3. Integrar primer módulo individual no-CASE por `ModuleManifest`+adaptador mock/sintético (capability-first), proposal-only.
+4. Post F0-13: adaptadores HTTP/lib con timeouts/fallos seguros; CASE solo proposal-only; pilotos con datos sintéticos/autorizados.

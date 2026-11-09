@@ -532,35 +532,39 @@ No hay rutas absolutas duras en el código que dependan del nombre del directori
 
 ## Documentación
 
-| Documento | Contenido |
-|---|---|
-| [`docs/vision_y_proposito.md`](docs/vision_y_proposito.md) | Visión y propósito del MVP |
-| [`docs/modelo_autorizacion.md`](docs/modelo_autorizacion.md) | Matriz de permisos por organización/persona/rol |
-| [`docs/modelo_problemas_colectivos.md`](docs/modelo_problemas_colectivos.md) | Dominio, reglas, estado del código |
-| [`docs/cat_herramientas.md`](docs/cat_herramientas.md) | Catálogo de herramientas operativas |
-| [`docs/consentimiento.md`](docs/consentimiento.md) | Consentimiento y privacidad |
-| [`docs/accesibilidad_wcag.md`](docs/accesibilidad_wcag.md) | Guía de accesibilidad |
-| [`docs/hoja_de_ruta.md`](docs/hoja_de_ruta.md) | Hoja de ruta con pendientes |
-| [`docs/auditoria_etapas.md`](docs/auditoria_etapas.md) | 10 etapas documentadas |
-| [`docs/cierre_iteracion.md`](docs/cierre_iteracion.md) | Estado de entrega |
-| [`docs/entrega_iteracion.md`](docs/entrega_iteracion.md) | Entregables |
-| [`docs/registro_individual.md`](docs/registro_individual.md) | Restricciones de registro |
-| [`docs/decisiones_tecnicas.md`](docs/decisiones_tecnicas.md) | Decisiones técnicas |
-| [`docs/riesgos_pendientes.md`](docs/riesgos_pendientes.md) | Riesgos P0/P1 |
-| [`docs/adr_langgraph_crewai.md`](docs/adr_langgraph_crewai.md) | ADR LangGraph vs CrewAI |
-| [`docs/adr_langsmith_langfuse.md`](docs/adr_langsmith_langfuse.md) | ADR LangSmith vs Langfuse |
-| [`docs/demo/escenario_logistica.md`](docs/demo/escenario_logistica.md) | Escenario de logística compartida |
+**Índice navegable (fuente compilable):** [`docs/index.md`](docs/index.md) · `mkdocs.yml`. Informes legacy de iteración/Fase 0 en [`docs/archive/fase0/`](docs/archive/fase0/) (trazabilidad; no estado actual).
 
----
+| Documento | Descripción |
+|---|---|
+| [`docs/index.md`](docs/index.md) | Índice vigente + archivo histórico |
+| [`AUDIT_READY_POOLAR.md`](AUDIT_READY_POOLAR.md) | Estado verificable para auditoría (cierre formal: gates externos) |
+| [`BACKLOG_PRIORIZADO_POOLAR.md`](BACKLOG_PRIORIZADO_POOLAR.md) | Backlog priorizado |
+| [`FASE0_CHECKLIST_CIERRE.md`](FASE0_CHECKLIST_CIERRE.md) | Checklist cierre Fase 0 |
+| [`INTENT.md`](INTENT.md) / [`BOUNDARIES.md`](BOUNDARIES.md) / [`GOBERNANZA_POOLAR.md`](GOBERNANZA_POOLAR.md) | Intención, límites, gobernanza/HITL |
+| [`docs/modelo_autorizacion.md`](docs/modelo_autorizacion.md) | Matriz de permisos y riesgos |
+| [`docs/modelo_problemas_colectivos.md`](docs/modelo_problemas_colectivos.md) | Entidad Problema Colectivo |
+| [`docs/POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md`](docs/POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md) | Ecosistema, contratos, L1 propuesto |
+| [`docs/POOLAR_BENCHMARK_ARQUITECTURA_BIEN_COMUN.md`](docs/POOLAR_BENCHMARK_ARQUITECTURA_BIEN_COMUN.md) | Benchmark CORE/MODULE/CONNECTOR |
+| [`docs/adr_langgraph_crewai.md`](docs/adr_langgraph_crewai.md) / [`docs/adr_langsmith_langfuse.md`](docs/adr_langsmith_langfuse.md) | ADRs |
+| [`docs/demo/escenario_logistica.md`](docs/demo/escenario_logistica.md) | Escenario demostrativo |
+
+### Compilar documentación (local)
+```bash
+pip install mkdocs
+python -m mkdocs build          # genera site/ (usa mkdocs.yml)
+python -m mkdocs serve          # vista local
+```
+`site/` está ignorado por git.
+
 
 ## Limitaciones conocidas
 
 - No incluye pagos ni custodia de fondos.
-- No integra `Anexo_Risk`, `EnRuta` ni `CASE` hasta validar licencias y corregir `P0`/`P1`.
+- No integra `Anexo_Risk`, `EnRuta`, `CASE` ni otros módulos/productos externos de forma operativa real sin validar contratos, licencias/IP, seguridad multi-tenant, procedencia de datos y corregir `P0`/`P1`/Fase 0 donde aplique.
 - `PostgreSQL` objetivo; `SQLite` solo para desarrollo controlado.
 - No es producción; no afirma resultados de impacto sin evidencia.
-- Datos sintéticos etiquetados; no usados como resultados reales.
-- No declara "listo para producción"; no afirma impacto verificado sin evidencia.
+- Datos sintéticos/estimaciones deben etiquetarse (`synthetic`/`estimated`/procedencia); no usarlos como resultados reales observados.
+- Integraciones externas: solo bajo autoridad HITL/gobernanza de POOLAR en su contexto; módulos/servicios devuelven propuestas/evidencias, no ejecutan acciones sensibles por sí solos. Ver [`docs/POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md`](docs/POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md).
 
 ---
 
