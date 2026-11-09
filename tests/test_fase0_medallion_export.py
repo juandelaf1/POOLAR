@@ -9,6 +9,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite:///./.pytest_poolar.db")
 from scripts.export_medallion_raw import export_all  # noqa: E402
 from src.core.database import SessionLocal  # noqa: E402
 from src.core.models import EventoAuditoria  # noqa: E402
+from src.core.agent_harness.approvals import approval_manager  # noqa: E402
 
 
 def test_export_is_idempotent(tmp_path):
@@ -23,3 +24,13 @@ def test_export_is_idempotent(tmp_path):
     assert s2["eventos_auditoria"] == 0  # idempotente
     lines = [json.loads(l) for l in (out / "eventos_auditoria.jsonl").read_text(encoding="utf-8").splitlines() if l.strip()]
     assert all("_idempotency_key" in r and "_provenance" in r for r in lines)
+
+
+def test_export_redacts_sensitive_fields(tmp_path, org_a):
+    actor = {"tipo": "organizacion", "user_id": org_a["user_id"], "persona_id": None, "organizacion_id": org_a["org_id"], "rol": "administrador"}
+    approval_manager.create("ex-red", "tool_x", {}, proposed_by=org_a["user_id"], reason="contact a@b.com postgresql://u:p@h/db", actor=actor)
+    out = tmp_path / "raw"
+    export_all(out)
+    text = (out / "approval_requests.jsonl").read_text(encoding="utf-8")
+    assert "a@b.com" not in text
+    assert "u:p@" not in text
