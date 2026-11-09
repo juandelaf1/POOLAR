@@ -1551,6 +1551,7 @@ _approval_handlers.RESUMABLE_HANDLERS["create_problema_colectivo"] = _handler_cr
 # P0.4: Endpoints de aprobacion
 # ---------------------------------------------------------------------------
 from src.core.agent_harness.approvals import approval_manager, ApprovalStatus
+from src.core.module_registry import module_registry
 
 
 @app.get("/approvals/pending")
@@ -1666,3 +1667,14 @@ for _tool, _fn in {
     "create_decision_for_initiative": _handler_create_decision_for_initiative,
 }.items():
     _h.RESUMABLE_HANDLERS[_tool] = _fn
+
+# ---------------------------------------------------------------------------
+# M�dulos/capacidades (C1-02, descubrimiento read-only; sin ejecuci�n)
+
+# ---------------------------------------------------------------------------
+# Modulos/capacidades (C1-02, descubrimiento read-only; sin ejecucion)
+# ---------------------------------------------------------------------------
+@app.get("/modules/capabilities")
+def list_module_capabilities(user=Depends(get_current_user)):
+    """Catalogo declarativo de modulos/capacidades registrados (solo lectura)."""
+    return {"modules": module_registry.catalog(), "source": "declarative-registry"}
