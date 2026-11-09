@@ -1,0 +1,16 @@
+# Copiar a ~/.dbt/profiles.yml o configurar por entorno. NO commitear credenciales.
+poolar_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "analytics/local.duckdb"
+      threads: 4
+    # prod:
+    #   type: postgres
+    #   host: "{{ env_var('ANALYTICS_PG_HOST') }}"
+    #   user: "{{ env_var('ANALYTICS_PG_USER') }}"
+    #   password: "{{ env_var('ANALYTICS_PG_PASSWORD') }}"
+    #   dbname: "{{ env_var('ANALYTICS_PG_DB') }}"
+    #   schema: analytics
+    #   threads: 4
