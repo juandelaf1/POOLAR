@@ -454,8 +454,16 @@ def _approval_audit(session, req_db, tipo_evento: str, user_id=None, justificaci
     try:
         from src.core.models import EventoAuditoria
         from src.core.security import sanitize_for_log
+        try:
+            from src.core.agent_harness.action_policies import policy_warnings
+            pw = policy_warnings(getattr(req_db, "tool_name", "") or "")
+        except Exception:
+            pw = []
         uid = user_id if user_id is not None else getattr(req_db, "proposed_by", None)
-        just = sanitize_for_log(justificacion or f"approval:{req_db.approval_id} tool:{req_db.tool_name}")
+        base = justificacion or f"approval:{req_db.approval_id} tool:{req_db.tool_name}"
+        if pw:
+            base = f"{base} policy_warnings={','.join(pw[:3])}"
+        just = sanitize_for_log(base)
         session.add(EventoAuditoria(
             entidad_referencia="approval_request",
             entidad_id=int(req_db.id),

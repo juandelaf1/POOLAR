@@ -15,3 +15,4 @@ def test_medallion_duckdb_runs(tmp_path):
     assert "ejecutada" in statuses or "pendiente" in statuses
     assert out.get("raw_counts", {}).get("iniciativas") == 2
     assert out.get("raw_counts", {}).get("necesidades") == 1
+    assert "mart_iniciativas_estado" in out.get("marts", {})

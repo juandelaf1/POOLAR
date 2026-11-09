@@ -52,7 +52,23 @@ def run(raw_dir: Path, db_path: Path) -> dict:
     rows = con.execute("select * from mart_hitl_summary order by tool_name, status").fetchall()
     cols = [d[0] for d in con.description]
     result = {"ok": True, "db": str(db_path), "mart_hitl_summary": [dict(zip(cols, r)) for r in rows]}
-    # Resumen operativo adicional (sintético/redactado)
+    # Marts operativos (sintético/redactado)
+    marts = {}
+    for spec in [
+        ("mart_problemas_estado", "problemas_colectivos", "estado"),
+        ("mart_iniciativas_estado", "iniciativas", "estado"),
+        ("mart_decisiones_tipo", "decisiones", "tipo_decision"),
+    ]:
+        mart, raw, col = spec
+        try:
+            con.execute(f"create or replace table {mart} as select {col} as dimension, count(*) as n from raw_{raw} where _idempotency_key is not null group by 1")
+            rows = con.execute(f"select * from {mart} order by 1").fetchall()
+            cols = [d[0] for d in con.description]
+            marts[mart] = [dict(zip(cols, r)) for r in rows]
+        except Exception:
+            pass
+    if marts:
+        result["marts"] = marts
     try:
         extra = {}
         for name in ["problemas_colectivos", "iniciativas", "decisiones", "necesidades"]:
