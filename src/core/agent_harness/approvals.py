@@ -453,15 +453,17 @@ class ApprovalManager:
 def _approval_audit(session, req_db, tipo_evento: str, user_id=None, justificacion=None, dato_nuevo=None, dato_anterior=None):
     try:
         from src.core.models import EventoAuditoria
+        from src.core.security import sanitize_for_log
         uid = user_id if user_id is not None else getattr(req_db, "proposed_by", None)
+        just = sanitize_for_log(justificacion or f"approval:{req_db.approval_id} tool:{req_db.tool_name}")
         session.add(EventoAuditoria(
             entidad_referencia="approval_request",
             entidad_id=int(req_db.id),
             tipo_evento=tipo_evento,
             usuario_o_sistema=f"user_{uid}" if uid is not None else "system",
-            justificacion=(justificacion or f"approval:{req_db.approval_id} tool:{req_db.tool_name}")[:500],
-            dato_anterior=(str(dato_anterior)[:1000] if dato_anterior is not None else None),
-            dato_nuevo=(str(dato_nuevo)[:1000] if dato_nuevo is not None else None),
+            justificacion=(just or "")[:500],
+            dato_anterior=(sanitize_for_log(str(dato_anterior))[:1000] if dato_anterior is not None else None),
+            dato_nuevo=(sanitize_for_log(str(dato_nuevo))[:1000] if dato_nuevo is not None else None),
         ))
     except Exception:
         # No romper flujo principal por auditoría auxiliar; el estado ya es la fuente crítica.
