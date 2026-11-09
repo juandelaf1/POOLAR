@@ -37,5 +37,9 @@ class ModuleRegistry:
                 issues.append(f"módulo sin capacidades: {m.module_id}")
         return issues
 
+    def catalog(self) -> List[dict]:
+        """Catálogo read-only para descubrimiento (sin ejecución)."""
+        return [m.model_dump() for m in self.list()]
+
 
 module_registry = ModuleRegistry()
