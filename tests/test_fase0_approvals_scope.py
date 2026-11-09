@@ -15,6 +15,21 @@ from src.main import app  # noqa: E402
 from src.core.ports import AutomationRoute  # noqa: E402
 
 
+@pytest.fixture(autouse=True)
+def _register_scope_test_handlers():
+    """Handlers no-op para tools aprobadas en estos tests (approve ejecuta handler)."""
+    from src.core.agent_harness.handlers import RESUMABLE_HANDLERS
+
+    def _noop(session, inputs):
+        return {"ok": True, "inputs": inputs}
+
+    for name in ("test_tool", "create_problema_colectivo", "create_iniciativa", "create_decision", "create_decision_for_initiative", "cambiar_estado_problema_colectivo"):
+        RESUMABLE_HANDLERS.setdefault(name, _noop)
+    yield
+    for name in ("test_tool", "create_problema_colectivo", "create_iniciativa", "create_decision", "create_decision_for_initiative", "cambiar_estado_problema_colectivo"):
+        RESUMABLE_HANDLERS.pop(name, None)
+
+
 @pytest.fixture
 def necesidad_a(client, headers_a):
     resp = client.post(
@@ -95,7 +110,7 @@ def test_proponente_no_puede_autoaprobarse_http(client, headers_a, necesidad_a, 
     assert r.status_code == 403
 
 
-def test_rol_sin_permiso_no_puede_aprobar(client, headers_a, necesidad_a, monkeypatch, db_session):
+def test_rol_sin_permiso_no_puede_aprobar(client, headers_a, necesidad_a, monkeypatch, db_session, org_a):
     """F0-04: rol no autorizado en la misma org no puede aprobar."""
     _force_human_review(monkeypatch)
     approval_id = _create_pending(client, headers_a, necesidad_a)
@@ -105,7 +120,7 @@ def test_rol_sin_permiso_no_puede_aprobar(client, headers_a, necesidad_a, monkey
 
     miembro = OperationalUser(
         email="miembro@a.org", hashed_password=hash_password("secret123"),
-        nombre="Miembro A", rol="miembro", organizacion_id=1,
+        nombre="Miembro A", rol="miembro", organizacion_id=org_a["org_id"],
     )
     db_session.add(miembro)
     db_session.commit()
@@ -124,7 +139,7 @@ def test_rol_sin_permiso_no_puede_aprobar(client, headers_a, necesidad_a, monkey
         assert isinstance(r2.json(), list)
 
 
-def test_observador_no_puede_aprobar(client, headers_a, necesidad_a, monkeypatch, db_session):
+def test_observador_no_puede_aprobar(client, headers_a, necesidad_a, monkeypatch, db_session, org_a):
     _force_human_review(monkeypatch)
     approval_id = _create_pending(client, headers_a, necesidad_a)
 
@@ -132,14 +147,14 @@ def test_observador_no_puede_aprobar(client, headers_a, necesidad_a, monkeypatch
     from src.core.models import OperationalUser
 
     obs = OperationalUser(email="obs@a.org", hashed_password=hash_password("secret123"),
-                          nombre="Obs", rol="observador", organizacion_id=1)
+                          nombre="Obs", rol="observador", organizacion_id=org_a["org_id"])
     db_session.add(obs); db_session.commit()
     resp = client.post("/auth/token", json={"email": "obs@a.org", "password": "secret123"})
     headers_obs = {"Authorization": f"Bearer {resp.json()['access_token']}"}
     assert client.post(f"/approvals/{approval_id}/approve", headers=headers_obs).status_code == 403
 
 
-def test_coordinador_puede_aprobar_misma_org(client, headers_a, necesidad_a, monkeypatch, db_session):
+def test_coordinador_puede_aprobar_misma_org(client, headers_a, necesidad_a, monkeypatch, db_session, org_a):
     _force_human_review(monkeypatch)
     approval_id = _create_pending(client, headers_a, necesidad_a)
 
@@ -148,14 +163,14 @@ def test_coordinador_puede_aprobar_misma_org(client, headers_a, necesidad_a, mon
     from src.core.agent_harness.approvals import approval_manager
 
     coord = OperationalUser(email="coord@a.org", hashed_password=hash_password("secret123"),
-                            nombre="Coord", rol="coordinador", organizacion_id=1)
+                            nombre="Coord", rol="coordinador", organizacion_id=org_a["org_id"])
     db_session.add(coord); db_session.commit(); db_session.refresh(coord)
-    actor = {"tipo": "organizacion", "user_id": coord.id, "persona_id": None, "organizacion_id": 1, "rol": "coordinador"}
+    actor = {"tipo": "organizacion", "user_id": coord.id, "persona_id": None, "organizacion_id": org_a["org_id"], "rol": "coordinador"}
     result = approval_manager.approve(approval_id, approved_by=coord.id, actor=actor)
     assert result.status in ("ejecutada", "aprobada", "fallida_reintentable")
 
 
-def test_roles_gestion_permitidos_pueden_aprobar(client, headers_a, necesidad_a, monkeypatch, db_session):
+def test_roles_gestion_permitidos_pueden_aprobar(client, headers_a, necesidad_a, monkeypatch, db_session, org_a):
     from src.core.auth import hash_password
     from src.core.models import OperationalUser
     from src.core.agent_harness.approvals import approval_manager
@@ -165,9 +180,9 @@ def test_roles_gestion_permitidos_pueden_aprobar(client, headers_a, necesidad_a,
         approval_id = _create_pending(client, headers_a, necesidad_a)
         email = f"{rol}-role@a.org"  # evitar colisión con admin@a.org de fixtures
         u = OperationalUser(email=email, hashed_password=hash_password("secret123"),
-                            nombre=rol, rol=rol, organizacion_id=1)
+                            nombre=rol, rol=rol, organizacion_id=org_a["org_id"])
         db_session.add(u); db_session.commit(); db_session.refresh(u)
-        actor = {"tipo": "organizacion", "user_id": u.id, "persona_id": None, "organizacion_id": 1, "rol": rol}
+        actor = {"tipo": "organizacion", "user_id": u.id, "persona_id": None, "organizacion_id": org_a["org_id"], "rol": rol}
         result = approval_manager.approve(approval_id, approved_by=u.id, actor=actor)
         assert result.status in ("ejecutada", "aprobada", "fallida_reintentable"), rol
 
