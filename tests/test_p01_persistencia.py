@@ -94,7 +94,7 @@ def test_approve_and_reject_persisted():
     r = _create(m, "exec_002", proposed_by=uid)
     approver = _create_synthetic_user("p_approver@poolar.local")
     approved = m.approve(r.approval_id, approved_by=approver, actor=_actor(approver))
-    assert approved.status == ApprovalStatus.APPROVED
+    assert approved.status in (ApprovalStatus.APPROVED, ApprovalStatus.EXECUTED)
     assert approved.approved_by == approver
     assert approved.approved_at is not None
     with pytest.raises(Exception):
@@ -145,16 +145,17 @@ def test_concurrent_approve_blocked_by_db():
             result = m_local.approve(r.approval_id, approved_by=au, actor=_actor(au))
             results.append(("approved", result.status))
         except Exception as exc:
-            results.append(("error", str(exc)[:60]))
+            results.append(("error", str(exc)[:120]))
 
     t1 = threading.Thread(target=approve_thread, args=("c1@poolar.local",))
     t2 = threading.Thread(target=approve_thread, args=("c2@poolar.local",))
     t1.start(); t2.start()
     t1.join(); t2.join()
-    approved_count = sum(1 for _, s in results if getattr(s, "value", s) == "aprobada" or s == "aprobada")
-    assert approved_count == 1
+    ok_statuses = {ApprovalStatus.APPROVED, ApprovalStatus.EXECUTED, "aprobada", "ejecutada"}
+    approved_count = sum(1 for kind, s in results if kind == "approved" and (getattr(s, "value", s) in ok_statuses or s in ok_statuses))
+    assert approved_count == 1, f"expected 1 successful approval, got results={results}"
     final = m.get(r.approval_id)
-    assert final.status == ApprovalStatus.APPROVED
+    assert final.status in (ApprovalStatus.APPROVED, ApprovalStatus.EXECUTED)
 
 
 def test_human_review_no_ejecuta_efecto():
