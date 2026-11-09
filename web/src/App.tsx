@@ -2,6 +2,8 @@ import { NavLink, Route, Routes, useNavigate } from 'react-router-dom'
 import { clearToken, getToken } from './api/client'
 import Home from './pages/Home'
 import Login from './pages/Login'
+import Necesidades from './pages/Necesidades'
+import Flujo from './pages/Flujo'
 import Approvals from './pages/Approvals'
 import Modules from './pages/Modules'
 
@@ -14,6 +16,8 @@ export default function App() {
         <strong>POOLAR</strong>
         <nav>
           <NavLink to="/">Producto</NavLink>
+          <NavLink to="/necesidades">Necesidades</NavLink>
+          <NavLink to="/flujo">Flujo</NavLink>
           <NavLink to="/approvals">HITL/Aprobaciones</NavLink>
           <NavLink to="/modules">Módulos</NavLink>
           {authed ? <a href="#" onClick={(e)=>{e.preventDefault(); clearToken(); nav('/login')}}>Salir</a> : <NavLink to="/login">Ingresar</NavLink>}
@@ -23,6 +27,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/necesidades" element={<Necesidades />} />
+          <Route path="/flujo" element={<Flujo />} />
           <Route path="/approvals" element={<Approvals />} />
           <Route path="/modules" element={<Modules />} />
         </Routes>
