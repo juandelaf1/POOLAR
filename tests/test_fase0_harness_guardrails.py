@@ -103,3 +103,18 @@ def test_approval_lifecycle_emits_audit_events(org_a, db_session):
             _h.RESUMABLE_HANDLERS.pop(tool, None)
         else:
             _h.RESUMABLE_HANDLERS[tool] = prev
+
+
+def test_reject_emits_audit_event(org_a, db_session):
+    from src.core.models import EventoAuditoria, ApprovalRequest as AR
+    actor = _actor(org_a["org_id"], org_a["user_id"])
+    req = approval_manager.create("e8", "tool_rej_audit", {}, proposed_by=org_a["user_id"], actor=actor)
+    approver = OperationalUser(email="auditrej@a.org", hashed_password=hash_password("secret123"),
+                               nombre="A", rol="administrador", organizacion_id=org_a["org_id"])
+    db_session.add(approver); db_session.commit(); db_session.refresh(approver)
+    aa = _actor(org_a["org_id"], approver.id)
+    approval_manager.reject(req.approval_id, rejected_by=approver.id, reason="no", actor=aa)
+    with SessionLocal() as s:
+        ar = s.query(AR).filter_by(approval_id=req.approval_id).first()
+        evs = s.query(EventoAuditoria).filter_by(entidad_referencia="approval_request", entidad_id=ar.id).all()
+    assert any(e.tipo_evento == "cambio_estado" for e in evs)
