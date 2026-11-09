@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: poolar_raw
+    description: Exports raw idempotentes desde POOLAR (read-only). No HITL.
+    schema: main
+    tables:
+      - name: approval_requests
+        description: Solicitudes HITL (metadatos redactados)
+      - name: eventos_auditoria
+        description: Eventos de auditoría (metadatos redactados)
