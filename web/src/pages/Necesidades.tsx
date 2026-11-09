@@ -31,15 +31,18 @@ export default function Necesidades() {
     <section>
       <h1>Necesidades</h1>
       <div style={{ display:'grid', gap:8, maxWidth:520, marginBottom:16 }}>
-        <input placeholder="Título" value={titulo} onChange={e=>setTitulo(e.target.value)} />
-        <textarea placeholder="Descripción" value={descripcion} onChange={e=>setDescripcion(e.target.value)} />
-        <select value={visibilidad} onChange={e=>setVisibilidad(e.target.value)}>
+        <label htmlFor="nec-titulo">Título</label>
+        <input id="nec-titulo" placeholder="Título" value={titulo} onChange={e=>setTitulo(e.target.value)} minLength={3} required />
+        <label htmlFor="nec-descripcion">Descripción</label>
+        <textarea id="nec-descripcion" placeholder="Descripción" value={descripcion} onChange={e=>setDescripcion(e.target.value)} />
+        <label htmlFor="nec-visibilidad">Visibilidad</label>
+        <select id="nec-visibilidad" value={visibilidad} onChange={e=>setVisibilidad(e.target.value)}>
           <option value="privada">privada</option>
           <option value="compartida">compartida</option>
           <option value="publica">publica</option>
         </select>
-        <button onClick={()=>create.mutate()} disabled={create.isPending || !titulo.trim()}>Crear</button>
-        {msg && <p className={msg.startsWith('Error') ? 'err' : 'muted'}>{msg}</p>}
+        <button onClick={()=>create.mutate()} disabled={create.isPending || !titulo.trim()}>{create.isPending ? 'Enviando…' : 'Crear'}</button>
+        <div aria-live="polite" aria-atomic="true">{msg && <p role={msg.startsWith('Error') ? 'alert' : 'status'} className={msg.startsWith('Error') ? 'err' : 'muted'}>{msg}</p>}</div>
       </div>
       {q.isLoading && <p>Cargando…</p>}
       {q.error && <pre className="err">{String((q.error as any)?.message || q.error)}</pre>}

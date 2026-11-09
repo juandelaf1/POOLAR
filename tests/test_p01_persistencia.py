@@ -11,14 +11,11 @@ from src.core.ports import automation_evaluator, AutomationRoute, AutomationRout
 from src.core.database import SessionLocal, engine
 from src.core.models import OperationalUser, ApprovalRequest as ApprovalRequestDB
 
-def _pg_available():
-    return bool(os.getenv("POOLAR_TEST_POSTGRES_URL")) and "postgresql" in os.getenv("DATABASE_URL", "postgresql")
-
-
-@pytest.fixture(autouse=True)
-def _require_pg():
-    if not os.getenv("POOLAR_TEST_POSTGRES_URL"):
-        pytest.skip("No hay POOLAR_TEST_POSTGRES_URL (PostgreSQL de prueba)")
+# Estos tests requieren PostgreSQL de prueba. CI/local debe definir POOLAR_TEST_POSTGRES_URL.
+pytestmark = pytest.mark.skipif(
+    not os.getenv("POOLAR_TEST_POSTGRES_URL"),
+    reason="No hay POOLAR_TEST_POSTGRES_URL (PostgreSQL de prueba)",
+)
 
 
 def _org_p01():

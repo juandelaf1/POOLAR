@@ -1,9 +1,10 @@
 import { isPending } from '../api/client'
 
-export function PendingBanner({ res }: { res: any }) {
+export function PendingBanner({ res }: { res: unknown }) {
   if (!isPending(res)) return null
-  return <div style={{ background:'#fef3c7', border:'1px solid #f59e0b', padding:10, margin:'8px 0' }}>
-    <strong>HITL pendiente:</strong> <code>{res.approval_id}</code> — {res.nota || 'Revisión humana requerida. Sin efecto ejecutado.'}
+  const r = res as { approval_id?: string; nota?: string }
+  return <div role="status" aria-live="polite" style={{ background:'#fef3c7', border:'1px solid #f59e0b', padding:10, margin:'8px 0' }}>
+    <strong>HITL pendiente:</strong> <code>{r.approval_id}</code> — {r.nota || 'Revisión humana requerida. Sin efecto ejecutado.'}
   </div>
 }
 
