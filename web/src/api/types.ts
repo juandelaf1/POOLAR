@@ -45,6 +45,16 @@ export type ApprovalDetail = ApprovalListItem & {
 
 export type ApiError = { status: number; data?: any; message: string }
 
+export type Necesidad = {
+  id: number
+  titulo: string
+  descripcion?: string
+  estado?: string
+  visibilidad?: string
+  organizacion_id?: number | null
+  persona_id?: number | null
+}
+
 export function isPending(x: any): x is PendingReview {
   return x && x.status === 'pending_review' && typeof x.approval_id === 'string'
 }

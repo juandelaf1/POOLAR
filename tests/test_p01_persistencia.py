@@ -11,7 +11,14 @@ from src.core.ports import automation_evaluator, AutomationRoute, AutomationRout
 from src.core.database import SessionLocal, engine
 from src.core.models import OperationalUser, ApprovalRequest as ApprovalRequestDB
 
-postgres_available = bool(os.getenv("POOLAR_TEST_POSTGRES_URL"))
+def _pg_available():
+    return bool(os.getenv("POOLAR_TEST_POSTGRES_URL")) and "postgresql" in os.getenv("DATABASE_URL", "postgresql")
+
+
+@pytest.fixture(autouse=True)
+def _require_pg():
+    if not os.getenv("POOLAR_TEST_POSTGRES_URL"):
+        pytest.skip("No hay POOLAR_TEST_POSTGRES_URL (PostgreSQL de prueba)")
 
 
 def _org_p01():
@@ -56,7 +63,6 @@ def _create(m, exec_id, tool="t", inputs=None, proposed_by=None, **kw):
                      organizacion_id=_org_p01(), proposer_type="organizacion", proposer_actor_id=uid, **kw)
 
 
-@pytest.mark.skipif(not postgres_available, reason="No hay PostgreSQL disponible")
 def test_persistencia_across_instances():
     uid = _create_synthetic_user("p1@poolar.local")
     m1 = ApprovalManager()
@@ -69,7 +75,6 @@ def test_persistencia_across_instances():
     assert recovered.status == ApprovalStatus.PENDING
 
 
-@pytest.mark.skipif(not postgres_available, reason="No hay PostgreSQL disponible")
 def test_approve_and_reject_persisted():
     uid = _create_synthetic_user("p2@poolar.local")
     m = ApprovalManager()
@@ -83,7 +88,6 @@ def test_approve_and_reject_persisted():
         m.reject(r.approval_id, rejected_by=_create_synthetic_user("p_rejecter@poolar.local"), actor=_actor(_create_synthetic_user("p_rejecter@poolar.local")))
 
 
-@pytest.mark.skipif(not postgres_available, reason="No hay PostgreSQL disponible")
 def test_reject_expired_not_allowed():
     uid = _create_synthetic_user("p3@poolar.local")
     m = ApprovalManager()
@@ -101,7 +105,6 @@ def test_reject_expired_not_allowed():
         m.reject(r.approval_id, rejected_by=rej, actor=_actor(rej))
 
 
-@pytest.mark.skipif(not postgres_available, reason="No hay PostgreSQL disponible")
 def test_no_second_resolution():
     uid = _create_synthetic_user("p4@poolar.local")
     m = ApprovalManager()
@@ -116,7 +119,6 @@ def test_no_second_resolution():
         m.reject(r.approval_id, rejected_by=rj, actor=_actor(rj))
 
 
-@pytest.mark.skipif(not postgres_available, reason="No hay PostgreSQL disponible")
 def test_concurrent_approve_blocked_by_db():
     uid = _create_synthetic_user("p5@poolar.local")
     m = ApprovalManager()
@@ -142,7 +144,6 @@ def test_concurrent_approve_blocked_by_db():
     assert final.status == ApprovalStatus.APPROVED
 
 
-@pytest.mark.skipif(not postgres_available, reason="No hay PostgreSQL disponible")
 def test_human_review_no_ejecuta_efecto():
     result = automation_evaluator.evaluate(
         {"action": "create_decision", "origen_datos": "real_pilot"},
@@ -158,7 +159,6 @@ def test_human_review_no_ejecuta_efecto():
     assert req.status == ApprovalStatus.PENDING
 
 
-@pytest.mark.skipif(not postgres_available, reason="No hay PostgreSQL disponible")
 def test_reject_no_produce_efecto():
     result = automation_evaluator.evaluate(
         {"action": "create_decision", "origen_datos": "synthetic_pilot"},
@@ -168,7 +168,6 @@ def test_reject_no_produce_efecto():
     assert result["approved"] is False
 
 
-@pytest.mark.skipif(not postgres_available, reason="No hay PostgreSQL disponible")
 def test_aprobacion_ejecuta_una_vez():
     uid = _create_synthetic_user("p6@poolar.local")
     m = ApprovalManager()
@@ -187,7 +186,6 @@ def test_aprobacion_ejecuta_una_vez():
     assert len(effect_ran) == 1
 
 
-@pytest.mark.skipif(not postgres_available, reason="No hay PostgreSQL disponible")
 def test_autorizacion_actor_resuelve():
     uid = _create_synthetic_user("p7@poolar.local")
     m = ApprovalManager()
@@ -197,7 +195,6 @@ def test_autorizacion_actor_resuelve():
     assert res.approved_by is not None
 
 
-@pytest.mark.skipif(not postgres_available, reason="No hay PostgreSQL disponible")
 def test_origen_desconocido_falla_conservador():
     result = automation_evaluator.evaluate(
         {"action": "create_necesidad"},
