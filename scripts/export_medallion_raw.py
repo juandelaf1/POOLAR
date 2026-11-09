@@ -33,7 +33,7 @@ if not os.getenv("DATABASE_URL") and not os.getenv("POOLAR_TEST_POSTGRES_URL"):
     os.environ["DATABASE_URL"] = "sqlite:///./poolar.db"
 
 from src.core.database import SessionLocal  # noqa: E402
-from src.core.models import ApprovalRequest, EventoAuditoria  # noqa: E402
+from src.core.models import ApprovalRequest, Decision, EventoAuditoria, Iniciativa, ProblemaColectivo  # noqa: E402
 from src.core.security import sanitize_for_log  # noqa: E402
 
 
@@ -112,6 +112,40 @@ def export_all(out_dir: Path) -> dict:
                 "justificacion": sanitize_for_log(e.justificacion) if e.justificacion else None,
             })
         stats["eventos_auditoria"] = _write_jsonl(out_dir / "eventos_auditoria.jsonl", events, "evento_auditoria")
+
+        problemas = []
+        for p in s.query(ProblemaColectivo).all():
+            problemas.append({
+                "id": p.id,
+                "estado": p.estado,
+                "organizacion_id": getattr(p, "organizacion_id", None),
+                "origen_datos": getattr(p, "origen_datos", None),
+                "fecha_creacion": getattr(p, "fecha_creacion", None),
+                "descripcion": sanitize_for_log(p.descripcion) if getattr(p, "descripcion", None) else None,
+            })
+        stats["problemas_colectivos"] = _write_jsonl(out_dir / "problemas_colectivos.jsonl", problemas, "problema_colectivo")
+
+        iniciativas = []
+        for i in s.query(Iniciativa).all():
+            iniciativas.append({
+                "id": i.id,
+                "estado": i.estado,
+                "organizacion_id": getattr(i, "organizacion_id", None),
+                "problema_colectivo_id": getattr(i, "problema_colectivo_id", None),
+                "titulo": sanitize_for_log(i.titulo) if getattr(i, "titulo", None) else None,
+            })
+        stats["iniciativas"] = _write_jsonl(out_dir / "iniciativas.jsonl", iniciativas, "iniciativa")
+
+        decisiones = []
+        for d in s.query(Decision).all():
+            decisiones.append({
+                "id": d.id,
+                "iniciativa_id": d.iniciativa_id,
+                "tipo_decision": getattr(d, "tipo_decision", None),
+                "fecha": getattr(d, "fecha", None),
+                "motivo": sanitize_for_log(d.motivo) if getattr(d, "motivo", None) else None,
+            })
+        stats["decisiones"] = _write_jsonl(out_dir / "decisiones.jsonl", decisiones, "decision")
     return stats
 
 

@@ -9,3 +9,9 @@ sources:
         description: Solicitudes HITL (metadatos redactados)
       - name: eventos_auditoria
         description: Eventos de auditoría (metadatos redactados)
+      - name: problemas_colectivos
+        description: Problemas colectivos (metadatos redactados)
+      - name: iniciativas
+        description: Iniciativas (metadatos redactados)
+      - name: decisiones
+        description: Decisiones (metadatos redactados)
