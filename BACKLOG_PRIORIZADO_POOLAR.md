@@ -83,7 +83,7 @@
 ---
 
 ## Secuencia inmediata recomendada (actualizada)
-1. **F0-13 cierre formal (externo):** PR/merge + CI verde, habilitar job PG con secrets gestionados, evidencia E2E/fault-injection restante. (F0-10/F0-12 revalidados 0004+0005; suite Fase 0+capacidad **83 passed**).
+1. **F0-13 cierre formal (externo):** PR/merge + CI verde, habilitar job PG con secrets gestionados, evidencia E2E/fault-injection restante. (F0-10/F0-12 revalidados 0004+0005; suite Fase 0+capacidad **86 passed**).
 2. **Producto core sobre gobernanza:** completar capacidades del flujo (`actividades`, participantes, historial/export, invitaciones/membresía) con actor+scope+HITL y E2E por capacidad.
 3. **C1-01/C1-02 (post F0-13):** generalizar contratos modulares + registro de módulos/capacidades (CASE y otros proyectos como módulos **autoejecutables aislados + componibles**).
 4. **C1-03/C1-04/C1-05/C1-06:** adaptadores (CASE + ≥1 no-CASE) proposal-only, mocks/sintético, autoridad siempre en POOLAR.
