@@ -1,0 +1,2 @@
+{"_idempotency_key":"e1","_provenance":{"synthetic_safe":true,"entity":"evento_auditoria"},"id":1,"entidad_referencia":"approval_request","entidad_id":101,"tipo_evento":"inicio","usuario_o_sistema":"user_1","fecha":"2026-11-01T10:00:00Z","justificacion":"approval:ap-001"}
+{"_idempotency_key":"e2","_provenance":{"synthetic_safe":true,"entity":"evento_auditoria"},"id":2,"entidad_referencia":"approval_request","entidad_id":101,"tipo_evento":"resultado","usuario_o_sistema":"user_2","fecha":"2026-11-01T10:05:00Z","justificacion":"approval:ap-001"}
