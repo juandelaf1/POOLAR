@@ -43,6 +43,8 @@ from src.main import _handle_governance  # noqa: E402
 
 def test_two_approvers_race_single_effect_pg():
     """Dos aprobadores compiten con barrera sobre una solicitud pendiente: 1 efecto."""
+    if not os.getenv("POOLAR_TEST_POSTGRES_URL") and not os.getenv("DATABASE_URL", "").startswith("postgresql"):
+        pytest.skip("Requiere PostgreSQL real")
     marker = f"Problema race PG {__import__('uuid').uuid4().hex[:8]}"
     with SessionLocal() as s:
         org = Organizacion(nombre=f"Org Race {marker[-8:]}", tipo_organizacion="cooperativa", contacto_publico=f"r-{marker[-8:]}@r.org")
