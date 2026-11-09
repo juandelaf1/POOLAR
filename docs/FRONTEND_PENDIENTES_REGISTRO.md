@@ -7,17 +7,20 @@
 - [ ] Revalidación PG real (0004/0005) en entorno CI/objetivo cuando haya secrets.
 
 ## Pendientes (API/contrato para front — deseables)
-- [ ] **Auth UX:** flujo login/token documentado para UI (CORS, refresh si aplica, manejo 401/403 fail-closed).
-- [ ] **DTOs estables:** respuestas consistentes para `pending_review` en todas las acciones gobernadas; tipado compartido (OpenAPI/TS client).
+- [x] **CORS dev/prod configurable** en FastAPI (`POOLAR_CORS_ORIGINS`), proxy Vite `/api`.
+- [x] **Auth UX base:** login/token + almacenamiento en `localStorage` (MVP; revisar estrategia segura/refresh para prod).
+- [x] **Tipos TS iniciales** alineados a contratos observados (`web/src/api/types.ts`); falta OpenAPI→TS generado.
+- [ ] **DTOs estables/OpenAPI:** exportar OpenAPI y generar cliente/tipos; homogeneizar `pending_review`/errores.
 - [ ] **Errores normalizados:** mensajes/`detail` sin filtrar info cross-tenant; códigos para UI.
 - [ ] **Paginación/filtros** en listados (necesidades, problemas, iniciativas, approvals).
 - [ ] **RBAC en UI** (solo presentación) alineado a roles/políticas reales del backend.
 
 ## Pendientes (frontend MVP)
 - [ ] `npm install` y verificar build; elegir kit UI (MUI/Chakra/shadcn+Tailwind).
-- [ ] Login + almacenamiento seguro de token (definir estrategia).
-- [ ] Pantallas: necesidades, problemas, iniciativas, decisiones, **approvals** (pending/approve/reject/retirar según permisos), módulos/capacidades.
-- [ ] Manejo global de `pending_review` y estados HITL; toasts/errores.
+- [x] **Login + HITL real (MVP wiring):** `/auth/token`, `/approvals/pending`, aprobar, rechazar (motivo). Falta retiro por proponente, detalle, polling/refetch UX.
+- [ ] Pantallas producto: necesidades, problemas, iniciativas, decisiones (manejar `pending_review` end-to-end).
+- [ ] Manejo global de `pending_review` y estados HITL; toasts/errores; guardas de ruta.
+- [ ] Estrategia token segura (refresh/expiración/almacenamiento) para prod.
 - [ ] Tests front (Vitest/RTL) para flujos críticos (opcional MVP+).
 
 ## Pendientes (modular/otros — paralelos, no front)

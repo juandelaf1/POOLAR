@@ -12,6 +12,7 @@ import os
 from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel, Field
@@ -58,6 +59,17 @@ if os.getenv("DATABASE_URL", "").startswith("sqlite"):
     Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Poolar MVP", version="0.6.0")
+
+# CORS para front dev/prod (configurable). Gobernanza/authz permanece en API.
+_cors_origins = [o.strip() for o in os.getenv("POOLAR_CORS_ORIGINS", "http://127.0.0.1:5173,http://localhost:5173").split(",") if o.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
