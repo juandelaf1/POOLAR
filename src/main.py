@@ -1746,9 +1746,19 @@ for _tool, _fn in {
 # M�dulos/capacidades (C1-02, descubrimiento read-only; sin ejecuci�n)
 
 # ---------------------------------------------------------------------------
-# Modulos/capacidades (C1-02, descubrimiento read-only; sin ejecucion)
+# Modules/capabilities (read-only discovery; no execution)
 # ---------------------------------------------------------------------------
 @app.get("/modules/capabilities")
-def list_module_capabilities(user=Depends(get_current_user)):
-    """Catalogo declarativo de modulos/capacidades registrados (solo lectura)."""
-    return {"modules": module_registry.catalog(), "source": "declarative-registry"}
+def list_module_capabilities(request: Request, correlation_id: Optional[str] = None, user=Depends(get_current_user)):
+    """Declarative catalog of registered modules/capabilities (read-only)."""
+    cid = _resolve_correlation_id(request, correlation_id)
+    return JSONResponse(
+        content={
+            "modules": module_registry.catalog(),
+            "source": "declarative-registry",
+            "correlation_id": cid,
+            "status": "ok",
+            "data_status": "synthetic",
+        },
+        headers={"X-Correlation-Id": cid},
+    )

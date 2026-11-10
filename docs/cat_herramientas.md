@@ -1,43 +1,36 @@
-# Catálogo de Herramientas Operativas — Poolar v0.6
-Estado: MVP independiente; no producción; datos sintéticos (`synthetic_pilot`).
+# Operational Tools Catalog — POOLAR
 
-## 1. Descubrimiento de posibilidades (`matching`)
-- `find_related_needs` (determinista: categoría, ámbito, restricciones, escala, recursos necesarios)
-- `explain_match` (criterios compartidos, diferencias, faltantes)
-- `propose_relationship` / `accept` / `reject`
-- Persistencia de propuesta y decisión.
+> Updated: 2026-11-10. Status: **development/prototype, not production**. Capabilities are implemented incrementally; this catalog is a functional map (some items may be planned/partial). Use `synthetic_pilot` by default.
 
-## 2. Capacidad colectiva (`aggregation`, `resources`)
-- `calculate_shared_demand` (unidades, supuestos explícitos)
-- `identify_gaps` (faltantes: recursos, conocimientos, capacidades)
-- `search_capabilities` / `offer_capability`
-- `search_resources` / `reserve` / `release` / `record_use`
+## 1. Discovery / matching
+- Deterministic need matching (category, scope, constraints, scale, required resources).
+- Match explanation (shared criteria, differences, gaps).
+- Relationship proposal/accept/reject and persistence (where implemented).
 
-## 3. Motor de soluciones (`feasibility`, `initiatives`)
-- `compare_alternatives` (criterios documentados, supuestos explícitos)
-- `define_alternative` / `estimate_requirements`
-- `initiatives.create_from_problem` / `get` / `update`
-- `commitments.create` / `accept` / `update_status`
-- `activities.record`
+## 2. Collective capacity (aggregation, resources)
+- Shared demand calculation (explicit units/assumptions).
+- Gap identification (resources, knowledge, capabilities).
+- Capability/resource search, offers, reservation/release/use tracking (as implemented).
 
-## 4. Ejecución y medición (`execution`, `outcomes`, `audit`)
-- `record_event` / `record_milestone`
-- `define_metric` / `record_observation`
-- `compare_with_baseline`
-- `generate_summary`
-- `audit.get_history`
+## 3. Solution design (feasibility, initiatives)
+- Alternative comparison with documented criteria and assumptions.
+- Initiative creation from validated problems, commitments, and activity records.
 
-## 5. Autonomía, consentimiento y trazabilidad (`audit`, `provenance`, `exports`)
-- `provenance.register` / `get`
-- `exports.generate_json` / `generate_csv`
-- `data.validate_import`
-- `contracts.get_schema`
-- `needs.create/get/search/update` con visibilidad (`privada`/`compartible`/`publica`)
-- Registro de invitaciones y participación con consentimiento efectivo (`invitation_service`).
+## 4. Execution and measurement (execution, outcomes, audit)
+- Event/milestone recording.
+- Metrics/observations and baseline comparison.
+- Summary generation and audit history.
 
-Requisitos generales:
-- Cada herramienta: entrada tipada, salida tipada, permisos, errores definidos, eventos de auditoría, idempotencia verificada cuando corresponda.
-- Contratos versionados (`src/core/contracts.py`).
-- Datos sintéticos obligatorios (`synthetic_pilot`).
-- Datos personales no expuestos en DTOs públicos.
-- No producción; integración con repos auditados (`Anexo_Risk`, `EnRuta`, `CASE`) bloqueada hasta `P0`/`P1` corregidos.
+## 5. Autonomy, consent, and traceability (audit, provenance, exports)
+- Provenance registration/retrieval.
+- JSON/CSV exports (authorized/synthetic context).
+- Import validation and schema/contract exposure.
+- Visibility controls (`private`/`shareable`/`public` as implemented).
+- Invitations/participation with effective consent.
+
+## Cross-cutting requirements
+- Typed inputs/outputs, permissions, defined errors, audit events, idempotency where applicable.
+- Contracts/schemas: `src/core/contracts.py`, module contracts, runtime OpenAPI (`/docs`).
+- No unnecessary PII in public DTOs/logs/exports.
+- HITL/governance for sensitive actions (POOLAR retains authority; modules propose).
+- External repo integrations only with verified rights/remediation and explicit authorization. Verify implementation status in code/tests.

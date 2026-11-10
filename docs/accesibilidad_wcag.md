@@ -1,28 +1,27 @@
-# Accesibilidad — Poolar (WCAG 2.1 AA)
+# Accessibility — POOLAR (WCAG 2.1 AA target)
 
-## Estado
-Guía base; no implementado completamente.
+> Updated: 2026-11-10. Status: **baseline guidance; not fully implemented/verified**.
 
-## Principios (POUR)
-- **Perceptible**: contraste mínimo 4.5:1 para texto normal, 3:1 para texto grande.
-- **Operable**: navegación por teclado completa, sin trampas de foco.
-- **Comprensible**: etiquetas claras, mensajes de error descriptivos.
-- **Robusto**: HTML semántico, ARIA cuando sea necesario.
+## Principles (POUR)
+- **Perceivable**: sufficient contrast (4.5:1 normal text, 3:1 large text).
+- **Operable**: full keyboard navigation, no focus traps.
+- **Understandable**: clear labels and descriptive error messages.
+- **Robust**: semantic HTML, ARIA where necessary.
 
-## Requisitos mínimos
-1. Todos los formularios tienen `label` asociado con `for`.
-2. Los botones tienen texto descriptivo o `aria-label`.
-3. Los estados de carga/error se anuncian con `aria-live`.
-4. La navegación por teclado cubre todos los elementos interactivos.
-5. El foco visible (outline) no se elimina.
-6. Las imágenes tienen `alt` descriptivo.
-7. Los mensajes de error son específicos y legibles.
+## Minimum requirements
+1. All form inputs have associated `label`/`for`.
+2. Buttons have descriptive text or `aria-label`.
+3. Loading/error states announced with `aria-live` where appropriate.
+4. Keyboard navigation covers all interactive elements.
+5. Visible focus indicators are preserved.
+6. Images have descriptive `alt` text.
+7. Error messages are specific and readable.
 
-## Estado actual de la interfaz
-- `interfaz/index.html`: formularios con labels, botones con texto, estados de error visibles.
-- Pendiente: navegación por teclado completa, ARIA live regions, contraste verificado.
+## Current state (indicative)
+- `interfaz/index.html` includes basic labels/buttons and visible error states.
+- Pending: complete keyboard flow, ARIA live regions, verified contrast, and broader audit.
 
-## Referencias
+## References
 - WCAG 2.1 (W3C).
-- `docs/modelo_autorizacion.md` — matriz de permisos.
-- `interfaz/index.html` — interfaz funcional.
+- `docs/modelo_autorizacion.md` — authorization context.
+- `interfaz/index.html`.
