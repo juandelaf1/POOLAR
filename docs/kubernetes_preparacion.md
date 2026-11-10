@@ -1,34 +1,37 @@
-# Preparación para Kubernetes — Poolar
+# Kubernetes Preparation — POOLAR
 
-## Estado
-Documentado; no desplegado. Docker Compose es el entorno principal de desarrollo.
+> Updated: 2026-11-10. Status: **documented; not deployed**. Docker Compose is the primary development environment.
 
-## Objetivo
-Preparar la arquitectura para que Poolar pueda desplegarse en Kubernetes en el futuro sin reescribir el núcleo.
+## Objective
 
-## Separación de cargas (futuro)
-- API de Poolar (Deployment).
-- Workers de tareas asíncronas (Deployment futuro).
-- Ejecución del Agent Harness (Deployment futuro).
-- Procesos de ingestión (Job/CronJob).
-- Servicios auxiliares de evaluación (Job).
+Prepare the architecture so POOLAR can be deployed on Kubernetes in the future without rewriting the core.
 
-## Preparación actual
-- Dockerfile con usuario no-root y healthcheck.
-- docker-compose.yml con PostgreSQL, migrate, api.
-- Configuración por variables de entorno.
-- Secretos fuera del repositorio.
-- Logs estructurados (configurables).
-- Endpoint `/health` para verificación.
+## Workload separation (future)
+
+- POOLAR API (Deployment)
+- Async task workers (future Deployment)
+- Agent Harness execution (future Deployment)
+- Ingestion processes (Job/CronJob)
+- Auxiliary evaluation services (Job)
+
+## Current preparation
+
+- Dockerfile with non-root user and healthcheck.
+- `docker-compose.yml` with PostgreSQL, migrate, api services.
+- Configuration via environment variables; secrets outside the repository.
+- Configurable structured logging.
+- `/health` endpoint for checks (correlation/envelope fields added additively).
 
 ## Health checks
-- **Liveness**: el proceso está vivo (`/health`).
-- **Readiness**: el servicio puede atender solicitudes (conexión a PostgreSQL).
-- **Dependencias**: conexión y disponibilidad de PostgreSQL.
 
-## Manifiestos de referencia (futuros, no desplegados)
+- **Liveness:** process is alive (`/health`).
+- **Readiness:** service can handle requests (including DB connectivity, when implemented/validated).
+- **Dependencies:** PostgreSQL connection/availability.
+
+## Reference manifests (future, not deployed)
+
 ```yaml
-# API Deployment (referencia)
+# API Deployment (reference)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -52,12 +55,12 @@ spec:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: trama-secrets
+              name: poolar-secrets
               key: database-url
         - name: POOLAR_SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: trama-secrets
+              name: poolar-secrets
               key: secret-key
         livenessProbe:
           httpGet:
@@ -71,25 +74,12 @@ spec:
             port: 8000
           initialDelaySeconds: 5
           periodSeconds: 10
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
 ```
 
-## Cuándo introducir Kubernetes
-- Aumento real de carga.
-- Workers independientes que necesitan escalar.
-- Necesidad de alta disponibilidad.
-- Varios entornos y despliegues frecuentes.
-- Requisitos operativos que Docker Compose ya no puede cubrir.
-- Capacidad del equipo para mantener el clúster.
+## When to introduce Kubernetes
 
-## No incluido (por ahora)
-- Helm, operadores, service mesh, HPA.
-- Despliegue real en proveedor cloud.
-- Microservicios.
-- Redis, Celery, Kafka, Temporal.
+- Real load/scale needs, independent workers, HA requirements, multiple environments/frequent deploys, or operational needs beyond Docker Compose — and team capacity to operate the cluster.
+
+## Not included (for now)
+
+- Helm/operators/service mesh/HPA, real cloud deployment, microservices split, Redis/Celery/Kafka/Temporal.

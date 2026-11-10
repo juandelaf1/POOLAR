@@ -7,31 +7,32 @@ nav:
   - Home: index.md
   - Conventions (language & contracts): CONVENTIONS.md
   - Architecture and ecosystem:
-      - Ecosistema e integración: POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md
-      - Benchmark bien común: POOLAR_BENCHMARK_ARQUITECTURA_BIEN_COMUN.md
-      - Frontend monitoreo: FRONTEND_MONITOREO_ARQUITECTURA.md
-      - Frontend pendientes: FRONTEND_PENDIENTES_REGISTRO.md
-  - Dominio y operación:
-      - Autorización: modelo_autorizacion.md
-      - Problemas colectivos: modelo_problemas_colectivos.md
-      - Registro individual: registro_individual.md
-      - Visión y propósito: vision_y_proposito.md
-      - Hoja de ruta: hoja_de_ruta.md
-      - Riesgos pendientes: riesgos_pendientes.md
-      - Analytics y lakehouse: ANALYTICS_LAKEHOUSE.md
-  - ADRs y decisiones:
+      - Ecosystem and integration: POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md
+      - Common good benchmark: POOLAR_BENCHMARK_ARQUITECTURA_BIEN_COMUN.md
+      - Frontend and monitoring: FRONTEND_MONITOREO_ARQUITECTURA.md
+      - Frontend pending tasks: FRONTEND_PENDIENTES_REGISTRO.md
+  - Domain and operations:
+      - Authorization model: modelo_autorizacion.md
+      - Collective problems: modelo_problemas_colectivos.md
+      - Individual registration: registro_individual.md
+      - Vision and purpose: vision_y_proposito.md
+      - Roadmap: hoja_de_ruta.md
+      - Pending risks: riesgos_pendientes.md
+      - Analytics and lakehouse: ANALYTICS_LAKEHOUSE.md
+      - Operational tools catalog: cat_herramientas.md
+  - ADRs and decisions:
       - Agent harness: adr_agent_harness.md
       - LangGraph/CrewAI: adr_langgraph_crewai.md
       - LangSmith/Langfuse: adr_langsmith_langfuse.md
       - CI PG/secrets: CI_PG_SECRETS.md
-      - Decisiones técnicas: decisiones_tecnicas.md
-  - Calidad y cumplimiento:
-      - Accesibilidad WCAG: accesibilidad_wcag.md
-      - Consentimiento: consentimiento.md
-      - Kubernetes (preparación): kubernetes_preparacion.md
+      - Technical decisions: decisiones_tecnicas.md
+  - Quality and compliance:
+      - Accessibility (WCAG): accesibilidad_wcag.md
+      - Consent and privacy: consentimiento.md
+      - Kubernetes preparation: kubernetes_preparacion.md
   - Demo:
-      - Logística compartida: demo/escenario_logistica.md
-  - Archivo (histórico): archive/README.md
+      - Shared logistics: demo/escenario_logistica.md
+  - Archive (historical): archive/README.md
 
 theme:
   name: readthedocs

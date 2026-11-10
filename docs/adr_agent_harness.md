@@ -1,29 +1,27 @@
-# ADR: Agent Harness — Diseño y decisiones
+# ADR: Agent Harness — Design and Decisions
 
-## Estado
-Aceptado (harness propio mínimo, con interfaces para LangGraph).
+> Updated: 2026-11-10. Status: **accepted/evolving** (POOLAR-owned minimal harness; external orchestration frameworks evaluated only when justified).
 
-## Decisión
-Implementar un Agent Harness propio y ligero en `src/core/agent_harness/`, con interfaces intercambiables para incorporar LangGraph cuando sea necesario. No instalar LangGraph, CrewAI ni Deep Agents en esta iteración.
+## Decision
 
-## Razones
-- Poolar necesita control explícito sobre permisos, autorización y aprobaciones.
-- Un framework genérico no sustituye el modelo de autorización propio.
-- El harness propio permite separar contexto, herramientas, políticas, aprobaciones y estado.
-- LangGraph se evaluará cuando aparezcan flujos duraderos que realmente lo necesiten.
-- CrewAI es una alternativa a comparar, no un segundo orquestador simultáneo.
-- Deep Agents se evaluará si aporta valor frente al harness propio.
+Implement and evolve a lightweight, **POOLAR-owned Agent Harness** (`src/core/agent_harness/`) with explicit control over context, tools, policies, approvals, and execution state. External frameworks (LangGraph, CrewAI, Deep Agents, etc.) are not adopted by default and are evaluated only when durable workflow needs justify them.
 
-## Componentes implementados
-- `ExecutionContext`: contexto estructurado (actor, permisos, presupuesto, herramientas).
-- `ToolRegistry`: registro de herramientas tipadas con contratos, permisos, límites.
-- `PolicyEngine`: verificación de autorización en tiempo de ejecución.
-- `ApprovalManager`: aprobaciones humanas para operaciones sensibles.
-- `ExecutionStateManager`: gestión de estado temporal de ejecuciones.
-- `Security limits`: iteraciones, tool calls, timeout, presupuesto, rate limiting.
+## Rationale
 
-## Alternativas descartadas
-- LangChain: útil para integración con modelos, pero no necesario para el harness básico.
-- LangGraph: se evaluará cuando haya flujos duraderos que lo requieran.
-- Deep Agents: se evaluará si aporta valor frente al harness propio.
-- CrewAI: alternativa a comparar, no segundo orquestador simultáneo.
+- POOLAR requires explicit control over permissions, authorization, approvals, and HITL boundaries.
+- Generic agent frameworks do not replace POOLAR's governance/authorization model.
+- The harness separates concerns (context, tool registry/contracts, policy, approvals, state) and supports fail-closed behavior.
+
+## Implemented/evolved components (current direction)
+
+- **Execution context / actor scoping** (tenant/personal context propagation).
+- **Approval lifecycle & persistence** (`ApprovalManager`, states, idempotency, concurrency controls, resumable handlers).
+- **Policy/governance checks** (fail-closed, no self-approval, scope enforcement).
+- **Tool/handler registry** for governed resumable actions.
+- **Auditability and security limits** as applicable.
+
+> Verify exact component names/APIs in `src/core/agent_harness/*` (implementation has evolved beyond the initial skeleton).
+
+## Alternatives considered
+
+- **LangGraph/CrewAI/Deep Agents:** evaluate later for concrete, demonstrated needs (durable workflows, multi-agent orchestration) without displacing POOLAR governance or adding unnecessary complexity. See related ADRs.

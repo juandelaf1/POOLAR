@@ -1,25 +1,27 @@
-# POOLAR — Frontend y Monitoreo (propuesta/diagrama)
+# POOLAR — Frontend and Monitoring (proposal/diagram)
 
-> Borrador para decisión. Respeta gobernanza: **POOLAR conserva autoridad** (tenant, HITL, permisos, auditoría). Analytics/monitoreo **no** acoplan ni ejecutan efectos HITL.
+> Updated: 2026-11-10. Draft for decision. Respects governance: **POOLAR retains authority** (tenant, HITL, permissions, audit). Analytics/monitoring **must not** couple to or execute HITL effects.
 
-## 1) Separar superficies (no mezclar)
-| Superficie | Usuarios | Objetivo | Fuente de verdad |
+## 1) Separate surfaces (do not mix)
+
+| Surface | Users | Goal | Source of truth |
 |---|---|---|---|
-| **Frontend producto** | organizaciones/individuos/gestores | flujo `necesidad→problema→iniciativa→decisión`, invitaciones, recursos, acciones gobernadas | API POOLAR (gobernada) |
-| **Consola HITL/Gobernanza** | aprobadores/admins | ver/gestionar approvals, auditoría, estados, retiros (según política) | API `/approvals/*` + eventos auditoría |
-| **Monitoreo ops** | equipo técnico | salud API, latencia, errores, colas/jobs, DB performance, alertas | métricas/logs/infra (fuera de lógica de negocio HITL) |
-| **Analytics/BI** | decisión/seguimiento | KPIs, embudos HITL, problemas/iniciativas/CO2e (estimado vs medido) | exports/medallion `raw→staging→marts` (DuckDB/dbt), **read-only**, sin tocar transaccional |
+| **Product frontend** | orgs/individuals/managers | `need→problem→initiative→decision`, invitations, resources, governed actions | POOLAR API (governed) |
+| **HITL/Governance console** | approvers/admins | view/manage approvals, audit, states, withdrawals (per policy) | `/approvals/*` API + audit events |
+| **Ops monitoring** | technical team | API health, latency, errors, jobs/queues, DB performance, alerts | metrics/logs/infra (outside HITL business logic) |
+| **Analytics/BI** | decision/tracking | KPIs, HITL funnels, problems/initiatives/CO2e (estimated vs measured) | medallion exports `raw→staging→marts` (DuckDB/dbt), **read-only** |
 
-## 2) Herramientas mencionadas — encaje recomendado
-| Herramienta | ¿Encaja? | Uso recomendado / nota |
+## 2) Tool fit (recommended)
+
+| Tool | Fit | Notes |
 |---|---|---|
-| **MLflow** | **No ahora** (salvo ML real) | Tracking de experimentos/modelos ML. Útil solo si hay modelos versionados (p.ej. scoring CASE) — **no** para monitoreo de app/DB ni UI de producto. |
-| **SQL Server Perf Monitoring** | **No** | Específico de SQL Server; POOLAR usa **PostgreSQL** (y SQLite tests). Irrelevante. |
-| **ParadeDB / pg_analytics / Hydra** | **Opcional, más adelante** | Extensiones/variantes analíticas sobre Postgres. Útiles si el volumen/consultas analíticas crecen *dentro* de PG. Hoy ya tenemos **DuckDB + exports medallion** (separado, simple, sin riesgo al OLTP). No adoptar antes de necesidad medida. |
-| **DuckDB + dbt + exports** (actual) | **Sí (base)** | Analytics read-only post-Fase 0, reproducible, sin acoplar HITL. Mantener. |
-| **Dashboard ops liviano** | **Sí** | `/health` + métricas (Prometheus/OpenTelemetry) + logs estructurados + consultas PG de performance (pg_stat_statements) o panel simple (Grafana/Metabase según stack). Separado del producto. |
+| **MLflow** | **Not now** (unless real ML) | For ML experiment/model tracking only (e.g. model scoring). Not for app/DB monitoring or product UI. |
+| **SQL Server Perf Monitoring** | **No** | POOLAR targets PostgreSQL (SQLite in tests). |
+| **ParadeDB / pg_analytics / Hydra** | **Optional, later** | Consider only if in-PG analytics pressure is demonstrated. Current base is separated DuckDB + medallion exports. |
+| **DuckDB + dbt + exports** (current) | **Yes (base)** | Read-only, reproducible analytics without coupling HITL/OLTP. |
+| **Lightweight ops dashboard** | **Yes** | `/health` + metrics (Prometheus/OpenTelemetry) + structured logs + PG stats (e.g. `pg_stat_statements`) / simple dashboard. |
 
-**Recomendación práctica:** 1 frontend producto + 1 vista HITL (puede ser módulo del mismo front con permisos), 1 stack ops liviano, analytics vía medallion/DuckDB→BI cuando haya marts estables. Evitar tool sprawl.
+**Practical recommendation:** 1 product frontend + 1 HITL view (can be RBAC module in same app), 1 lightweight ops stack, analytics via medallion/DuckDB→BI when marts are stable. Avoid tool sprawl.
 
 ## 3) Diagrama (objetivo)
 ```mermaid

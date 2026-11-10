@@ -1,31 +1,31 @@
-# Registro: tareas pendientes antes/durante el frontend
+# Frontend Pending Tasks Log
 
-> Creado 2026-11-09 al iniciar scaffold `poolar/web/` (React+Vite+TS). El frontend es fino; **POOLAR API conserva autoridad**.
+> Created: 2026-11-09 (when `poolar/web/` scaffold started, React+Vite+TS). Updated: 2026-11-10. Frontend is thin; **POOLAR API retains authority**.
 
-## Pendientes (gobernanza/Fase 0 — no bloquean scaffold, sí producción formal)
-- [ ] **F0-13 cierre formal:** PR/merge `fase0-gobernanza`→`dev/main`, CI verde, job PG con secrets gestionados, evidencia E2E/fault-injection restante.
-- [ ] Revalidación PG real (0004/0005) en entorno CI/objetivo cuando haya secrets.
+## Governance / Phase 0 (not blocking scaffold; relevant for formal closure)
+- [ ] **F0-13 formal closure:** PR/merge `fase0-gobernanza`→`dev/main`, CI green, PG job with managed secrets, remaining E2E/fault-injection evidence.
+- [ ] Revalidate real PG (0004/0005) in CI/target env when secrets available.
 
-## Pendientes (API/contrato para front — deseables)
-- [x] **CORS dev/prod configurable** en FastAPI (`POOLAR_CORS_ORIGINS`), proxy Vite `/api`.
-- [x] **Auth UX base:** login/token + almacenamiento en `localStorage` (MVP; revisar estrategia segura/refresh para prod).
-- [x] **Tipos TS iniciales** alineados a contratos observados (`web/src/api/types.ts`); falta OpenAPI→TS generado.
-- [ ] **DTOs estables/OpenAPI:** exportar OpenAPI y generar cliente/tipos; homogeneizar `pending_review`/errores.
-- [ ] **Errores normalizados:** mensajes/`detail` sin filtrar info cross-tenant; códigos para UI.
-- [ ] **Paginación/filtros** en listados (necesidades, problemas, iniciativas, approvals).
-- [ ] **RBAC en UI** (solo presentación) alineado a roles/políticas reales del backend.
+## API/contract for frontend (desirable)
+- [x] Configurable dev/prod CORS (`POOLAR_CORS_ORIGINS`), Vite `/api` proxy.
+- [x] Basic auth UX: login/token + `localStorage` storage (MVP; review secure refresh/storage for prod).
+- [x] Initial TS types aligned to observed contracts (`web/src/api/types.ts`); OpenAPI→TS generation pending.
+- [ ] Stable DTOs/OpenAPI export + client/type generation; normalize `pending_review`/error shapes.
+- [ ] Normalized errors (`detail`/codes) without cross-tenant leakage.
+- [ ] Pagination/filters for listings (needs, problems, initiatives, approvals).
+- [ ] RBAC in UI (presentation only) aligned with backend roles/policies.
 
-## Pendientes (frontend MVP)
-- [ ] `npm install` y verificar build; elegir kit UI (MUI/Chakra/shadcn+Tailwind).
-- [x] **Login + HITL real (MVP wiring):** `/auth/token`, `/approvals/pending`, aprobar, rechazar (motivo). Falta retiro por proponente, detalle, polling/refetch UX.
-- [ ] Pantallas producto: necesidades, problemas, iniciativas, decisiones (manejar `pending_review` end-to-end).
-- [ ] Manejo global de `pending_review` y estados HITL; toasts/errores; guardas de ruta.
-- [ ] Estrategia token segura (refresh/expiración/almacenamiento) para prod.
-- [ ] Tests front (Vitest/RTL) para flujos críticos (opcional MVP+).
+## Frontend MVP
+- [ ] `npm install` and verify build; choose UI kit (MUI/Chakra/shadcn+Tailwind).
+- [x] Login + HITL MVP wiring: `/auth/token`, `/approvals/pending`, approve/reject (reason). Missing proposer withdrawal UX, detail views, polling/refetch.
+- [ ] Product screens: needs, problems, initiatives, decisions (end-to-end `pending_review` handling).
+- [ ] Global handling of HITL states/errors/toasts/route guards.
+- [ ] Secure token strategy (refresh/expiry/storage) for prod.
+- [ ] Frontend tests (Vitest/RTL) for critical flows (optional MVP+).
 
-## Pendientes (modular/otros — paralelos, no front)
-- [ ] C1: primer módulo no-CASE real por `ModuleManifest`+adaptador (mock/sintético primero).
-- [ ] Ops/monitoreo liviano separado; analytics BI sobre marts cuando estables.
+## Parallel (not frontend)
+- [ ] First non-CASE module via `ModuleManifest`+adapter (mock/synthetic first).
+- [ ] Lightweight ops monitoring; analytics BI on stable marts.
 
-## Decisión registrada
-- Front: **React + Vite + TypeScript** en `poolar/web/` (SPA), proxy `/api`→FastAPI, backend conserva autoridad.
+## Recorded decision
+- Frontend: **React + Vite + TypeScript** in `poolar/web/` (SPA), `/api` proxy to FastAPI, backend retains authority.
