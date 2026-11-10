@@ -1,71 +1,43 @@
-# Modelo de Problemas Colectivos — Poolar v0.6
+# Collective Problems Model — POOLAR
 
-Referencia: `docs/vision_y_proposito.md`; `poolar_mvp/src/core/contracts.py`; `poolar_mvp/src/core/models.py`.
-Estado: Definido en contratos y modelos; pendiente verificación completa con datos de piloto.
+> Updated: 2026-11-10. Status: **defined in contracts/models and partially implemented (dev/prototype)**. Verify against current code/tests for exact fields and behavior.
 
----
+References: `docs/vision_y_proposito.md`, `src/core/contracts.py`, `src/core/models.py`.
 
-## Entidad central: Problema Colectivo
+## Core entity: Collective Problem (`ProblemaColectivo`)
 
-No es una etiqueta ni un tipo de iniciativa. Es una entidad de dominio que representa una situación que afecta a varias personas u organizaciones y que requiere una respuesta coordinada.
+A Collective Problem is a domain entity representing a situation affecting multiple people or organizations that requires a coordinated response. It is not just a tag or an initiative type.
 
-### Diferencia clave
+### Key distinctions
 
-- **Necesidad individual** (`Necesidad`): algo que una persona o organización declara como carencia, objetivo o problema.
-- **Problema Colectivo** (`ProblemaColectivo`): agrupación validada de necesidades relacionadas que comparten contexto, causa, alcance territorial o impacto, y que pueden requerir una respuesta conjunta.
-- **Iniciativa** (`Iniciativa`): acción coordinada propuesta para abordar un problema (o parte de él), no el problema en sí.
+- **Individual need (`Necesidad`)**: a need/goal/problem declared by a person or organization.
+- **Collective Problem (`ProblemaColectivo`)**: a validated grouping of related needs sharing context, cause, scope, or impact, potentially requiring a joint response.
+- **Initiative (`Iniciativa`)**: a coordinated action proposed to address a problem (or part of it), not the problem itself.
 
-Esto evita confundir una coincidencia potencial con una relación confirmada.
+This avoids conflating a potential match with a confirmed relationship.
 
----
-
-## Relaciones fundamentales
+## Fundamental relationships (conceptual)
 
 ```
-Persona ── puede declarar ──► Necesidad
-Organizacion ── puede declarar ──► Necesidad
-Necesidad ── se relaciona con ──► ProblemaColectivo (N:M, validable/rechazable)
-ProblemaColectivo ── reúne ──► Personas participantes (lista de IDs)
-ProblemaColectivo ── reúne ──► Organizaciones participantes (lista de IDs)
-ProblemaColectivo ── puede generar ──► Iniciativa (1:N)
-Iniciativa ── utiliza ──► Recurso / RecursoAporte (N:M por contexto)
-Iniciativa ── toma ──► Decision (1:N, con version_metodologia)
-Iniciativa ── genera ──► EventoAuditoria (1:N, con trazabilidad)
+Persona/Organizacion ── declares ──► Necesidad
+Necesidad ── relates to (N:M, validatable/rejectable) ──► ProblemaColectivo
+ProblemaColectivo ── involves ──► participating Personas/Organizaciones
+ProblemaColectivo ── can generate ──► Iniciativa (1:N)
+Iniciativa ── records ──► Decision / EventoAuditoria
 ```
 
----
+## Domain rules (intent)
 
-## Reglas de dominio (verificables en código y pruebas)
+1. Not every group of similar needs is a Collective Problem; validation/state transitions are required (e.g. detected → analysis → validated/rejected).
+2. A need may relate to more than one Collective Problem when contexts differ.
+3. A Collective Problem does not require a prior organization; individuals can initiate and others can join under governance/consent rules.
+4. Associated needs may not share the same solution; initiatives represent evaluated alternatives/actions.
+5. Personal data remains separated; public DTOs must not expose sensitive personal fields.
+6. Evidence/provenance is required before validation where applicable.
+7. Incorrect matches/relations must be rejectable/correctable with audit traceability.
 
-1. **No todo grupo de necesidades iguales es un Problema Colectivo**. Se requiere un paso de validación (`estado: detectado → en_analisis → validado`).
-2. **Una necesidad puede pertenecer a más de un Problema Colectivo** cuando aplica a contextos distintos (ej: transporte rural y logística ambiental).
-3. **Un Problema Colectivo no requiere una organización previa**. Una persona puede iniciar; otras pueden unirse; una organización puede participar posteriormente sin ser obligatoria.
-4. **No se asume que todas las necesidades asociadas tengan la misma solución**. La Iniciativa puede ser una de varias alternativas evaluadas (`alternativas_evaluadas`).
-5. **Los datos personales permanecen separados**. El `ProblemaColectivo` describe el problema; no expone datos de personas (`Contacto`/`DNI` no en DTO público).
-6. **La evidencia es necesaria antes de validar** (`evidencias` como campo obligatorio o recomendado; `calidad_reportada` en `ProcedenciaDatos`).
-7. **Las coincidencias erróneas deben poder rechazarse** (`estado: rechazado` o `corregido`; registro de `EventoAuditoria` cuando se rechaza o modifica una relación).
+## Implementation notes
 
----
-
-## Estado en el código (verificado)
-
-- `ProblemaColectivo` está definido en `src/core/contracts.py` (`BaseModel`) con campos `descripcion`, `necesidades_asociadas`, `organizaciones_participantes`, `personas_participantes`, `descripcion_problema`, `evidencias`, `estado`, `fecha_detecion`, `fecha_actualizacion`.
-- `ProblemaColectivo` está definido en `src/core/models.py` (`SQLAlchemy`) con relación `N:M` (`necesidad_problema_colectivo`) a `Necesidad`, y campo `iniciativas` vinculadas.
-- La relación `Necesidad ↔ ProblemaColectivo` permite agregar y quitar sin perder la `Necesidad` individual.
-- La `Iniciativa` incorpora `problema_colectivo_id` opcional, permitiendo que una iniciativa se cree desde un problema validado.
-- La `Persona` permite iniciar sin `Organizacion`; `Organizacion` amplifica posibilidades pero no es obligatoria.
-
----
-
-## Qué falta antes de usarlo en piloto
-
-- Validación de la relación `N:M` con datos reales o sintéticos etiquetados.
-- Prueba de que una `Necesidad` puede existir sin `organizacion_id` (solo con `persona_id` o sin ser de organización).
-- Confirmación de que `EventoAuditoria` registra cambios de relación sin exponer datos personales.
-- Definición de `version_metodologia` para decisiones vinculadas al problema y no solo a la iniciativa.
-
----
-
-## Por qué esto diferencia a Poolar
-
-No se trata solo de "agrupar necesidades similares" por categoría o ubicación. Se trata de permitre que varias personas u organizaciones **validen que comparten un problema** antes de decidir actuar juntos, y de conservar evidencia de cómo llegó esa validación (evidencias, criterios, decisiones de rechazo o corrección, resultados). Esto es lo que convierte una coincidencia potencial en una acción colectiva informada.
+- Domain/contracts and persistence models define `ProblemaColectivo`, N:M linkage with needs, participants, initiatives, and state/evidence fields (see `src/core/contracts.py`, `src/core/models.py`, `src/main.py`).
+- HITL/governance applies to sensitive transitions/actions as configured (Phase 0).
+- Some pilot-readiness items (real-data validation, full methodology versioning, exhaustive audit/privacy guarantees) remain pending and evidence-dependent. See `docs/riesgos_pendientes.md` and `FASE0_CHECKLIST_CIERRE.md`.

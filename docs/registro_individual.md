@@ -1,12 +1,23 @@
-# Registro Individual — Decisión y Estado
+# Individual Registration — Status
 
-Estado: **Implementado parcialmente** (`Persona` model + `auth.py` actualizado). Endpoint `POST /personas/registro` pendiente de integración completa en `main.py`. Documentado como pendiente en `docs/modelo_autorizacion.md`.
+> Updated: 2026-11-10. Status: **implemented (dev/prototype)**. Verify against current code/tests for exact behavior.
 
-Restricción del piloto: `origen_datos=synthetic_pilot` obligatorio. No se habilita registro público con datos reales hasta que exista proceso documentado de consentimiento y privacidad.
+## Current state
 
-**Validaciones aplicadas:**
-- Email normalizado (`strip`, `lower`).
-- Contraseña mínima 8 caracteres; hash `PBKDF2-SHA256`.
-- Rol fijo a `individuo`; no se acepta `administrador` ni `miembro` desde este endpoint.
-- Duplicados de email rechazados (`IntegrityError` capturado con mensaje genérico, sin enumeración de cuentas).
-- Datos sensibles (`email` privado en DTO, nunca en eventos de auditoría).
+- **Endpoint:** `POST /personas/registro` is implemented (individual/persona registration).
+- **Authentication:** registered individuals authenticate via `POST /auth/token` with `tipo=individuo` context where applicable; passwords hashed with **PBKDF2-SHA256**.
+- **Data default:** `synthetic_pilot` for MVP/dev flows. Real data requires documented consent and privacy controls (see `docs/consentimiento.md`).
+
+## Applied validations (typical)
+
+- Email normalized (trim/lowercase handling as implemented).
+- Minimum password requirements and secure hashing (PBKDF2-SHA256).
+- Fixed individual role for this registration path (no privileged/admin role granted by self-registration).
+- Duplicate email handling without account enumeration (generic/conflict response).
+- Sensitive data not exposed in public DTOs or audit events.
+
+## References
+
+- `docs/modelo_autorizacion.md` — authorization model and actor contexts.
+- `src/main.py`, `src/core/auth.py`, `src/core/models.py`, `src/core/contracts.py` — source of truth.
+- `docs/consentimiento.md`, `docs/riesgos_pendientes.md`.
