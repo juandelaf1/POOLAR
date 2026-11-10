@@ -1,36 +1,45 @@
-# Analytics y Lakehouse (estado y hoja de ruta)
+# Analytics and Lakehouse (Status and Roadmap)
 
-> **Separado del núcleo transaccional/HITL.** La analítica es **read-only/post-transaccional**: lee y transforma; **nunca** aprueba ni ejecuta efectos de negocio. Sin PII innecesaria; procedencia, redacción e idempotencia obligatorias.
+> **Separated from the transactional/HITL core.** Analytics is **read-only/post-transactional**: it reads and transforms data; it **never** approves or executes business effects. No unnecessary PII; provenance, redaction, and idempotency are required.
 
-## Estado actual (implementado/scaffolded, dev-stage)
+## Current state (implemented/scaffolded, dev-stage)
 
-| Componente | Estado | Evidencia |
+| Component | Status | Evidence |
 |---|---|---|
-| Arquitectura medallion `raw → staging → marts` | **Scaffold** | `analytics/` (`raw/`, `staging/`, `marts/`, `sample/`, `dbt/`) |
-| Export idempotente raw (JSONL) con procedencia/redacción | **Implementado** | `scripts/export_medallion_raw.py` (read-only; entidades HITL/problemas/iniciativas/decisiones/necesidades; `_idempotency_key`, `_provenance`, `sanitize_for_log`) |
-| Muestras sintéticas/redactadas | **Presente** | `analytics/sample/raw/*.jsonl` |
-| Modelado dbt (stubs) | **Scaffold** | `analytics/dbt/dbt_project.yml`, `models/raw|staging|marts` (views/tables, p.ej. `stg_approval_requests`, `mart_hitl_summary`) |
-| Consulta/validación local | **Previsto** | DuckDB sobre exports/Parquet-CSV (local) |
-| Pruebas de export | **Presentes** | `tests/test_fase0_medallion_export.py` (idempotencia, redacción) |
+| Medallion architecture `raw → staging → marts` | **Scaffold** | `analytics/` (`raw/`, `staging/`, `marts/`, `sample/`, `dbt/`) |
+| Idempotent raw export (JSONL) with provenance/redaction | **Implemented** | `scripts/export_medallion_raw.py` (read-only; HITL/problems/initiatives/decisions/needs entities; `_idempotency_key`, `_provenance`, `sanitize_for_log`) |
+| Synthetic/redacted samples | **Present** | `analytics/sample/raw/*.jsonl` |
+| dbt modeling (stubs/models) | **Implemented/scaffolded** | `analytics/dbt/dbt_project.yml`, models (`raw/staging/marts`), reproducible local profile (`analytics/dbt/profiles.yml`) |
+| Local build/query (DuckDB) | **Implemented** | `analytics/build_local_lakehouse.py` (medallion in `analytics/local/analytics.duckdb`, gitignored) |
+| dbt local run (DuckDB) | **Implemented** | `dbt run --project-dir analytics/dbt --profiles-dir analytics/dbt` → **PASS=3** (sample) |
+| Export tests | **Present** | `tests/test_fase0_medallion_export.py` (idempotency, redaction) |
 
-**Alcance actual:** analítica local/dev, datos sintéticos o exports controlados, sin acoplar commits HITL a pipelines externos.
+**Current scope:** local/dev analytics, synthetic or controlled exports, no coupling of HITL commits to external pipelines.
 
-## ¿Data lakehouse? (contemplado)
+## Data lakehouse? (contemplated)
 
-- **Hoy:** base tipo *medallion* local (exports + capas + dbt stubs + DuckDB previsto). Esto es un **fundamento lakehouse-style**, no un lakehouse productivo completo (no hay storage de objetos gestionado como lake, formato de tabla transaccional tipo Iceberg/Delta, catálogo unificado ni cómputo distribuido en operación).
-- **Contemplado (estratégico, cuando se habilite):** evolución a lakehouse gestionado: `exports auditables → (Basin/Pipelines → R2/Iceberg)` según `analytics/README.md` y la arquitectura de ecosistema (`docs/POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md`). Sujeto a autorización, controles de privacidad/retención, y sin ejecutar efectos de negocio desde analítica.
-- **Principios:** contratos auditables para métricas externas (p.ej. CO2e), procedencia/versionado, idempotencia, sin PII innecesaria, sin dependencia circular con HITL.
+- **Today:** local medallion-style foundation (exports + layers + dbt + DuckDB). This is **lakehouse-style groundwork**, not a full production lakehouse (no managed object-lake storage, no transactional table format such as Iceberg/Delta, no unified catalog or distributed compute in operation).
+- **Contemplated (strategic, when enabled):** evolution to a managed lakehouse: `auditable exports → (Basin/Pipelines → R2/Iceberg)` (see `analytics/README.md` and `docs/POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md`). Subject to authorization, privacy/retention controls, and no business effects executed from analytics.
+- **Principles:** auditable contracts for external metrics (e.g. CO2e), provenance/versioning, idempotency, no unnecessary PII, no circular dependency with HITL.
 
-## Uso (dev)
+## Usage (dev)
+
 ```bash
-# Export raw idempotente (read-only)
+# Idempotent raw export (read-only)
 python scripts/export_medallion_raw.py --out analytics/local/raw
 
-# dbt (stubs; requiere perfil/engine configurado, p.ej. DuckDB)
-# dbt run --project-dir analytics/dbt --profiles-dir analytics/dbt
+# Build local DuckDB medallion (sample or exports)
+python analytics/build_local_lakehouse.py
+
+# dbt (reproducible local; DuckDB)
+python -m pip install dbt-duckdb
+dbt run --project-dir analytics/dbt --profiles-dir analytics/dbt
+dbt run --project-dir analytics/dbt --profiles-dir analytics/dbt --vars '{"raw_path":"analytics/local/raw"}'
 ```
 
-## Relación
-- `analytics/README.md` — reglas y capas.
+## Related
+
+- `analytics/README.md` — rules and layers.
 - `scripts/export_medallion_raw.py` — export.
-- `docs/POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md` — ecosistema (Basin/R2/Iceberg como opción estratégica).
+- `analytics/build_local_lakehouse.py` — local build.
+- `docs/POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md` — ecosystem (Basin/R2/Iceberg as strategic option).
