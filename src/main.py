@@ -9,9 +9,11 @@ Autorización: por organización/rol y por persona individual (`tipo` en token).
 import csv
 import io
 import os
+import uuid
+from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
@@ -80,9 +82,32 @@ if os.path.isdir(interfaz_dir):
     app.mount("/interfaz", StaticFiles(directory=interfaz_dir), name="interfaz")
 
 
+def _resolve_correlation_id(request: Request | None = None, explicit: str | None = None) -> str:
+    if explicit and str(explicit).strip():
+        return str(explicit).strip()
+    if request is not None:
+        for h in ("x-correlation-id", "x-request-id", "x-trace-id"):
+            v = request.headers.get(h)
+            if v and v.strip():
+                return v.strip()
+    return str(uuid.uuid4())
+
+
 @app.get("/health")
-def health_check():
-    return {"status": "ok", "version": "0.6.0"}
+def health_check(request: Request):
+    correlation_id = _resolve_correlation_id(request)
+    now = datetime.now(timezone.utc).isoformat()
+    return {
+        "status": "ok",
+        "service": "poolar",
+        "version": "0.6.0",
+        "timestamp": now,
+        "correlation_id": correlation_id,
+        "data_status": "synthetic",
+        "checks": [{"name": "api", "status": "ok", "detail": None, "latency_ms": None}],
+        "capabilities": [],
+        "contracts": ["ops.health/v0-draft"],
+    }
 
 
 def _handle_governance(db: Session, governance: dict, user: dict, proposal: dict, execution_id: str = "") -> dict:
@@ -1567,7 +1592,13 @@ from src.core.module_registry import module_registry
 
 
 @app.get("/approvals/pending")
-def list_pending_approvals(db: Session = Depends(get_db), user=Depends(get_current_user)):
+def list_pending_approvals(
+    request: Request,
+    correlation_id: Optional[str] = None,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    cid = _resolve_correlation_id(request, correlation_id)
     reqs = approval_manager.list_pending(actor=user)
     result = []
     for r in reqs:
@@ -1582,17 +1613,25 @@ def list_pending_approvals(db: Session = Depends(get_db), user=Depends(get_curre
             "created_at": r.created_at.isoformat() if r.created_at else None,
             "expires_at": r.expires_at.isoformat() if r.expires_at else None,
         })
-    return result
+    return JSONResponse(content=result, headers={"X-Correlation-Id": cid})
 
 
 @app.get("/approvals/{approval_id}")
-def get_approval(approval_id: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def get_approval(
+    approval_id: str,
+    request: Request,
+    correlation_id: Optional[str] = None,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    cid = _resolve_correlation_id(request, correlation_id)
     req = approval_manager.get(approval_id, actor=user)
     if req is None:
         raise HTTPException(status_code=404, detail="Aprobacion no encontrada")
-    return {
+    return JSONResponse(content={
         "approval_id": req.approval_id,
         "execution_id": req.execution_id,
+        "correlation_id": cid,
         "tool_name": req.tool_name,
         "status": req.status,
         "proposed_by": req.proposed_by,
@@ -1606,11 +1645,19 @@ def get_approval(approval_id: str, db: Session = Depends(get_db), user=Depends(g
         "execution_result": req.execution_result,
         "execution_error": req.execution_error,
         "expires_at": req.expires_at.isoformat() if req.expires_at else None,
-    }
+        "data_status": "synthetic",
+    }, headers={"X-Correlation-Id": cid})
 
 
 @app.post("/approvals/{approval_id}/approve")
-def approve_approval(approval_id: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def approve_approval(
+    approval_id: str,
+    request: Request,
+    correlation_id: Optional[str] = None,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    cid = _resolve_correlation_id(request, correlation_id)
     actor_id = user.get("user_id") or user.get("persona_id")
     if actor_id is None:
         raise HTTPException(status_code=403, detail="Actor no identificado")
@@ -1620,17 +1667,27 @@ def approve_approval(approval_id: str, db: Session = Depends(get_db), user=Depen
         raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    return {
+    return JSONResponse(content={
         "approval_id": result.approval_id,
+        "correlation_id": cid,
         "status": result.status,
         "executed_at": result.executed_at.isoformat() if result.executed_at else None,
         "execution_result": result.execution_result,
         "execution_error": result.execution_error,
-    }
+        "data_status": "synthetic",
+    }, headers={"X-Correlation-Id": cid})
 
 
 @app.post("/approvals/{approval_id}/reject")
-def reject_approval(approval_id: str, reason: str = "", db: Session = Depends(get_db), user=Depends(get_current_user)):
+def reject_approval(
+    approval_id: str,
+    request: Request,
+    reason: str = "",
+    correlation_id: Optional[str] = None,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    cid = _resolve_correlation_id(request, correlation_id)
     actor_id = user.get("user_id") or user.get("persona_id")
     if actor_id is None:
         raise HTTPException(status_code=403, detail="Actor no identificado")
@@ -1640,7 +1697,12 @@ def reject_approval(approval_id: str, reason: str = "", db: Session = Depends(ge
         raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    return {"approval_id": result.approval_id, "status": result.status}
+    return JSONResponse(content={
+        "approval_id": result.approval_id,
+        "correlation_id": cid,
+        "status": result.status,
+        "data_status": "synthetic",
+    }, headers={"X-Correlation-Id": cid})
 
 
 # Fase 0: registro determinista de handlers reanudables (sin silenciamiento de fallos críticos)
