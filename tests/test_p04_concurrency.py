@@ -3,12 +3,23 @@
 import os
 import pytest
 import threading
-from fastapi.testclient import TestClient
+
+PG_URL = os.getenv("POOLAR_TEST_POSTGRES_URL") or ""
+if not PG_URL.startswith("postgresql"):
+    pytest.skip("Requiere PostgreSQL real (POOLAR_TEST_POSTGRES_URL)", allow_module_level=True)
+
+try:
+    import sqlalchemy as sa
+    _e = sa.create_engine(PG_URL)
+    with _e.connect() as _c:
+        _c.execute(sa.text("SELECT 1"))
+except Exception:
+    pytest.skip("PostgreSQL no accesible en el entorno de prueba", allow_module_level=True)
 
 os.environ.setdefault("POOLAR_SECRET_KEY", "test-only-secret-key-not-for-production-0123456789abcdef")
-os.environ.setdefault("DATABASE_URL", "postgresql+psycopg2://trama:trama-dev-password@localhost:5432/trama_abierta")
-os.environ.setdefault("POOLAR_TEST_POSTGRES_URL", "postgresql+psycopg2://trama:trama-dev-password@localhost:5432/trama_abierta")
+os.environ["DATABASE_URL"] = PG_URL
 
+from fastapi.testclient import TestClient
 from src.main import app
 from src.core.ports import AutomationRoute, automation_evaluator
 

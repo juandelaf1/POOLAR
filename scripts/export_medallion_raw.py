@@ -17,24 +17,29 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-# Cargar .env local sin imprimir secretos
-_env = ROOT / ".env"
-if _env.exists():
-    for line in _env.read_text(encoding="utf-8", errors="replace").splitlines():
-        line = line.strip().lstrip("\ufeff")
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        k, v = line.split("=", 1)
-        k, v = k.strip(), v.strip().strip('"').strip("'")
-        if k and not os.getenv(k):
-            os.environ[k] = v
-os.environ.setdefault("POOLAR_SECRET_KEY", "test-only-secret-key-not-for-production-0123456789abcdef")
-if not os.getenv("DATABASE_URL") and not os.getenv("POOLAR_TEST_POSTGRES_URL"):
-    os.environ["DATABASE_URL"] = "sqlite:///./poolar.db"
 
-from src.core.database import SessionLocal  # noqa: E402
-from src.core.models import ApprovalRequest, Decision, EventoAuditoria, Iniciativa, Necesidad, ProblemaColectivo  # noqa: E402
-from src.core.security import sanitize_for_log  # noqa: E402
+def _bootstrap_env():
+    """Carga .env local solo bajo demanda (CLI); evita efectos secundarios en imports/tests."""
+    _env = ROOT / ".env"
+    if _env.exists():
+        for line in _env.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip().lstrip("\ufeff")
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            k, v = k.strip(), v.strip().strip('"').strip("'")
+            if k and not os.getenv(k):
+                os.environ[k] = v
+    os.environ.setdefault("POOLAR_SECRET_KEY", "test-only-secret-key-not-for-production-0123456789abcdef")
+    if not os.getenv("DATABASE_URL") and not os.getenv("POOLAR_TEST_POSTGRES_URL"):
+        os.environ["DATABASE_URL"] = "sqlite:///./poolar.db"
+
+
+def _lazy_imports():
+    from src.core.database import SessionLocal  # noqa: E402
+    from src.core.models import ApprovalRequest, Decision, EventoAuditoria, Iniciativa, Necesidad, ProblemaColectivo  # noqa: E402
+    from src.core.security import sanitize_for_log  # noqa: E402
+    return SessionLocal, (ApprovalRequest, Decision, EventoAuditoria, Iniciativa, Necesidad, ProblemaColectivo), sanitize_for_log
 
 
 def _provenance(entity: str) -> dict:
@@ -77,6 +82,10 @@ def _write_jsonl(path: Path, rows: list[dict], entity: str) -> int:
 
 
 def export_all(out_dir: Path) -> dict:
+    if not os.getenv("DATABASE_URL") and not os.getenv("POOLAR_TEST_POSTGRES_URL"):
+        _bootstrap_env()
+    SessionLocal, models, sanitize_for_log = _lazy_imports()
+    ApprovalRequest, Decision, EventoAuditoria, Iniciativa, Necesidad, ProblemaColectivo = models
     stats = {}
     with SessionLocal() as s:
         approvals = []
@@ -166,9 +175,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(ROOT / "analytics/local/raw"))
     args = ap.parse_args()
-    os.environ.setdefault("POOLAR_SECRET_KEY", "test-only-secret-key-not-for-production-0123456789abcdef")
-    if not os.getenv("DATABASE_URL"):
-        os.environ["DATABASE_URL"] = "sqlite:///./poolar.db"
+    _bootstrap_env()
     stats = export_all(Path(args.out))
     print(json.dumps({"ok": True, "out": args.out, "written": stats}, ensure_ascii=False))
 

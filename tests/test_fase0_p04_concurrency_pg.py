@@ -11,7 +11,7 @@ import threading
 
 import pytest
 
-PG_URL = os.getenv("POOLAR_TEST_POSTGRES_URL") or os.getenv("DATABASE_URL", "")
+PG_URL = os.getenv("POOLAR_TEST_POSTGRES_URL") or ""
 if not PG_URL.startswith("postgresql"):
     pytest.skip("Requiere PostgreSQL real (POOLAR_TEST_POSTGRES_URL)", allow_module_level=True)
 
@@ -30,6 +30,8 @@ def _pg_reachable(url: str) -> bool:
 if not _pg_reachable(PG_URL):
     pytest.skip("PostgreSQL no accesible en el entorno de prueba", allow_module_level=True)
 
+# NOTE: este módulo solo corre con PG real explícito; establece DATABASE_URL para sus imports.
+# No usar DATABASE_URL genérico como criterio de skip para evitar falsos positivos en suites SQLite.
 os.environ["DATABASE_URL"] = PG_URL
 os.environ.setdefault("POOLAR_SECRET_KEY", "test-only-secret-key-not-for-production-0123456789abcdef")
 
@@ -43,8 +45,16 @@ from src.main import _handle_governance  # noqa: E402
 
 def test_two_approvers_race_single_effect_pg():
     """Dos aprobadores compiten con barrera sobre una solicitud pendiente: 1 efecto."""
-    if not os.getenv("POOLAR_TEST_POSTGRES_URL") and not os.getenv("DATABASE_URL", "").startswith("postgresql"):
-        pytest.skip("Requiere PostgreSQL real")
+    _u = os.getenv("POOLAR_TEST_POSTGRES_URL", "")
+    if not _u.startswith("postgresql"):
+        pytest.skip("Requiere PostgreSQL real (POOLAR_TEST_POSTGRES_URL)")
+    try:
+        import sqlalchemy as sa
+        _e = sa.create_engine(_u)
+        with _e.connect() as _c:
+            _c.execute(sa.text("SELECT 1"))
+    except Exception:
+        pytest.skip("PostgreSQL de prueba no accesible")
     marker = f"Problema race PG {__import__('uuid').uuid4().hex[:8]}"
     with SessionLocal() as s:
         org = Organizacion(nombre=f"Org Race {marker[-8:]}", tipo_organizacion="cooperativa", contacto_publico=f"r-{marker[-8:]}@r.org")

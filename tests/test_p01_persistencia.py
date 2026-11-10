@@ -12,10 +12,16 @@ from src.core.database import SessionLocal, engine
 from src.core.models import OperationalUser, ApprovalRequest as ApprovalRequestDB
 
 # Estos tests requieren PostgreSQL de prueba. CI/local debe definir POOLAR_TEST_POSTGRES_URL.
-pytestmark = pytest.mark.skipif(
-    not os.getenv("POOLAR_TEST_POSTGRES_URL"),
-    reason="No hay POOLAR_TEST_POSTGRES_URL (PostgreSQL de prueba)",
-)
+_PG_URL = os.getenv("POOLAR_TEST_POSTGRES_URL", "")
+if not _PG_URL.startswith("postgresql"):
+    pytest.skip("No hay POOLAR_TEST_POSTGRES_URL (PostgreSQL de prueba)", allow_module_level=True)
+try:
+    import sqlalchemy as sa
+    _e = sa.create_engine(_PG_URL)
+    with _e.connect() as _c:
+        _c.execute(sa.text("SELECT 1"))
+except Exception:
+    pytest.skip("PostgreSQL de prueba no accesible", allow_module_level=True)
 
 
 @pytest.fixture(autouse=True)
