@@ -62,7 +62,7 @@ if os.getenv("DATABASE_URL", "").startswith("sqlite"):
 
 app = FastAPI(title="Poolar MVP", version="0.6.0")
 
-# CORS para front dev/prod (configurable). Gobernanza/authz permanece en API.
+# CORS for dev/prod frontends (configurable). Governance/authz remains in API.
 _cors_origins = [o.strip() for o in os.getenv("POOLAR_CORS_ORIGINS", "http://127.0.0.1:5173,http://localhost:5173").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
@@ -70,7 +70,18 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Correlation-Id", "X-Request-Id"],
 )
+
+
+@app.middleware("http")
+async def correlation_middleware(request: Request, call_next):
+    cid = _resolve_correlation_id(request)
+    request.state.correlation_id = cid
+    response = await call_next(request)
+    if "X-Correlation-Id" not in response.headers:
+        response.headers["X-Correlation-Id"] = cid
+    return response
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
