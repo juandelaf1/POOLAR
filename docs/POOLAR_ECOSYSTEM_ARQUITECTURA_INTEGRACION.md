@@ -1,163 +1,174 @@
-# POOLAR ECOSYSTEM — Arquitectura, Gobernanza e Integración de Productos y Servicios
+# POOLAR ECOSYSTEM — Architecture, Governance, and Product/Service Integration
 
-**Fecha:** 2026-11-09  
-**Estado:** documento maestro registrado en repo a solicitud del usuario (auditoría/diseño, **no implementación**).  
-**Método:** inspección local read-only de clones disponibles (`POOLAR`, `CASE`, `EnRuta`, `SkyCast`, etc.), páginas públicas GitHub `juandelaf1`, y auditorías previas como contexto histórico **no revalidado** salvo indicación. **No se modificaron repos durante el análisis; no commits/cambios de rama/migraciones/despliegues; no se ejecutaron tests del portfolio en esa sesión.**
+**Date:** 2026-11-09  
+**Updated:** 2026-11-10 (English translation/progressive alignment)  
+**Status:** master strategy/design document recorded in repo (audit/design, **not implementation**).
 
-## 1. Resumen ejecutivo
-POOLAR debe ser el **núcleo abierto de cooperación gobernada** (identidad organizativa en contexto, necesidades/capacidades/recursos genéricos, iniciativas, decisiones HITL, compromisos, auditoría, consentimiento, procedencia, registro de capacidades). Los productos especializados se conectan como **autónomos** mediante **contratos versionados y adaptadores**, sin compartir bases de datos ni importar ORM entre repos. **Autoridad HITL/ejecución sensible en contexto POOLAR:** siempre en POOLAR. CASE, EnRuta, SkyCast, Anexo_Risk, GeoRisk_Finder, Parada-Viva, SANDAM aportan capacidades/evidencias/propuestas; no sustituyen esa autoridad.
+**Method:** read-only local inspection of available clones (`POOLAR`, `CASE`, `EnRuta`, `SkyCast`, etc.), public `juandelaf1` GitHub pages, and prior audits as **historical, not revalidated** context unless stated. No repos were modified during the original analysis; no commits/branch changes/migrations/deployments; portfolio tests were not executed in that session.
 
-## 2. Diagnóstico del estado real (evidencia)
+## 1. Executive summary
 
-| Área | Estado observado | Evidencia | Nivel |
+POOLAR should be the **open core of governed cooperation** (identity in context, generic needs/capabilities/resources, initiatives, HITL decisions, commitments, audit, consent, provenance, capability registry). Specialized products connect as **autonomous** systems through **versioned contracts and adapters**, without shared databases or cross-repo ORM imports. **HITL/sensitive execution authority in POOLAR context:** always in POOLAR. CASE, EnRuta, SkyCast, Anexo_Risk, GeoRisk_Finder, Parada-Viva, SANDAM provide capabilities/evidence/proposals; they do not replace that authority.
+
+## 2. Real-state diagnosis (evidence)
+
+| Area | Observed state | Evidence | Level |
 |---|---|---|---|
-| POOLAR local | `fase0-gobernanza@9ddc834096d1bd86e39f9ef32d6ffbf61452f32f`, árbol sucio (M: `tests/test_p01_persistencia.py`, `web/src/App.tsx`, `web/src/api/types.ts`; ?? `fix_regresion.py`, `web/src/pages/Flujo.tsx`, `web/src/pages/Necesidades.tsx`) | git local | **Verificado** |
-| POOLAR CI | `ci.yml` (PG16, migraciones, backend sin e2e, e2e Playwright); `fase0-check.yml` (SQLite; `fase0-pg-real` `if:false`). Ejecución remota verde **no verificada** | workflows locales | Config verificada / ejecución no verificada |
-| POOLAR capacidades | HITL/scope/idempotencia/atomicidad, contratos/adaptadores mock, analytics separado, web MVP; Fase 0 cierre formal, authz exhaustiva, RGPD operativo, PG CI real estables **pendientes** | código/docs + histórico | **Parcial** |
-| CASE | Hexagonal, evaluación conservadora, HITL/auditoría/políticas (README local). **Discrepancia abierta:** README local declara “813 passed”; versión pública histórica citada en auditorías previas mostraba “692”. **No revalidado** | README local + prompt | **Documentado, no revalidado** |
-| EnRuta | Dual autónomo+acoplable. `docs/CONTRATO_LOGISTICO_POOLAR.md`: `POST /matches/evaluate` stateless, `contract_version=logistics-l1/0.1`; `/matches/run`, `/health`. Datos sintéticos; OSRM público sin SLA; coste/CO₂ estimados | docs locales/README | **Parcial/documentado** |
-| SkyCast | `POST /api/v1/route-weather` (`skycast-route-weather/0.1`), `/validate`, health/capabilities; procedencia; AEMET ES + fallback Open-Meteo | docs/README local | **Parcial/documentado** |
-| Anexo_Risk | Emergencias; solapa orgs/necesidades/recursos/alertas/decisiones; LICENSE/atribuciones a revisar | README público | **Parcial; riesgo IP/licencia** |
-| GeoRisk_Finder | Analytics H3/clustering/escenarios; BCR/métricas financieras = modelo/escenarios, no observadas | README público | **Experimental/analítico** |
-| Parada-Viva | Base revivida, sin partners/datos reales | README público | **Temprano** |
-| SANDAM | API playas FastAPI async/PG/Haversine | README público | **MVP técnico** |
-| Licencias | MIT visibles en varios; **inciertas/no verificadas** en detalle (Anexo_Risk, Devera_DS, SkyCast, AsesorIA, GeoRisk_Finder, forks/datasets) | GitHub | **Revisión requerida** |
+| POOLAR local | `fase0-gobernanza` (evolving), HITL/scope/idempotency/atomicity, module contracts/adapters (mock/synthetic), separated analytics, web MVP; formal Phase 0 closure, exhaustive authz, operational GDPR, stable real PG CI **pending** | code/docs + history | **Partial** |
+| POOLAR CI | `ci.yml` (PG16, migrations, backend excluding e2e, Playwright e2e); `fase0-check.yml` (SQLite; `fase0-pg-real` `if:false`). Remote green execution **not verified** | local workflows | Config verified / execution not verified |
+| CASE | Hexagonal, conservative evaluation, HITL/audit/policies. **Open discrepancy:** local README claimed 813 passed; prior public/historical audits cited 692. Baseline revalidated 2026-11-09: **806 passed, 7 skipped** (excluding streamlit client test as applicable) | README/history + local run evidence | **Documented / partially revalidated** |
+| EnRuta | Dual autonomous+integrable. `POST /matches/evaluate` stateless, `logistics-l1/0.1`; `/matches/run`, `/health`. Synthetic data; public OSRM without SLA; cost/CO₂e estimated | local docs/README | **Partial/documented** |
+| SkyCast | `POST /api/v1/route-weather` (`skycast-route-weather/0.1`), validate, health/capabilities; provenance; AEMET ES + Open-Meteo fallback | docs/README | **Partial/documented** |
+| Anexo_Risk | Emergencies; overlap with orgs/needs/resources/alerts/decisions; license/attributions to review | public README | **Partial; IP/license risk** |
+| GeoRisk_Finder | H3/clustering/scenario analytics; BCR/financial metrics = modeled scenarios, not observed | public README | **Experimental/analytical** |
+| Parada-Viva | Revived base, no real partners/data | public README | **Early** |
+| SANDAM | Beach API (FastAPI/async/PG/Haversine) | public README | **Technical MVP** |
+| Licenses | MIT visible in several; **uncertain/unverified** in detail (Anexo_Risk, Devera_DS, SkyCast, AsesorIA, GeoRisk_Finder, forks/datasets) | GitHub | **Review required** |
 
-## 3. Cinco decisiones arquitectónicas fundamentales
-1. **POOLAR = núcleo de cooperación y única autoridad HITL/ejecución en su contexto.** Externos: evaluación/evidencia/propuesta/resultado, no aprobación final de acciones sensibles de POOLAR.
-2. **Autonomía por producto** + integración opcional L0→L1→L2→L3 (federación futura).
-3. **Sin DB compartida, sin imports ORM cross-repo.** Intercambio por API/contratos, IDs mapeados, procedencia.
-4. **Monolito modular en POOLAR + adaptadores + productos/servicios autónomos.** No microservicios por defecto.
-5. **Gobernanza explícita:** diferenciar autenticación, autorización, delegación, aprobación y ejecución; tenant/org/scope, idempotencia, correlación, versionado, auditoría, degradación segura.
+## 3. Five fundamental architectural decisions
 
-## 4. Riesgos críticos
-| Riesgo | Mitigación |
+1. **POOLAR = cooperation core and sole HITL/sensitive-execution authority in its context.** External systems provide evaluation/evidence/proposals/results, not final approval of sensitive POOLAR actions.
+2. **Product autonomy** + optional integration levels **L0→L1→L2→L3** (future federation).
+3. **No shared DB, no cross-repo ORM imports.** Exchange via APIs/contracts, mapped IDs, provenance.
+4. **Modular monolith in POOLAR + adapters + autonomous products/services.** No microservices by default.
+5. **Explicit governance:** distinguish authentication, authorization, delegation, approval, and execution; tenant/org/scope, idempotency, correlation, versioning, audit, safe degradation.
+
+## 4. Critical risks
+
+| Risk | Mitigation |
 |---|---|
-| Doble autoridad CASE/POOLAR | CASE proposal-only; HITL/auditoría final en POOLAR |
-| Autorización multi-tenant incompleta | Matriz authz endpoint/adapter, tests negativos, scopes mínimos |
-| Licencias/IP inciertas | Verificar LICENSE/deps/atribuciones antes de fusionar código |
-| Datos sintéticos/estimaciones mal interpretados | `data_status`, procedencia, disclaimers, separar evaluación/ejecución |
-| Dependencias externas (OSRM/AEMET/Open-Meteo) | timeout, fallback explícito, circuit breaker, caché gobernada |
-| RGPD/consentimiento incompleto | minimización, retención, DSAR/export/borrado, clasificación PII |
-| Complejidad prematura | empezar L1, contratos mínimos, monolito modular |
+| Dual CASE/POOLAR authority | CASE proposal-only; final HITL/audit in POOLAR |
+| Incomplete multi-tenant authorization | Authz matrix per endpoint/adapter, negative tests, minimum scopes |
+| Uncertain licenses/IP | Verify LICENSE/deps/attributions before merging code |
+| Synthetic/estimated data misinterpreted | `data_status`, provenance, disclaimers, separate evaluation/execution |
+| External dependencies (OSRM/AEMET/Open-Meteo) | timeout, explicit fallback, circuit breaker, governed cache |
+| GDPR/consent incomplete | minimization, retention, DSAR/export/deletion, PII classification |
+| Premature complexity | start at L1, minimal contracts, modular monolith |
 
-## 5. Arquitectura recomendada
+## 5. Recommended architecture
 
 ```mermaid
 flowchart TB
-  subgraph POOLAR["POOLAR (monolito modular)"]
-    API["API FastAPI gobernada"]
-    DOM["Identidad/org, necesidades/ofertas/capacidades/recursos,\niniciativas/decisiones/compromisos"]
-    GOV["HITL, permisos, auditoría, consentimiento, procedencia"]
+  subgraph POOLAR["POOLAR (modular monolith)"]
+    API["Governed FastAPI API"]
+    DOM["Identity/org, needs/offers/capabilities/resources,\ninitiatives/decisions/commitments"]
+    GOV["HITL, permissions, audit, consent, provenance"]
     REG["Module Registry\ninstalled/enabled/healthy/degraded/disabled"]
-    ADP["Adaptadores"]
-    CTR["Contratos versionados"]
+    ADP["Adapters"]
+    CTR["Versioned contracts"]
     API --> DOM --> GOV
     API --> REG --> ADP --> CTR
   end
-  CASE["CASE autónomo\nproposal/evaluation"]
-  ENR["EnRuta autónomo\nlogistics"]
-  SKY["SkyCast autónomo\nweather"]
-  ANX["Anexo_Risk autónomo\nemergencias"]
+  CASE["CASE (autonomous)\nproposal/evaluation"]
+  ENR["EnRuta (autonomous)\nlogistics"]
+  SKY["SkyCast (autonomous)\nweather"]
+  ANX["Anexo_Risk (autonomous)\nemergencies"]
   GRF["GeoRisk_Finder\ngeo analytics"]
   PV["Parada-Viva"]; SDM["SANDAM"]
   ADP <-->|L1/L2| CASE
   ADP <-->|L1/L2| ENR
   ADP <-->|L1| ANX
-  ADP <-->|L1 evidencia| GRF
+  ADP <-->|L1 evidence| GRF
   ADP <-->|L0/L1| PV
   ADP <-->|L0/L1| SDM
   ENR <-->|route-weather| SKY
-  ANX -.->|evidencia/clima opcional| GRF
-  ANX -.->|clima opcional| SKY
+  ANX -.->|optional evidence/weather| GRF
+  ANX -.->|optional weather| SKY
 ```
 
-## 6. Primera integración a desarrollar
-**POOLAR + EnRuta + SkyCast, L1 evaluación logística gobernada con datos sintéticos** (sin ejecución operativa real). Contratos base: `logistics-l1/0.1` y `skycast-route-weather/0.1`. Separar estrictamente evaluación vs operación.
+## 6. First integration to develop
 
-## ENTREGABLE A — Inventario (síntesis verificable)
-| Proyecto | Dominio | Clasificación | Madurez | Autonomía | Relación POOLAR | Evidencia | Incertidumbre clave |
+**POOLAR + EnRuta + SkyCast, L1 governed logistics evaluation with synthetic data** (no real operational execution). Base contracts: `logistics-l1/0.1` and `skycast-route-weather/0.1`. Strictly separate evaluation vs operation.
+
+## Deliverable A — Inventory (verifiable summary)
+
+| Project | Domain | Classification | Maturity | Autonomy | POOLAR relation | Evidence | Key uncertainty |
 |---|---|---|---|---|---|---|---|
-| POOLAR | cooperación | PLATFORM/CORE | prototipo | alta | core | código/config local | Fase 0, authz, RGPD |
-| CASE | evaluación IA | PRODUCT/CAPABILITY | producto técnico | alta | proposal-only | README local | tests 813/692, contrato |
-| EnRuta | logística rural | PRODUCT+MODULE | MVP simulado | alta | L1/L2 logística | docs locales | datos reales, m2m, SLA |
-| SkyCast | clima/riesgo | CAPABILITY SERVICE | parcial | alta | capacidad compartida | docs/README | licencia, resiliencia |
-| Anexo_Risk | emergencias | PRODUCT vertical | prototipo | alta | coordinación | README público | IP/licencia, solapamiento |
-| GeoRisk_Finder | geo analytics | ANALYTICS | experimental | alta | evidencia | README público | validez operativa |
-| Parada-Viva | territorio/comercio | PRODUCT | temprano | alta | conector | README | datos/PII/pagos |
-| SANDAM | playas | PRODUCT/CAPABILITY | MVP técnico | alta | puntual | README | integración real |
-| DashLogistics | analytics logística | ANALYTICS | exploración | alta | no prioritaria | README local | R² no predictivo real |
-| RASPAL_SCRAPER | extracción | TOOL | madura | alta | herramienta interna | README | legalidad/PII |
-| AsesorIA | RAG fiscal | PRODUCT | independiente | alta | no core | README | dominio ajeno/licencia |
-| Devera_DS | LCA | EXPERIMENT | experimental | alta | no integrar | README | **IP/licencia/datos** |
-| FitFamily/DataScope/NetTension/Attention/Optimus/Golden/ONCE-UPON-A-90S/EDA | varios | RESEARCH | variable | alta | no integrar ahora | GitHub/local | utilidad baja |
-| Archivados | histórico | ARCHIVED | histórico | n/a | no integrar | GitHub | obsolescencia |
-**Privados/no accesibles:** `DESCONOCIDO`. **Locales no mapeados:** inventario aparte.
+| POOLAR | cooperation | PLATFORM/CORE | prototype | high | core | local code/config | Phase 0, authz, GDPR |
+| CASE | AI evaluation | PRODUCT/CAPABILITY | technical product | high | proposal-only | README/local runs | contract hardening, live-provider env |
+| EnRuta | rural logistics | PRODUCT+MODULE | simulated MVP | high | L1/L2 logistics | local docs | real data, m2m, SLA |
+| SkyCast | weather/risk | CAPABILITY SERVICE | partial | high | shared capability | docs/README | license, resilience |
+| Anexo_Risk | emergencies | vertical product | prototype | high | coordination | public README | IP/license, overlap |
+| GeoRisk_Finder | geo analytics | ANALYTICS | experimental | high | evidence | public README | operational validity |
+| Parada-Viva | territory/commerce | PRODUCT | early | high | connector | README | data/PII/payments |
+| SANDAM | beaches | PRODUCT/CAPABILITY | technical MVP | high | specific | README | real integration |
+| DashLogistics | logistics analytics | ANALYTICS | exploration | high | non-priority | local README | predictive limits |
+| RASPAL_SCRAPER | extraction | TOOL | mature | high | internal tool | README | legality/PII |
+| AsesorIA | fiscal RAG | PRODUCT | independent | high | not core | README | domain/license |
+| Devera_DS | LCA | EXPERIMENT | experimental | high | do not integrate | README | **IP/license/data** |
+| Others/archived | various | RESEARCH/ARCHIVED | variable | high/n/a | not now | GitHub/local | low utility/obsolescence |
 
-## ENTREGABLE B — Mapa de dominios y responsabilidades
-| Capacidad/dato | Propietario | Conflicto/solapamiento | Decisión |
+Private/inaccessible repos: **unknown**.
+
+## Deliverable B — Domain map and responsibilities
+
+| Capability/data | Owner | Conflict/overlap | Decision |
 |---|---|---|---|
-| Identidad cooperativa, orgs, membresías, roles, ámbitos (contexto POOLAR) | POOLAR | auth local productos | POOLAR canónico en integrado; local en standalone |
-| Necesidades/ofertas/capacidades/recursos genéricos | POOLAR | Anexo/Parada modelan similares | Core genérico + refs/extensiones |
-| Iniciativas, decisiones, compromisos, auditoría cooperación | POOLAR | CASE/Anexo decisiones propias | separar cooperación POOLAR vs dominio interno producto |
-| Evaluación conservadora IA | CASE | HITL/políticas solapadas | CASE evalúa; POOLAR autoriza/ejecuta |
-| Matching/rutas/capacidad/coste/CO₂ | EnRuta | reimplementación en POOLAR | delegar por contrato |
-| Clima/riesgo ruta | SkyCast | lógica dispersa | servicio compartible |
-| Incidentes/respuesta emergencias | Anexo_Risk | entidades genéricas con POOLAR | Anexo operativo; POOLAR coordinación genérica |
-| Geo analytics/modelos | GeoRisk_Finder | confusión con autoridad operativa | evidencia versionada con incertidumbre |
-| Catálogo/servicios locales | Parada-Viva | ofertas/territorio | autónomo conectado |
-| Gestión playas | SANDAM | nicho | autónomo conectado |
+| Cooperative identity, orgs, memberships, roles, scopes (POOLAR context) | POOLAR | local auth in products | canonical in integrated mode; local in standalone |
+| Generic needs/offers/capabilities/resources | POOLAR | modeled in verticals | generic core + refs/extensions |
+| Initiatives, decisions, commitments, cooperation audit | POOLAR | CASE/Anexo own decisions | separate POOLAR cooperation vs internal product domain |
+| Conservative AI evaluation | CASE | HITL/policy overlap | CASE evaluates; POOLAR authorizes/executes |
+| Matching/routes/capacity/cost/CO₂e | EnRuta | reimplementation in POOLAR | delegate by contract |
+| Route weather/risk | SkyCast | dispersed logic | shareable service |
+| Emergency incidents/response | Anexo_Risk | overlap with generic entities | Anexo operational; POOLAR generic coordination |
+| Geo analytics/models | GeoRisk_Finder | confusion with operational authority | versioned evidence with uncertainty |
+| Local catalog/services | Parada-Viva | offers/territory | autonomous connected |
+| Beach management | SANDAM | niche | autonomous connected |
 
-## ENTREGABLE C — Arquitectura actual
+## Deliverable C — Current architecture
+
 ```mermaid
 flowchart LR
-  P["POOLAR\nCore HITL parcial + web MVP"] -.-> C["CASE"]
-  P -.-> E["EnRuta\ncontrato L1 doc"]
+  P["POOLAR\nPartial HITL core + web MVP"] -.-> C["CASE"]
+  P -.-> E["EnRuta\nL1 contract doc"]
   E --> S["SkyCast\nroute-weather/validate"]
   A["Anexo_Risk"] -.-> G["GeoRisk_Finder"]
-  PV["Parada-Viva"]; SD["SANDAM"]; O["Otros/research"]
+  PV["Parada-Viva"]; SD["SANDAM"]; O["Others/research"]
 ```
-Productos mayormente autónomos; integraciones reales externas limitadas/mock; persistencias independientes.
 
-## ENTREGABLE D — Arquitectura objetivo
-Ver diagrama sección 5. Capas: **Núcleo POOLAR** (identidad/org/roles, necesidades/recursos, iniciativas/decisiones/compromisos, aprobaciones, auditoría, consentimiento, registry) · **Contratos** (versionados, tipados, procedencia) · **Adaptadores** (traducción, auth m2m, scopes, validación, timeouts, correlación) · **Productos autónomos** · **Conectores externos opcionales**.
+Products mostly autonomous; real external integrations limited/mock; independent persistence.
 
-## ENTREGABLE E — Diseño de contratos
+## Deliverable D — Target architecture
 
-### Sobre común
-Campos mínimos: `module_id`, `module_version`, `contract_version`, `capability_id`, `caller`, `tenant_context`, `organization_context`, `scopes`, `correlation_id`, `idempotency_key`, `data_classification`, `provenance`, `requested_at`, `locale`, `payload_version`, `payload`.
+See section 5 diagram. Layers: **POOLAR Core** (identity/org/roles, needs/resources, initiatives/decisions/commitments, approvals, audit, consent, registry) → **Contracts** (versioned, typed, provenance) → **Adapters** (translation, m2m auth, scopes, validation, timeouts, correlation) → **Autonomous products** → **Optional external connectors**.
 
-### Errores normalizados
+## Deliverable E — Contract design
+
+### Common envelope
+Minimum fields: `module_id`, `module_version`, `contract_version`, `capability_id`, `caller`, `tenant_context`, `organization_context`, `scopes`, `correlation_id`, `idempotency_key`, `data_classification`, `provenance`, `requested_at`, `locale`, `payload_version`, `payload`.
+
+### Normalized errors
 `AUTHENTICATION_ERROR`, `AUTHORIZATION_ERROR`, `CONTRACT_INCOMPATIBLE`, `INVALID_DATA`, `CAPABILITY_UNAVAILABLE`, `TIMEOUT`, `IDEMPOTENCY_CONFLICT`, `PROVIDER_INTERNAL_ERROR`, `OPERATION_REJECTED`, `APPROVAL_PENDING` (+ `retryable`, `correlation_id`).
 
-### Contratos tipados (dominio)
-- `LogisticsMatchRequest/Response` — alineado con EnRuta `logistics-l1/0.1` (`/matches/evaluate`, stateless). 
-- `RouteWeatherRequest/Response` — alineado con SkyCast `skycast-route-weather/0.1`. 
-- `CaseEvaluationRequest/Response` — evaluación/riesgo/recomendación/evidencia; **sin autorización de ejecución POOLAR**. 
-- `RiskAssessmentRequest/Response` — evidencia versionada, `data_status=modelled/observed/mixed`, incertidumbre/disclaimer.
+### Typed domain contracts
+- `LogisticsMatchRequest/Response` — aligned with EnRuta `logistics-l1/0.1` (`/matches/evaluate`, stateless).
+- `RouteWeatherRequest/Response` — aligned with SkyCast `skycast-route-weather/0.1`.
+- `CaseEvaluationRequest/Response` — evaluation/risk/recommendation/evidence; **no POOLAR execution authorization**.
+- `RiskAssessmentRequest/Response` — versioned evidence, `data_status=modelled/observed/mixed`, uncertainty/disclaimer.
 
-### Versionado
-SemVer contrato. MAJOR incompatible. Consumidor declara versión soportada; proveedor responde `CONTRACT_INCOMPATIBLE` si no aplica. Deprecación con ventana y métricas. Contract tests + golden fixtures + matriz compatibilidad.
+### Versioning
+Contract SemVer. MAJOR incompatible. Consumer declares supported version; provider returns `CONTRACT_INCOMPATIBLE` if not applicable. Deprecation window and metrics. Contract tests + golden fixtures + compatibility matrix.
 
-## ENTREGABLE F — Identidad y gobernanza
-Distinguir: **autenticación** (quién), **autorización** (qué puede), **delegación** (en nombre de quién), **aprobación** (quién autoriza acción sensible), **ejecución** (qué sistema actúa). Estrategia progresiva: auth local + m2m scopes (L1) → JWT/OIDC/delegación acotada (L2) → federación (L3 futura). Amenazas: IDOR/BOLA, escalado, confusión tenant, suplantación servicio, replay, delegación amplia, reintentos duplicados, ejecución sin HITL válido. Matriz de pruebas authz obligatoria.
+## Deliverable F — Identity and governance
+
+Distinguish: **authentication** (who), **authorization** (what allowed), **delegation** (on whose behalf), **approval** (who authorizes sensitive action), **execution** (which system acts). Progressive strategy: local auth + m2m scopes (L1) → JWT/OIDC/bounded delegation (L2) → federation (L3 future). Threats: IDOR/BOLA, privilege escalation, tenant confusion, service impersonation, replay, broad delegation, duplicate retries, execution without valid HITL. Mandatory authz test matrix.
 
 ```mermaid
 sequenceDiagram
-  participant U as Usuario
+  participant U as User
   participant P as POOLAR
   participant A as Adapter
-  participant X as Producto externo
-  U->>P: Solicitud / aprobación sensible
+  participant X as External product
+  U->>P: Request / sensitive approval
   P->>P: Authn + Authz + tenant/org/scope + HITL
   P->>A: Request + correlation + idempotency
-  A->>X: m2m autenticado, scopes mínimos
+  A->>X: Authenticated m2m, minimum scopes
   X-->>A: Result/proposal/error
-  A-->>P: Normalizado + procedencia
-  P->>P: Auditoría + estado
+  A-->>P: Normalized + provenance
+  P->>P: Audit + state
 ```
 
-## ENTREGABLE G — POOLAR + EnRuta + SkyCast (referencia)
+## Deliverable G — POOLAR + EnRuta + SkyCast (reference)
 
 ```mermaid
 sequenceDiagram
@@ -166,61 +177,69 @@ sequenceDiagram
   participant Adapter as Poolar-EnRuta Adapter
   participant EnRuta
   participant SkyCast
-  User->>POOLAR: Necesidad transporte (sintética)
+  User->>POOLAR: Transport need (synthetic)
   POOLAR->>Adapter: LogisticsMatchRequest (evaluate, L1)
   Adapter->>EnRuta: POST /matches/evaluate
   EnRuta->>SkyCast: POST /api/v1/route-weather
-  SkyCast-->>EnRuta: hazard + procedencia (o fallback)
-  EnRuta-->>Adapter: matches estimados
-  Adapter-->>POOLAR: CapabilityResult normalizado
-  POOLAR-->>User: Alternativas + advertencias + data_status
-  Note over POOLAR,EnRuta: L2 operación logística separada: HITL POOLAR + validación interna EnRuta
+  SkyCast-->>EnRuta: hazard + provenance (or fallback)
+  EnRuta-->>Adapter: Estimated matches
+  Adapter-->>POOLAR: Normalized CapabilityResult
+  POOLAR-->>User: Alternatives + warnings + data_status
+  Note over POOLAR,EnRuta: L2 logistics operation separate: POOLAR HITL + EnRuta internal validation
 ```
-**Aceptación L1:** contrato válido; sin operación real; `contract_version`/`correlation_id`/`idempotency_key`/`data_status`/procedencia; degradación segura si SkyCast falla; sin duplicados por reintento; auditoría sin PII.
 
-## ENTREGABLE H — Integraciones posteriores
-| Integración | Regla | Riesgo |
+**L1 acceptance:** valid contract; no real operation; `contract_version`/`correlation_id`/`idempotency_key`/`data_status`/provenance; safe degradation if SkyCast fails; no duplicates on retry; audit without PII.
+
+## Deliverable H — Subsequent integrations
+
+| Integration | Rule | Risk |
 |---|---|---|
-| POOLAR+CASE | CASE evalúa; POOLAR decide/autoriza/ejecuta en su contexto | doble gobernanza |
-| POOLAR+Anexo+GeoRisk(+SkyCast) | Anexo operativo; GeoRisk evidencia; POOLAR coordinación genérica | solapamiento dominio/datos sensibles |
-| POOLAR+Parada-Viva | catálogo/ofertas/territorio por adapter; no asumir operación real | PII/madurez |
-| POOLAR+SANDAM | capacidad territorial puntual | alcance limitado |
-| Resto | integrar solo con beneficio claro; RASPAL solo herramienta controlada | coste/IP/legal |
+| POOLAR+CASE | CASE evaluates; POOLAR decides/authorizes/executes in its context | dual governance |
+| POOLAR+Anexo+GeoRisk(+SkyCast) | Anexo operational; GeoRisk evidence; POOLAR generic coordination | domain/sensitive-data overlap |
+| POOLAR+Parada-Viva | catalog/offers/territory via adapter; do not assume real operation | PII/maturity |
+| POOLAR+SANDAM | specific territorial capability | limited scope |
+| Others | integrate only with clear benefit; RASPAL only as controlled tool | cost/IP/legal |
 
-## ENTREGABLE I — Seguridad, privacidad y operación
-Amenazas: IDOR/BOLA, escalado, confusión tenant, suplantación m2m, replay, delegación amplia, proveedor comprometido, fuga PII, ejecución sensible sin HITL, estado desconocido. Controles: TLS, secretos gestionados, scopes mínimos, validación E/S, rate limit, logs estructurados, auditoría, SBOM/escaneo, health/backups/restore, rotación, reconciliación por `correlation_id/idempotency_key`. Offline: **no** aprobar/ejecutar acciones sensibles offline. RGPD: minimización, finalidad, retención, exportación/supresión, consentimiento (requiere revisión jurídica para cumplimiento formal).
+## Deliverable I — Security, privacy, and operations
 
-## ENTREGABLE J — Estrategia de pruebas
-Producto, contrato, integración, seguridad (authz/tenant/IDOR), resiliencia (timeouts/fallos parciales), idempotencia, interoperabilidad de versiones, UX/accesibilidad. No usar counts de tests de README como calidad. Distinguir existente/ejecutado/aprobado/omitido/fallido/externo.
+Threats: IDOR/BOLA, escalation, tenant confusion, m2m impersonation, replay, broad delegation, compromised provider, PII leakage, sensitive execution without HITL, unknown state. Controls: TLS, managed secrets, minimum scopes, I/O validation, rate limiting, structured logs, audit, SBOM/scanning, health/backups/restore, rotation, reconciliation by `correlation_id/idempotency_key`. Offline: **no** offline approval/execution of sensitive actions. GDPR: minimization, purpose limitation, retention, export/deletion, consent (requires legal review for formal compliance).
 
-## ENTREGABLE K — Roadmap
-| Horizonte | Prioridad | Entregables | Criterios |
+## Deliverable J — Testing strategy
+
+Product, contract, integration, security (authz/tenant/IDOR), resilience (timeouts/partial failures), idempotency, version interoperability, UX/accessibility. Do not use README test counts as quality. Distinguish existing/executed/approved/skipped/failed/external.
+
+## Deliverable K — Roadmap
+
+| Horizon | Priority | Deliverables | Criteria |
 |---|---|---|---|
-| 0–30 días | Contratos/manifest/ADRs, inventario licencias, matriz authz POOLAR | `ModuleManifest` v0, envelope+errores, ADR CASE/POOLAR | schemas validados, riesgos IP clasificados |
-| 31–90 días | L1 POOLAR+EnRuta+SkyCast, CASE proposal-only, CI/PG hardening | adapters, contract tests, observabilidad, degradación | criterios L1 cumplidos, sin ejecución L2 |
-| 91–180 días | Piloto vertical gobernado + 1 conector externo seleccionado | piloto acotado, runbooks, UX accesible básica | auditoría completa, métricas, datos sintéticos/autorizados |
-| 181–365 días | Ecosistema estable, self-host reproducible, gobernanza/licencias | 3-4 integraciones, docs ops, seguridad revisada | despliegues reproducibles, revisión legal/IP |
+| 0–30 days | Contracts/manifest/ADRs, license inventory, POOLAR authz matrix | `ModuleManifest` v0, envelope+errors, CASE/POOLAR ADR | validated schemas, classified IP risks |
+| 31–90 days | L1 POOLAR+EnRuta+SkyCast, CASE proposal-only, CI/PG hardening | adapters, contract tests, observability, degradation | L1 criteria met, no L2 execution |
+| 91–180 days | Governed vertical pilot + 1 selected external connector | scoped pilot, runbooks, basic accessible UX | complete audit, metrics, synthetic/authorized data |
+| 181–365 days | Stable ecosystem, reproducible self-host, governance/licenses | 3–4 integrations, ops docs, security review | reproducible deployments, legal/IP review |
 
-## ENTREGABLE L — Backlog técnico (extracto P0)
-- **B-001** Envelope común + errores (POOLAR/docs). 
-- **B-002** `ModuleManifest` v0. 
-- **B-003** Matriz authz endpoints/adapters críticos. 
-- **B-004** Adapter L1 EnRuta evaluación (mock/sandbox/sintético). 
-- **B-005** Degradación SkyCast/procedencia. 
-- **B-006** Correlation/idempotency end-to-end. 
-- **B-007** ADR frontera CASE-POOLAR. 
-- **B-008** Inventario licencias/IP/deps/datos.
+## Deliverable L — Technical backlog (P0 extract)
 
-## ENTREGABLE M — ADRs (resumen)
-| ADR | Decisión | Estado |
+- **B-001** Common envelope + errors (POOLAR/docs).
+- **B-002** `ModuleManifest` v0.
+- **B-003** Authz matrix for critical endpoints/adapters.
+- **B-004** L1 EnRuta evaluation adapter (mock/sandbox/synthetic).
+- **B-005** SkyCast degradation/provenance handling.
+- **B-006** End-to-end correlation/idempotency.
+- **B-007** CASE–POOLAR boundary ADR.
+- **B-008** License/IP/deps/data inventory.
+
+## Deliverable M — ADRs (summary)
+
+| ADR | Decision | Status |
 |---|---|---|
-| ADR-001 | Núcleo POOLAR + productos autónomos | propuesta |
-| ADR-002 | Sin DB compartida ni ORM cross-repo | propuesta |
-| ADR-003 | Autoridad HITL/ejecución POOLAR en su contexto | propuesta |
-| ADR-004 | Monolito modular primero | propuesta |
-| ADR-005 | L1 antes de L2 | propuesta |
-| ADR-006 | Contratos versionados + procedencia/data_status | propuesta |
-| ADR-007 | Identidad progresiva (m2m→OIDC→federación) | pendiente validación |
+| ADR-001 | POOLAR core + autonomous products | proposed |
+| ADR-002 | No shared DB or cross-repo ORM | proposed |
+| ADR-003 | POOLAR HITL/execution authority in its context | proposed |
+| ADR-004 | Modular monolith first | proposed |
+| ADR-005 | L1 before L2 | proposed |
+| ADR-006 | Versioned contracts + provenance/data_status | proposed |
+| ADR-007 | Progressive identity (m2m→OIDC→federation) | pending validation |
 
-## PRÓXIMO PASO DE IMPLEMENTACIÓN (propuesta, no implementada)
-**L1-EVAL-SYNTH:** evaluación logística gobernada con datos sintéticos `POOLAR→EnRuta(/matches/evaluate, logistics-l1/0.1)→SkyCast(route-weather)`. Excluir ejecución real, L2, datos personales, cambios de permisos, aprobaciones de ejecución. Aceptación: esquema válido, `contract_version/correlation_id/idempotency_key/data_status/procedencia`, no duplicación por reintento, degradación segura, tests contrato+seguridad, auditoría sin PII. **Requiere autorización explícita antes de implementar.**
+## Next implementation step (proposal, not implemented)
+
+**L1-EVAL-SYNTH:** governed logistics evaluation with synthetic data `POOLAR → EnRuta (/matches/evaluate, logistics-l1/0.1) → SkyCast (route-weather)`. Exclude real execution, L2, personal data, permission changes, execution approvals. Acceptance: valid schema, `contract_version/correlation_id/idempotency_key/data_status/provenance`, no duplication on retry, safe degradation, contract+security tests, audit without PII. **Requires explicit authorization before implementation.**
