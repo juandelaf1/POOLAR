@@ -1,8 +1,8 @@
-# Riesgos pendientes — POOLAR
+# Pending Risks — POOLAR
 
-> Actualizado: 2026-11-10 (`fase0-gobernanza`). Estado: **desarrollo/prototipo, no producción**. Riesgos clasificados para priorización; no implica remediación completada salvo evidencia explícita.
+> Updated: 2026-11-10 (`fase0-gobernanza`). Status: **development/prototype, not production**. Risks are classified for prioritization; listing does not imply remediation unless explicitly evidenced.
 
-## Críticos / abiertos
+## Critical / open
 
 | Riesgo | Impacto | Estado | Mitigación / siguiente paso |
 |---|---|---|---|

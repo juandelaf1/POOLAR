@@ -28,3 +28,6 @@ web/.vite/
 web/.env.local
 web/.env.*.local
 
+
+# MkDocs build output
+site/

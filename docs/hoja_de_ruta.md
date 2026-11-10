@@ -1,8 +1,8 @@
-# Hoja de Ruta — POOLAR
+# Roadmap — POOLAR
 
-> Actualizado: 2026-11-10 (`fase0-gobernanza`). Estado: **desarrollo/prototipo, no producción**. Fase 0 con núcleo fuerte; cierre formal sujeto a gates externos.
+> Updated: 2026-11-10 (`fase0-gobernanza`). Status: **development/prototype, not production**. Phase 0 core is strong; formal closure is subject to external gates.
 
-## Completado (base y Fase 0)
+## Completed (foundation and Phase 0)
 
 - [x] Monolito modular FastAPI + SQLAlchemy; auth JWT/PBKDF2, registro individual (`POST /personas/registro`), autorización org/persona, datos sintéticos `synthetic_pilot`.
 - [x] Modelo dominio: Necesidad, Problema Colectivo, Iniciativa, Decisión, Invitación/Participación, auditoría, exportación.

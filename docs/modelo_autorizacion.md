@@ -1,7 +1,7 @@
-# Modelo de Autorización — POOLAR
+# Authorization Model — POOLAR
 
-> Actualizado: 2026-11-10. Estado: **implementado parcialmente y en evolución (dev/Fase 0), no verificado con usuario real ni producción**.  
-> Referencias: `GOBERNANZA_POOLAR.md`, `docs/modelo_problemas_colectivos.md`, `BOUNDARIES.md`, `src/core/agent_harness/approvals.py`, `src/main.py`.
+> Updated: 2026-11-10. Status: **partially implemented and evolving (dev/Phase 0), not verified with real users or production**.  
+> References: `GOBERNANZA_POOLAR.md`, `docs/modelo_problemas_colectivos.md`, `BOUNDARIES.md`, `src/core/agent_harness/approvals.py`, `src/main.py`.
 
 ## Principios
 
