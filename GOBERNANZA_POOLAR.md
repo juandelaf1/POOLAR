@@ -38,6 +38,8 @@
 `ejecutada` → terminal (re-aprobar idempotente, sin duplicar efecto).  
 `expirada/caducada`/terminal → no aprobar ni ejecutar.
 
+*Semántica implementada:* `approve()` autorizado ejecuta el handler reanudable en transacción controlada (no hay “aprobado” sin ejecución en el flujo actual); fallos dejan estado reintentable/auditable. Correlación/idempotencia y auditoría deben preservarse en cada transición.
+
 ## 5) Políticas por riesgo (propuesto)
 | Riesgo/acción | Ruta por defecto | Requisitos |
 |---|---|---|

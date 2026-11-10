@@ -1,6 +1,6 @@
 # Capas y avance — POOLAR (registro vivo)
 
-> Actualizado: 2026-11-08 (local, sin commit/push). Complementa `BACKLOG_PRIORIZADO_POOLAR.md`, `CAMBIOS_POOLAR_FASE0.md`, `RESULTADOS_TESTS_POOLAR_FASE0.md`.
+> Actualizado: 2026-11-10 (`fase0-gobernanza`). Complementa `BACKLOG_PRIORIZADO_POOLAR.md`, `AUDIT_READY_POOLAR.md`, `FASE0_CHECKLIST_CIERRE.md`. Informes de iteración Fase 0 archivados en `docs/archive/fase0/`.
 
 ## 1) Mapa de capas (arquitectura modular en monolito)
 
@@ -12,7 +12,7 @@
 | **Agent harness / gobernanza** | `src/core/agent_harness/approvals.py`, `handlers.py`, `policy_engine.py`, `tool_registry.py`, `state.py`, `security.py` | Evaluación, HITL, persistencia de solicitudes, autorización/scope, ejecución transaccional, reanudación determinista, trazabilidad. | **Foco actual.** Aislamiento tenant, no autoaprobación, retiro propio seguro, idempotencia/dedup, estados de ejecución, handlers 5/5 registrados/validados. |
 | **Puertos / contratos** | `src/core/ports/*`, `src/core/contracts.py` | Interfaces ABC para capacidades externas (evidencia/geo/semántico). | Parcial: ABCs explícitos (sin `or True`); contratos POOLAR↔CASE pendientes. |
 | **Migraciones** | `src/core/alembic/`, `src/core/migrations/` | Evolución de esquema. | 0004 aplicada en PG real (Neon desechable). **0005 local** (unicidad parcial `idempotency_key`) pendiente de aplicar al revalidar PG. |
-| **Pruebas** | `tests/` | Regresión, Fase 0, concurrencia PG, HITL HTTP. | Suites Fase 0/gobernanza verdes en 1 corrida (SQLite) + evidencia PG carrera. Harness SQLite estabilizado. |
+| **Pruebas** | `tests/` | Regresión, Fase 0, concurrencia PG, HITL HTTP. | Suite local sin PG (2026-11-10): **171 passed, 7 skipped, 1 xfailed**; PG-only con skip/reachability determinista. Aislamiento de `RESUMABLE_HANDLERS` y guards reforzados. Concurrencia PG real validada en evidencia desechable previa; revalidar en entorno/CI objetivo. |
 
 ## 2) Flujo HITL (capa de gobernanza)
 
@@ -29,6 +29,7 @@
 | 2026-11-08 | core/agent_harness, services, API, alembic, tests, docs | P0.2 fail-closed decisiones cross-org. P0.1 scope/tenant/roles/no autoaprobación/idempotency key (0004). P0.3 commit único + estados ejecución + handlers/servicios componibles. P1.4/P1.5 handlers 5/5 + validación + ABCs. | 41 passed (focal) en corridas controladas; docs auditoría/plan/resultados/cambios. |
 | 2026-11-08 | PG real (Neon desechable) | `alembic upgrade head` hasta 0004; carrera 2 aprobadores, 1 efecto, `executed_at`. | `test_fase0_p04_concurrency_pg.py` → **1 passed (11.07s)**. F0-10/F0-12 DONE (base). |
 | 2026-11-08 | tests/conftest, approvals, scope tests, backlog | Harness SQLite: `reset_db` por borrado de datos (estable). Persona HTTP scope + retiro propio seguro. 0005 unicidad parcial idempotency **aplicada en Neon (desechable, 2026-11-09)**; carrera PG **1 passed (10.15s)** revalidada. | **104 passed** en 1 corrida (suites Fase 0/gobernanza + guards F0-09 + retiro propio): `test_fase0_approvals_scope`, `test_fase0_decision_failclosed`, `test_fase0_resumption_handlers`, `test_fase0_handlers_registry`, `test_governance_regresion`, `test_p03_http_governance`, `test_p04_resumption`. |
+| 2026-11-09/10 | docs, analytics, tests/scripts, ecosistema | Reorganización documental (índice `docs/index.md`, `mkdocs.yml`, archivo Fase 0), doc `ANALYTICS_LAKEHOUSE.md` (medallion/DuckDB/dbt stubs; lakehouse estratégico Basin/R2/Iceberg). Fixes: aislamiento `RESUMABLE_HANDLERS`, guards PG/reachability, eliminación de side effect `.env` en `scripts/export_medallion_raw.py`. Ecosistema: adapters/contratos dev-stage en EnRuta y SkyCast (PRs mergeadas). | Suite local sin PG: **171 passed, 7 skipped, 1 xfailed**. Docs compilables con MkDocs. |
 
 ## 4) Gobernanza / decisiones / gaps abiertos
 
