@@ -1,42 +1,44 @@
-# BOUNDARIES.md — Poolar
+# BOUNDARIES.md — POOLAR
 
-## Límites estrictos que la IA nunca debe romper
+## Strict boundaries that must not be broken
 
-### Arquitectura
-- Monolito modular en FastAPI + SQLAlchemy + PostgreSQL. No microservicios.
-- SQLite solo para desarrollo controlado y tests locales.
-- No introducir CrewAI, LangGraph, microservicios ni sistemas de IA obligatorios sin justificación.
-- Las migraciones se ejecutan con Alembic, no con `create_all()` en producción.
+### Architecture
+- Modular monolith (FastAPI + SQLAlchemy + PostgreSQL target). No microservices by default.
+- SQLite only for controlled local development and tests.
+- Do not introduce CrewAI, LangGraph, distributed infrastructure, or mandatory AI systems without demonstrated need and justification.
+- Migrations are managed with Alembic (not `create_all()` in production/target flows).
 
-### Seguridad
-- `POOLAR_SECRET_KEY` (antes `POOLAR_SECRET_KEY`) obligatoria de entorno. Falla segura si falta.
-- Autenticación JWT con PBKDF2-SHA256.
-- Autorización por organización y rol, y por persona individual (`tipo` en token).
-- No tokens ambiguos con ambos `organizacion_id` y `persona_id`.
-- Datos sensibles (`email`, `contacto`, `dni`, `ubicaciones_privadas`) nunca en respuestas públicas.
-- Rate limiting y validación de entrada en todos los endpoints.
+### Security
+- `POOLAR_SECRET_KEY` is required from environment. Fail safely if missing.
+- Authentication: JWT with PBKDF2-SHA256.
+- Authorization by organization/role and by individual person context (`tipo` in token/actor context). No ambiguous tokens with conflicting contexts.
+- Sensitive data (`email`, `contact`, `dni`, private locations, etc.) must never be exposed in public responses/DTOs, logs, or audit payloads.
+- Apply rate limiting and input validation on endpoints as applicable.
+- HITL/governed actions must be fail-closed; no self-approval and no authority transfer to external modules.
 
-### Datos
-- Etiqueta `synthetic_pilot` obligatoria en todos los datos de desarrollo/prueba.
-- No datos personales reales sin proceso de consentimiento documentado.
-- Procedencia de datos (`DataProvenance`) en cada registro.
-- No confundir datos sintéticos con resultados verificados.
+### Data
+- `synthetic_pilot` labeling/provenance is required for dev/test data unless a documented consent process exists.
+- No real personal data without documented consent, privacy, and operational controls.
+- Preserve provenance (`DataProvenance`/`_provenance`) on records/exports where applicable.
+- Do not confuse synthetic/estimated data with verified results.
 
-### Código
-- Tipado Pydantic estricto en todos los contratos.
-- Contraseñas en cuerpo JSON, nunca en URL.
-- `create_all()` solo para SQLite en desarrollo.
-- PostgreSQL se inicializa mediante migraciones Alembic.
-- Tests contra PostgreSQL real en CI.
+### Code
+- Strict Pydantic typing for contracts/DTOs.
+- Passwords/secrets in request bodies or env vars only, never in URLs.
+- `create_all()` only for SQLite/local dev as appropriate; PostgreSQL is initialized via Alembic migrations.
+- Test PostgreSQL behavior in CI/target environments when required (do not substitute SQLite for migration/concurrency validation).
 
 ### Testing
-- No aceptar códigos HTTP de error como si una operación hubiese tenido éxito.
-- No tests vacíos (`pass`).
-- Pruebas negativas de autorización obligatorias.
-- No sustituir PostgreSQL por SQLite en validación de migraciones.
+- Do not accept error HTTP codes as success.
+- No empty tests (`pass`).
+- Negative authorization tests are required for sensitive flows.
+- Do not claim green status without evidence; distinguish local/CI/PG/external-provider results.
 
-### Documentación
-- No declarar "listo para producción".
-- No afirmar impacto verificado sin evidencia.
-- No presentar agentes de IA como funcionales si no lo están.
-- No presentar matching determinista como probabilidad estadística.
+### Documentation and claims
+- Do not declare "production-ready".
+- Do not claim verified real-world impact without evidence.
+- Do not present AI agents/modules as executing authority in POOLAR context; modules propose, POOLAR governs/executes.
+- Do not present deterministic matching as statistical probability.
+
+### Language and conventions
+- Repository default language is **English** (README bilingual, English default). See `docs/CONVENTIONS.md`. Keep contracts and behavior backward-compatible in dev where specified.

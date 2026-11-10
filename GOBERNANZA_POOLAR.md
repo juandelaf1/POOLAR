@@ -1,66 +1,62 @@
-# Gobernanza — POOLAR (modelo operativo)
+# Governance — POOLAR (Operational Model)
 
-> Estado: **propuesto + parcialmente implementado (Fase 0)**. Principios: **fail-closed**, mínimo privilegio, separación de funciones, trazabilidad, aislamiento por ámbito. **POOLAR decide; CASE/módulos externos solo proponen.**
+> Updated: 2026-11-10 (English translation/alignment). Status: **proposed + partially implemented (Phase 0)**.  
+> Principles: **fail-closed**, least privilege, separation of duties, traceability, scope isolation. **POOLAR decides; CASE/external modules only propose.**
 
-## 1) Principios
-- **Autoridad:** la ejecución de efectos de negocio sensibles requiere decisión válida en POOLAR (automática bajo política explícita o HITL).
-- **Fail-closed:** falta de contexto, permiso, scope, handler o evidencia suficiente ⇒ bloquear/no ejecutar.
-- **Separación de funciones:** quien propone no aprueba/ejecuta su propia solicitud (salvo retiro seguro sin ejecución).
-- **Ámbito (tenant/personal):** acceso mínimo al scope correspondiente; sin fuga cross-tenant ni cross-persona.
-- **Auditabilidad:** cada decisión relevante deja rastro: actor, acción, contexto, motivo, estado, resultado/error, timestamps, correlación.
-- **Idempotencia/recuperación:** reintentos seguros, sin duplicar efectos; estados recuperables.
+## 1) Principles
 
-## 2) Actores y ámbitos
-| Actor | Ámbito típico | Notas |
+- **Authority:** execution of sensitive business effects requires a valid decision in POOLAR (automatic under explicit policy or HITL).
+- **Fail-closed:** missing context, permission, scope, handler, or sufficient evidence → block/do not execute.
+- **Separation of duties:** proposers do not approve/execute their own requests (except safe withdrawal without execution, where policy allows).
+- **Scope (tenant/personal):** minimum access to the corresponding scope; no cross-tenant or cross-person leakage.
+- **Auditability:** relevant decisions leave a trace: actor, action, context, reason, state, result/error, timestamps, correlation.
+- **Idempotency/recovery:** safe retries without duplicating effects; recoverable states.
+
+## 2) Actors and scopes
+
+| Actor | Typical scope | Notes |
 |---|---|---|
-| Organización (miembro operativo) | `organizacion_id` | Permisos por rol dentro de la org. |
-| Individuo / persona | personal (`persona_id`, sin `organizacion_id`) | Política actual: ver/retirar HITL propio; sin autoaprobación ni aprobación por terceros sin autoridad explícita. |
-| Sistema / automatización | según política | Solo rutas auto-aprobadas explícitas; trazable. |
-| Autoridad de gobernanza (futuro, explícita) | definido por política | Para escalamiento/excepciones; debe ser nominada, auditable y no relajar aislamiento por defecto. |
+| Organization (operational member) | `organizacion_id` | Permissions by role within the org. |
+| Individual / person | personal (`persona_id`, no `organizacion_id`) | Current policy: view/withdraw own HITL; no self-approval and no third-party approval without explicit authority (fail-closed). |
+| System / automation | per policy | Only explicitly auto-approved routes; traceable. |
+| Governance authority (future, explicit) | defined by policy | For escalation/exceptions; must be nominated, auditable, and must not relax isolation by default. |
 
-## 3) Matriz de permisos (base Fase 0, a completar)
+## 3) Permissions matrix (Phase 0 base, to be completed)
 
-| Capacidad | `miembro`/`observador` | `coordinador`/`gestor`/`responsable`/`aprobador`/`admin` | Proponente (mismo actor) | Individuo (ámbito personal) |
+| Capability | `member`/`observer` | `coordinator`/`manager`/`responsible`/`approver`/`admin` | Proposer (same actor) | Individual (personal scope) |
 |---|---:|---:|---:|---:|
-| Ver solicitud en scope | **Sí** (lectura en scope, sin gestión) | Sí (en scope) | Sí (en scope) | Sí (propia) |
-| Aprobar/ejecutar | No | Sí, en scope, no propia | **No** (self-approval bloqueado) | **No** (self); terceros **No** (política fail-closed) |
-| Rechazar | No | Sí, en scope | **Retiro propio permitido** (sin ejecución) | **Retiro propio permitido** |
-| Reintentar `fallida_reintentable` | No | Sí (vía aprobar), en scope | No (si implica autoaprobación) | N/A según política |
-| Cerrar `fallida_reintentable` por rechazo | No | Sí, en scope | Retiro si aplica política | Retiro propio |
-| Administrar política/roles | No | Solo rol admin definido | No | No |
+| View request in scope | **Yes** (read in scope) | Yes (in scope) | Yes (in scope) | Yes (own) |
+| Approve/execute | No | Yes, in scope, not own | **No** (self-approval blocked) | **No** (self); third parties **No** (fail-closed policy) |
+| Reject | No | Yes, in scope | **Own withdrawal allowed** (no execution) | **Own withdrawal allowed** |
+| Retry `failed_retryable` | No | Yes (via approve), in scope | No (if self-approval implied) | N/A per policy |
+| Close `failed_retryable` by rejection | No | Yes, in scope | Withdrawal if policy applies | Own withdrawal |
+| Manage policy/roles | No | Admin role only (as defined) | No | No |
 
-*Implementado parcialmente en `src/core/agent_harness/approvals.py` y tests Fase 0; falta formalizar lectura vs gestión y cubrir todos los endpoints/acciones.*
+*Partially implemented in `src/core/agent_harness/approvals.py` and Phase 0 tests; read vs manage coverage and all endpoints/actions must be fully formalized and tested.*
 
-## 4) Flujo HITL (estados)
-`pendiente` → (aprobación autorizada) → `ejecutando` → `ejecutada`  
-`pendiente` → (rechazo/retiro autorizado) → `rechazada`  
-`ejecutando`/handler falla → rollback → `fallida_reintentable` → (aprobar/reintentar) o (rechazar/cerrar)  
-`ejecutada` → terminal (re-aprobar idempotente, sin duplicar efecto).  
-`expirada/caducada`/terminal → no aprobar ni ejecutar.
+## 4) HITL flow (states)
 
-*Semántica implementada:* `approve()` autorizado ejecuta el handler reanudable en transacción controlada (no hay “aprobado” sin ejecución en el flujo actual); fallos dejan estado reintentable/auditable. Correlación/idempotencia y auditoría deben preservarse en cada transición.
+`pending` → (authorized approval) → `executing` → `executed`  
+`pending` → (authorized reject/withdrawal) → `rejected`  
+handler failure → rollback → `failed_retryable` → (approve/retry) or (reject/close)  
+`executed` → terminal (idempotent re-approval, no duplicated effect)  
+`expired`/terminal → do not approve or execute.
 
-## 5) Políticas por riesgo (propuesto)
-| Riesgo/acción | Ruta por defecto | Requisitos |
-|---|---|---|
-| Bajo riesgo, reversible, política explícita | Auto | Registro + auditoría |
-| Medio/alto, efecto de negocio, datos sensibles | HITL | Scope + aprobador autorizado + no self |
-| Excepcional / personal / escalamiento | HITL + autoridad explícita | Política nominada, evidencia, auditoría reforzada (diseñar antes de habilitar) |
-| Ambiguo / sin contexto | **Bloquear** | Fail-closed |
+## 5) Approval, execution, and resumption
 
-## 6) POOLAR ↔ CASE / módulos externos
-- **CASE propone** (DecisionProposal, EvidenceEnvelope, recomendaciones); **POOLAR valida, registra y decide**.
-- Integración por **contratos versionados** (ModuleManifest, ActorContext, ExecutionRequest, CapabilityResult, ApprovalRecord), adapters y mocks/datos sintéticos.
-- Ningún módulo externo recibe autoridad de aprobar/ejecutar HITL por defecto.
+- **Approval does not imply uncontrolled execution:** an authorized approval triggers the resumable handler transactionally and records result/error.
+- **Idempotency:** duplicate actions/keys must not duplicate effects; terminal executed state remains idempotent.
+- **Concurrency:** concurrent approve/execute attempts must produce a single effect (verified in disposable PG evidence; revalidate in CI/target).
+- **Handler failure:** no silent success; fail-safe state (`failed_retryable`) with audit.
 
-## 7) Auditoría y datos
-- Registrar quién/cuándo/qué/por qué/resultado/correlación; preservar trazabilidad ante fallos.
-- Datos personales/consentimientos: mínimo necesario, procedencia, acceso por scope, retención definida.
-- Analítica separada del transaccional (exports auditables → DuckDB/DBT cuando aplique); sin acoplar a HITL.
+## 6) Evidence and open gates
 
-## 8) Pendientes de gobernanza (backlog)
-- Completar matriz lectura/aprobación/admin y aplicarla en todos los endpoints.
-- Diseñar autoridad de escalamiento/excepciones (si se requiere) sin romper aislamiento.
-- Definir expiración/SLA, notificaciones, y reglas de quórum/delegación (si aplica).
-- Contratos POOLAR↔CASE y pruebas con mocks.
-- Revalidación PG/CI en entorno objetivo cuando haya cambios o pipeline con secretos gestionados.
+- Local (non-PG, 2026-11-10): **171 passed, 7 skipped, 1 xfailed**.
+- Formal Phase 0 closure remains gated by external evidence (CI green, PG job/secrets, exhaustive authz/E2E/fault-injection as required).
+- Real data/consent/GDPR operations, license/IP clearance for blocked repos, and runtime L1-EVAL-SYNTH require explicit human/legal authorization.
+
+## 7) References
+
+- `BOUNDARIES.md`, `INTENT.md`, `FASE0_CHECKLIST_CIERRE.md`, `AUDIT_READY_POOLAR.md`
+- `docs/modelo_autorizacion.md`, `docs/CONVENTIONS.md`
+- `src/core/agent_harness/approvals.py`, `src/core/agent_harness/handlers.py`, `tests/test_fase0_*`
