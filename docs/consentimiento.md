@@ -1,37 +1,40 @@
-# Consentimiento y Privacidad — Poolar
+# Consent and Privacy — POOLAR
 
-## Estado
-Documentado; no implementado como flujo automatizado. Bloquea datos reales hasta definir proceso.
+> Updated: 2026-11-10. Status: **documented; not implemented as an automated end-to-end flow**. Real data is blocked/controlled until a documented process exists.
 
-## Principios
-1. Los datos sintéticos (`synthetic_pilot`) son obligatorios hasta que exista un proceso de consentimiento documentado.
-2. Ningún dato personal real puede registrarse sin consentimiento explícito, registrado y revocable.
-3. La minimización de datos es obligatoria: solo se recopila lo necesario para el caso de uso.
-4. La separación entre información privada, compartible y pública debe ser explícita en cada entidad.
+## Principles
 
-## Flujo de consentimiento (pendiente de implementación)
-1. El usuario recibe información clara sobre qué datos se recopilan y para qué.
-2. Acepta explícitamente (checkbox o firma digital).
-3. El consentimiento se registra con fecha, versión y alcance.
-4. El usuario puede revocar en cualquier momento.
-5. Los datos se exportan/eliminan conforme a la revocación.
+1. **Synthetic by default:** `synthetic_pilot` data is required unless/until a documented consent process exists for real data.
+2. **Explicit consent:** no real personal data may be recorded without explicit, recorded, and revocable consent.
+3. **Data minimization:** collect only what is necessary for the use case.
+4. **Visibility boundaries:** separation between private, shareable, and public information must be explicit per entity.
 
-## Validación en API
-- `origen_datos` debe ser `synthetic_pilot` en el MVP.
-- Intentar registrar datos reales (`real_pilot`) sin metadato de consentimiento → HTTP 403.
-- Cualquier endpoint que acepte datos debe validar `origen_datos`.
+## Consent flow (pending implementation)
 
-## Riesgos pendientes
-- No hay proceso de consentimiento implementado.
-- No hay política de retención definida.
-- No hay derecho de acceso/portabilidad automatizado.
-- No hay DPO (Data Protection Officer) asignado.
-- **Estado P0 (commit `ad16c29`):** `ApprovalManager` (modelo `approval_requests`) creado y persistente en PostgreSQL (`7462b4e_approval`), pero **no integrado aún en `main.py`** para bloqueo de ejecución; la gobernanza opera en `evaluate()` (pre-acción) pero no impide la ejecución de la operación hasta aprobación humana en el flujo completo.
-- **Estado repos auditados:** 11 repositorios (CASE, EnRuta, DashLogistics, FitFamily, etc.) permanecen bloqueados hasta que sus P0/P1 sean corregidos; Poolar es independiente.
-- **Estado datos reales:** La API rechaza `real_pilot` (`HTTP 403`) cuando no hay consentimiento; la gobernanza (`AutomationEvaluator`) garantiza `REJECT` o `HUMAN_REVIEW` para datos reales sin contexto formal, pero no hay registro de consentimiento en base de datos aún.
+1. User receives clear information about what data is collected and for what purpose.
+2. User gives explicit consent (and scope/version).
+3. Consent is recorded with date, version, and scope.
+4. User can revoke at any time.
+5. Data is exported/deleted according to revocation and retention rules.
 
-## Referencias
-- GDPR (Reglamento General de Protección de Datos).
-- LOPDGDD (Ley Orgánica de Protección de Datos y Garantía de Derechos Digitales).
-- `docs/modelo_autorizacion.md` — matriz de permisos.
-- `docs/riesgos_pendientes.md` — riesgos P0/P1.
+## API and governance controls (current intent/behavior)
+
+- `origen_datos` should be `synthetic_pilot` in MVP/dev flows.
+- Attempts to register/use real data (`real_pilot`) without valid consent context must be denied by policy/API validation (e.g. HTTP 403) and/or routed to human review as applicable.
+- HITL/governance must fail closed for sensitive or insufficiently evidenced actions; POOLAR does not execute effects without authorized approval where required.
+
+> **Note:** implementation details evolve; verify against current code/tests (`src/main.py`, `src/core/contracts.py`, agent harness, Fase 0 tests). Prior statements about components "not integrated" may be outdated — rely on `FASE0_CHECKLIST_CIERRE.md` and test evidence.
+
+## Pending risks
+
+- No automated consent capture/registry/ revocation workflow.
+- No formal retention/deletion/access/portability process.
+- No assigned DPO/operational privacy ownership (project-dependent).
+- Real-user pilots require legal/privacy review and environment controls.
+
+## References
+
+- GDPR / applicable local data protection regulations.
+- `docs/modelo_autorizacion.md` — authorization model.
+- `docs/riesgos_pendientes.md` — risk register.
+- `BOUNDARIES.md`, `GOBERNANZA_POOLAR.md`.
