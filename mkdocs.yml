@@ -4,8 +4,9 @@ docs_dir: docs
 repo_name: juandelaf1/POOLAR
 
 nav:
-  - Inicio: index.md
-  - Arquitectura y ecosistema:
+  - Home: index.md
+  - Conventions (language & contracts): CONVENTIONS.md
+  - Architecture and ecosystem:
       - Ecosistema e integración: POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md
       - Benchmark bien común: POOLAR_BENCHMARK_ARQUITECTURA_BIEN_COMUN.md
       - Frontend monitoreo: FRONTEND_MONITOREO_ARQUITECTURA.md

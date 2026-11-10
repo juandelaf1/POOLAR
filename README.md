@@ -1,3 +1,193 @@
+# POOLAR — Cooperation Infrastructure
+
+<p align="center">
+  <img src="assets/poolar-banner.jpg" alt="Poolar" width="100%">
+</p>
+
+<p align="center">
+  <strong>Connect needs. Organize capabilities. Build shared solutions.</strong>
+</p>
+
+<p align="center">
+  <a href="#what-is-poolar">What is Poolar</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#domain-model">Domain</a> ·
+  <a href="#governance-and-hitl-agent-harness">Governance</a> ·
+  <a href="#project-status">Status</a> ·
+  <a href="#installation-and-execution">Installation</a> ·
+  <a href="#documentation">Docs</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/status-prototype%20%2F%20dev-blue?logo=shield" alt="Status">
+  <img src="https://img.shields.io/badge/phase-0%20(core%20strong%2C%20closure%20gated)-blue?logo=tag" alt="Phase">
+  <img src="https://img.shields.io/badge/data-synthetic__pilot-7C3AED?logo=database" alt="Data">
+  <img src="https://img.shields.io/badge/auth-PBKDF2--SHA256%20%2B%20JWT-2563EB?logo=lock" alt="Auth">
+  <img src="https://img.shields.io/badge/tests-171%20passed%20%2F%207%20skipped%20(local%2C%20no%20PG)-brightgreen?logo=pytest" alt="Tests">
+  <img src="https://img.shields.io/badge/license-MIT-10B981?logo=license" alt="License">
+</p>
+
+> **Language:** English is the default for this repository. A Spanish version is available below. See [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md).
+
+---
+
+## What is Poolar
+
+**Poolar** is an open, modular, interoperable infrastructure for collective cooperation.
+
+It is not a social network, a task manager, or a listings portal. It is the layer that enables people, communities, associations, cooperatives, small businesses, and institutions to:
+
+1. **Identify** individual and shared needs.
+2. **Discover** collective problems.
+3. **Connect** capabilities, knowledge, and resources.
+4. **Organize** initiatives and shared solutions.
+5. **Document** decisions and responsibilities.
+6. **Execute** coordinated actions (with governance/HITL where required).
+7. **Measure** results and generate reusable learning.
+
+The fundamental unit is not the user, organization, task, or project. It is **the problem that needs a response** and the **collective capability** that can be assembled to address it.
+
+## The problem it addresses
+
+Needs, knowledge, and resources are often fragmented. Discovering shared problems, validating collective needs, and organizing action requires discovery, validation, aggregation, decision-making, coordination, and traceability. Poolar provides operational primitives for this process in an open, transparent, and reusable way.
+
+## How it works
+
+Operational cycle:
+
+```
+Need → Discovery → Collective Problem → Capabilities & resources → Alternatives → Decision → Execution → Results → Reusable learning
+```
+
+Typical flow: register needs, discover deterministic matches, review/accept relations, create a Collective Problem, identify capabilities, compare alternatives, document decisions, execute or resume governed actions, record outcomes, and export the case.
+
+## Architecture
+
+```mermaid
+graph TD
+    A[Client / UI] --> B[FastAPI]
+    B --> C[JWT Auth / Actor Context]
+    B --> D[Pydantic Contracts / DTOs]
+    B --> E[Domain Services]
+    E --> F[SQLAlchemy Models]
+    F --> G[(PostgreSQL target / SQLite dev)]
+    E --> H[Audit Events]
+    E --> I[Agent Harness / HITL Governance]
+    I --> J[Policy / Fail-closed]
+    I --> K[Approval Manager]
+    I --> L[Resumable Handlers]
+    G --> M[Alembic Migrations]
+```
+
+**Layers:** UI → FastAPI API → Domain services → Domain models/persistence → Governance/Agent Harness (HITL, approvals, resumable handlers, audit). Analytics is separated (read-only, post-transactional).
+
+## Domain model
+
+Core entities include: `Persona`, `Organizacion`, `Necesidad`, `ProblemaColectivo`, `Iniciativa`, `Decision`, `Invitacion`/participation, `ConocimientoCapacidad`, `RecursoAporte`, `EventoAuditoria`, and HITL `ApprovalRequest`.
+
+```mermaid
+erDiagram
+    PERSONA ||--o{ NECESIDAD : registers
+    ORGANIZACION ||--o{ NECESIDAD : registers
+    NECESIDAD }o--o{ PROBLEMA_COLECTIVO : linked_to
+    PROBLEMA_COLECTIVO ||--o{ INICIATIVA : generates
+    INICIATIVA ||--o{ DECISION : records
+    PROBLEMA_COLECTIVO ||--o{ EVENTO_AUDITORIA : audited
+```
+
+## Governance and HITL (Agent Harness)
+
+- **Fail-closed** by default (missing context/permission/scope/evidence/handler ⇒ block or deny).
+- **Scope/tenant isolation** (organization/personal), no cross-tenant leakage, no self-approval.
+- **State flow:** `pending` → (authorized approval) → `executing` → `executed`; `pending` → reject/withdraw → `rejected`; handler failure → rollback → `failed_retryable`; `executed` is terminal/idempotent.
+- **POOLAR retains authority:** external modules/providers propose; they do not receive execution authority.
+
+See [`GOBERNANZA_POOLAR.md`](GOBERNANZA_POOLAR.md), [`docs/modelo_autorizacion.md`](docs/modelo_autorizacion.md), [`FASE0_CHECKLIST_CIERRE.md`](FASE0_CHECKLIST_CIERRE.md).
+
+## Project status
+
+- **Stage:** prototype / development, **not production**. No verified impact claims without evidence.
+- **Phase 0:** core controls strong; **formal closure gated** (CI green, PG job with managed secrets, exhaustive authz/E2E/fault-injection as required).
+- **Local evidence (2026-11-10, no PG):** `python -m pytest -q --rootdir=.` → **171 passed, 7 skipped, 1 xfailed** (SQLite). PG-only tests are deterministically skipped with reachability guards; prior disposable-PG evidence exists for migrations/concurrency (revalidate in target/CI env).
+- **Data:** `synthetic_pilot` by default.
+
+## Analytics / Lakehouse (separated)
+
+Medallion foundation `raw → staging → marts` (read-only, no HITL effects): idempotent/redacted export (`scripts/export_medallion_raw.py`), synthetic samples, dbt stubs, and local DuckDB build (`analytics/build_local_lakehouse.py`). Strategic evolution contemplated: `auditable exports → (Basin/Pipelines → R2/Iceberg)` when enabled. See [`docs/ANALYTICS_LAKEHOUSE.md`](docs/ANALYTICS_LAKEHOUSE.md).
+
+## Tech stack
+
+Python 3.11+, FastAPI, Pydantic v2, SQLAlchemy, PostgreSQL (target) / SQLite (dev/tests), Alembic, JWT (python-jose) + PBKDF2-SHA256, Pytest, Docker/Compose.
+
+## API and development
+
+Interactive docs when running: Swagger `/docs`, ReDoc `/redoc`, OpenAPI `/openapi.json`.
+
+Key areas: auth (`/personas/registro`, `/auth/token`), needs, collective problems, initiatives/decisions/activities, invitations/participation, matching, approvals (`/approvals/*`), exports, audit events, health.
+
+## Installation and execution
+
+```bash
+# Local (dev)
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+
+cp .env.example .env  # set POOLAR_SECRET_KEY and DATABASE_URL
+python -m pytest -q   # local suite (non-PG)
+python -m uvicorn src.main:app --reload --port 8000
+```
+
+```bash
+# Docker Compose
+docker-compose up -d db
+docker-compose up -d api
+alembic upgrade head
+```
+
+Optional analytics:
+
+```bash
+python scripts/export_medallion_raw.py --out analytics/local/raw
+python analytics/build_local_lakehouse.py --raw analytics/local/raw
+```
+
+Docs build:
+
+```bash
+pip install mkdocs
+python -m mkdocs build
+```
+
+## Documentation
+
+- **Index (compilable):** [`docs/index.md`](docs/index.md) · `mkdocs.yml` (legacy Fase 0 reports archived in [`docs/archive/fase0/`](docs/archive/fase0/))
+- **Conventions (language, contracts):** [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md)
+- **Governance/limits:** [`GOBERNANZA_POOLAR.md`](GOBERNANZA_POOLAR.md), [`BOUNDARIES.md`](BOUNDARIES.md), [`INTENT.md`](INTENT.md)
+- **Audit/status:** [`AUDIT_READY_POOLAR.md`](AUDIT_READY_POOLAR.md), [`FASE0_CHECKLIST_CIERRE.md`](FASE0_CHECKLIST_CIERRE.md), [`BACKLOG_PRIORIZADO_POOLAR.md`](BACKLOG_PRIORIZADO_POOLAR.md)
+- **Architecture/ecosystem:** [`docs/POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md`](docs/POOLAR_ECOSYSTEM_ARQUITECTURA_INTEGRACION.md), [`docs/ANALYTICS_LAKEHOUSE.md`](docs/ANALYTICS_LAKEHOUSE.md)
+
+## Known limitations
+
+- Not production; no verified real-world impact claims without evidence.
+- Real data/pilots require consent, privacy, and legal/operational controls.
+- External module/provider integration requires verified contracts, licenses/IP, security, and governance; modules propose, POOLAR decides/executes under HITL.
+- PostgreSQL is the target; SQLite for controlled dev/tests. PG evidence must be revalidated in target/CI environments.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).
+
+---
+
+
+
+<details>
+<summary><strong>Español</strong></summary>
+
+> Note: the repository's primary language and convention is English (see `docs/CONVENTIONS.md`). This section is kept as a bilingual reference and may be migrated progressively.
+
 # Poolar — Infraestructura de Cooperación
 
 <p align="center">
@@ -577,3 +767,5 @@ MIT License. Ver [`LICENSE`](LICENSE).
 <p align="center">
   <sub>Poolar — Infraestructura abierta de cooperación. Datos sintéticos hasta consentimiento formal.</sub>
 </p>
+
+</details>

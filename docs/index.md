@@ -1,12 +1,15 @@
-# Documentación POOLAR
+# POOLAR Documentation
 
-Índice navegable de la documentación **vigente** y referencias históricas. POOLAR está en **desarrollo (prototipo/Fase 0)**: sin claims de producción ni impacto verificado sin evidencia.
+Navigable index of **current** documentation and historical references. POOLAR is in **development (prototype/Phase 0)**: no production or verified-impact claims without evidence.
 
-## Entrada rápida
-- [README del repositorio](../README.md) — visión, arquitectura, API, ejecución.
-- [AUDIT_READY_POOLAR.md](../AUDIT_READY_POOLAR.md) — estado verificable para auditoría (cierre formal sujeto a gates externos).
-- [BACKLOG_PRIORIZADO_POOLAR.md](../BACKLOG_PRIORIZADO_POOLAR.md) — prioridades y pendientes.
-- [FASE0_CHECKLIST_CIERRE.md](../FASE0_CHECKLIST_CIERRE.md) — checklist de cierre Fase 0.
+> Language: repository convention is **English** (README bilingual, English default). Some linked docs may still be in Spanish and are migrated progressively. See [CONVENTIONS](CONVENTIONS.md).
+
+## Quick start
+- [Repository README](../README.md) — overview, architecture, API, execution (English default, Spanish in collapsible section).
+- [CONVENTIONS](CONVENTIONS.md) — language policy and contract locations.
+- [AUDIT_READY_POOLAR.md](../AUDIT_READY_POOLAR.md) — auditable status (formal closure subject to external gates).
+- [BACKLOG_PRIORIZADO_POOLAR.md](../BACKLOG_PRIORIZADO_POOLAR.md) — priorities and pending work.
+- [FASE0_CHECKLIST_CIERRE.md](../FASE0_CHECKLIST_CIERRE.md) — Phase 0 closure checklist.
 
 ## Gobernanza y límites
 - [INTENT.md](../INTENT.md) — intención y flujo operativo.
