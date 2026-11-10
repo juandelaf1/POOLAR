@@ -4,30 +4,30 @@
 
 ## Completed (foundation and Phase 0)
 
-- [x] Monolito modular FastAPI + SQLAlchemy; auth JWT/PBKDF2, registro individual (`POST /personas/registro`), autorización org/persona, datos sintéticos `synthetic_pilot`.
-- [x] Modelo dominio: Necesidad, Problema Colectivo, Iniciativa, Decisión, Invitación/Participación, auditoría, exportación.
-- [x] Gobernanza/HITL: fail-closed, scoping tenant/personal, no autoaprobación, retiro propio seguro, aprobación→ejecución transaccional de handlers reanudables, idempotencia/dedup, estados (`pendiente/ejecutando/ejecutada/fallida_reintentable/rechazada/expirada`), migraciones 0004/0005.
-- [x] Handlers deterministas registrados/validados (núcleo Fase 0), políticas declarativas, auditoría de ciclo de vida.
-- [x] Suite local (2026-11-10, sin PG): **171 passed, 7 skipped, 1 xfailed**; guards PG-only/reachability deterministas; aislamiento de `RESUMABLE_HANDLERS`/fixtures corregido.
-- [x] Evidencia PG desechable previa: concurrencia 1 efecto (`test_fase0_p04_concurrency_pg.py`), migraciones 0004+0005 (revalidar en entorno/CI objetivo).
-- [x] Contratos/adaptadores modulares (manifests/ports, mocks sintéticos, proposal-only); adapters dev-stage de contratos ecosistema en EnRuta/SkyCast (PRs mergeadas).
-- [x] Documentación reorganizada y compilable: `docs/index.md`, `mkdocs.yml`, archivo `docs/archive/fase0/`, `docs/ANALYTICS_LAKEHOUSE.md`, README/checklist/gobernanza/capas alineados.
-- [x] Analítica (separada, read-only): medallion raw/staging/marts, export idempotente/redactado `scripts/export_medallion_raw.py`, muestras sintéticas, stubs dbt, `analytics/build_local_lakehouse.py` (DuckDB local).
-- [x] Docker/Compose, Alembic, CI workflow definido.
+- [x] Modular monolith (FastAPI + SQLAlchemy); JWT/PBKDF2 auth, individual registration (`POST /personas/registro`), org/person authorization, `synthetic_pilot` data.
+- [x] Domain model: Need, Collective Problem, Initiative, Decision, Invitation/Participation, audit, export.
+- [x] Governance/HITL: fail-closed, tenant/personal scoping, no self-approval, safe self-withdrawal, authorized approval→transactional execution of resumable handlers, idempotency/dedup, states (`pending/executing/executed/failed_retryable/rejected/expired`), migrations 0004/0005.
+- [x] Deterministic handlers registered/validated (Phase 0 core), declarative policies, lifecycle audit.
+- [x] Local suite (2026-11-10, no PG): **171 passed, 7 skipped, 1 xfailed**; deterministic PG-only/reachability guards; `RESUMABLE_HANDLERS`/fixture isolation fixed.
+- [x] Prior disposable-PG evidence: single-effect concurrency (`test_fase0_p04_concurrency_pg.py`), migrations 0004+0005 (revalidate in target/CI environment).
+- [x] Modular contracts/adapters (manifests/ports, synthetic mocks, proposal-only); dev-stage ecosystem contract adapters in EnRuta/SkyCast (PRs merged), CASE `case.evaluate` boundary adapter (additive).
+- [x] Documentation reorganized and buildable: `docs/index.md`, `mkdocs.yml`, `docs/archive/fase0/`, `docs/ANALYTICS_LAKEHOUSE.md`, aligned README/checklist/governance/layers; English default + bilingual README, conventions, progressive migration.
+- [x] Analytics (separated, read-only): medallion raw/staging/marts, idempotent/redacted export `scripts/export_medallion_raw.py`, synthetic samples, dbt models/profile, `analytics/build_local_lakehouse.py` (local DuckDB), **`dbt run` PASS=3**.
+- [x] Docker/Compose, Alembic, CI workflow defined; global correlation middleware + ops/HITL envelope enrichment (additive).
 
-## Pendiente / abierto
+## Pending / open
 
-- [ ] **Cierre formal Fase 0 (gates externos):** CI verde en HEAD objetivo, job PG con secretos gestionados, matriz E2E exhaustiva donde falte, fault-injection real mid-handler si se exige.
-- [ ] Revalidar concurrencia/migraciones PG en entorno objetivo tras cambios relevantes.
-- [ ] Proceso de consentimiento y controles RGPD/PII operativos para datos reales; rotación/gestión de secretos en entornos.
-- [ ] Integraciones externas reales (CASE/módulos/proveedores) solo por contrato, con autorización, datos sintéticos/autorizados y sin ampliar autoridad de ejecución.
-- [ ] Observabilidad/UI completa de estados HITL; accesibilidad WCAG completa; E2E ampliado (Playwright) según necesidad.
-- [ ] Búsqueda semántica real (pgvector) y capacidades avanzadas (RAG, PostGIS, OR-Tools, MCP, LangGraph/LangSmith) solo cuando haya necesidad demostrada.
-- [ ] Licencias/derechos verificados para repos bloqueados antes de reutilización.
+- [ ] **Formal Phase 0 closure (external gates):** green CI on target HEAD, PG job with managed secrets, exhaustive E2E matrix where missing, real mid-handler fault injection if required.
+- [ ] Revalidate PG concurrency/migrations in target environment after relevant changes.
+- [ ] Consent process and operational GDPR/PII controls for real data; secret rotation/management in environments.
+- [ ] Real external integrations (CASE/modules/providers) only by contract, with authorization, synthetic/authorized data, and without expanding execution authority.
+- [ ] Full HITL state observability/UI; complete WCAG accessibility; expanded E2E (Playwright) as needed.
+- [ ] Real semantic search (pgvector) and advanced capabilities (RAG, PostGIS, OR-Tools, MCP, LangGraph/LangSmith) only when justified by demonstrated need.
+- [ ] Verified licenses/rights for blocked repos before reuse.
 
-## Próximas iteraciones sugeridas
+## Suggested next iterations
 
-1. **CI/PG objetivo:** ejecutar suite PG con `POOLAR_TEST_POSTGRES_URL` + migraciones y publicar evidencia.
-2. **Analytics local:** perfil dbt DuckDB + `dbt run/test` sobre exports raw; marts de impacto trazable.
-3. **Integración contratos en POOLAR:** correlation/envelope en APIs HITL/ops (backward-compatible).
-4. **Docs contenido:** mantener `docs/modelo_autorizacion.md`, `docs/riesgos_pendientes.md`, `docs/decisiones_tecnicas.md` alineados con implementación.
+1. **Target CI/PG:** run PG suite with `POOLAR_TEST_POSTGRES_URL` + migrations and publish evidence.
+2. **Analytics:** extend dbt models/tests over real exports; traceable impact marts.
+3. **Contract adoption in POOLAR:** continue normalizing correlation/envelope/provenance in business/read APIs (backward-compatible) with contract tests.
+4. **Docs:** keep remaining docs/ADRs aligned in English and current as they are touched.

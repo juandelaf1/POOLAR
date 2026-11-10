@@ -3,53 +3,53 @@
 > Updated: 2026-11-10. Status: **partially implemented and evolving (dev/Phase 0), not verified with real users or production**.  
 > References: `GOBERNANZA_POOLAR.md`, `docs/modelo_problemas_colectivos.md`, `BOUNDARIES.md`, `src/core/agent_harness/approvals.py`, `src/main.py`.
 
-## Principios
+## Principles
 
-- **Mínimo privilegio y fail-closed:** falta contexto/permiso/scope/evidencia ⇒ denegar o no ejecutar.
-- **Aislamiento por ámbito:** organización (`organizacion_id`), individuo/personal (`persona_id`/actor personal), sin fuga cross-tenant ni cross-persona.
-- **Separación de funciones:** proponente no autoaprueba/ejecuta; retiro propio seguro permitido sin ejecución cuando la política lo autoriza.
-- **POOLAR conserva autoridad:** HITL/decisión/ejecución gobernada en POOLAR; módulos externos/CASE solo proponen.
-- **Datos y privacidad:** `synthetic_pilot` por defecto; sin PII innecesaria en respuestas/logs/exports; consentimiento/procedencia requeridos para datos reales.
+- **Least privilege and fail-closed:** missing context/permission/scope/evidence ⇒ deny or do not execute.
+- **Scope isolation:** organization (`organizacion_id`) and individual/personal (`persona_id`/personal actor), no cross-tenant or cross-person leakage.
+- **Separation of duties:** proposers do not self-approve/execute; safe self-withdrawal without execution is allowed when policy permits.
+- **POOLAR retains authority:** HITL/decision/governed execution stays in POOLAR; external modules/CASE only propose.
+- **Data and privacy:** `synthetic_pilot` by default; no unnecessary PII in responses/logs/exports; consent/provenance required for real data.
 
-## Actores y autenticación
+## Actors and authentication
 
-| Actor | Autenticación | Contexto típico |
+| Actor | Authentication | Typical context |
 |---|---|---|
-| Usuario de organización | `POST /auth/token` (JWT, PBKDF2-SHA256) | `tipo=organizacion`, `organizacion_id`, rol operativo |
-| Persona/individuo | `POST /personas/registro` + `POST /auth/token` | `tipo=individuo`, `persona_id`/ámbito personal |
-| Sistema/automatización | Política explícita | Solo rutas auto-aprobadas y trazables |
+| Organization user | `POST /auth/token` (JWT, PBKDF2-SHA256) | `tipo=organizacion`, `organizacion_id`, operational role |
+| Individual/person | `POST /personas/registro` + `POST /auth/token` | `tipo=individuo`, `persona_id`/personal scope |
+| System/automation | Explicit policy | Only explicitly auto-approved and traceable routes |
 
-`POOLAR_SECRET_KEY` obligatoria (fail-safe si falta). Tokens sin contexto ambiguo.
+`POOLAR_SECRET_KEY` is required (fail-safe if missing). No ambiguous token contexts.
 
-## Matriz resumida (dominio y HITL)
+## Summary matrix (domain and HITL)
 
-| Capacidad | Individuo (ámbito propio/personal) | Miembro/observador org | Gestor/coordinador/responsable/aprobador/admin org | Notas |
+| Capability | Individual (own/personal scope) | Org member/observer | Org manager/coordinator/responsible/approver/admin | Notes |
 |---|---|---|---|---|
-| Registrar/auth | Sí (registro y token) | Sí (según alta/token org) | Sí | Credenciales en JSON body |
-| Crear/leer necesidades | Propias y accesibles según visibilidad/scope | Propias org + accesibles (`compartible/publica`) según reglas | En scope org | No exponer datos sensibles en DTO público |
-| Problema colectivo / iniciativa / decisión | Según participación/responsabilidad y gobernanza | Según pertenencia/scope/rol | Según rol y scope | Algunas acciones pasan por evaluación/HITL |
-| Ver solicitud HITL | Sí, si está en su scope (propia/personal) | Sí, si está en scope (lectura) | Sí, en scope | Fuera de scope: ocultar/denegar (404/403 según endpoint) |
-| Aprobar/ejecutar HITL | **No** autoaprobación; terceros **no** sin autoridad explícita (fail-closed) | No | Sí, en scope, no propia | `approve()` autorizado ejecuta handler y registra resultado |
-| Rechazar HITL | Retiro propio permitido (sin ejecución) | No gestión | Sí, en scope | Proponente no autoaprueba |
-| Reintento/cierre `fallida_reintentable` | Según política (retiro propio si aplica) | No | Sí, en scope, no propia | Idempotente: sin duplicar efecto |
+| Register/auth | Yes (registration and token) | Yes (per org onboarding/token) | Yes | Credentials in JSON body |
+| Create/read needs | Own and accessible per visibility/scope | Own org + accessible (`shareable/public`) per rules | Within org scope | No sensitive data in public DTOs |
+| Collective problem / initiative / decision | Per participation/responsibility and governance | Per membership/scope/role | Per role and scope | Some actions go through HITL evaluation |
+| View HITL request | Yes, if in own/personal scope | Yes, if in scope (read) | Yes, in scope | Out of scope: hide/deny (404/403 per endpoint) |
+| Approve/execute HITL | **No** self-approval; third parties **no** without explicit authority (fail-closed) | No | Yes, in scope, not own | Authorized `approve()` executes handler and records result |
+| Reject HITL | Own withdrawal allowed (no execution) | No management action | Yes, in scope | Proposer cannot self-approve |
+| Retry/close `failed_retryable` | Per policy (own withdrawal if applicable) | No | Yes, in scope, not own | Idempotent: no duplicated effect |
 
-*La matriz exacta por endpoint/acción se valida en código y tests (`tests/test_fase0_*`, `tests/test_p03_http_governance.py`, etc.); completar cobertura exhaustiva es parte del cierre Fase 0.*
+*The exact per-endpoint/action matrix is validated in code and tests (`tests/test_fase0_*`, `tests/test_p03_http_governance.py`, etc.); exhaustive coverage is part of formal Phase 0 closure.*
 
-## Flujo HITL (implementado)
+## HITL flow (implemented)
 
-`pendiente` → (aprobación autorizada) → `ejecutando` → `ejecutada`  
-`pendiente` → (rechazo/retiro autorizado) → `rechazada`  
-falla de handler → rollback → `fallida_reintentable` → reintento/cierre autorizado  
-`ejecutada` → terminal (idempotente, sin duplicar efecto)  
-`expirada`/terminal → no aprobar ni ejecutar.
+`pending` → (authorized approval) → `executing` → `executed`  
+`pending` → (authorized reject/withdrawal) → `rejected`  
+handler failure → rollback → `failed_retryable` → authorized retry/close  
+`executed` → terminal (idempotent, no duplicated effect)  
+`expired`/terminal → do not approve or execute.
 
-## Evidencia y verificación
+## Evidence and verification
 
-- Local sin PG (2026-11-10): **171 passed, 7 skipped, 1 xfailed** (SQLite). Suite Fase 0/gobernanza y resumption cubiertas.
-- PG real (evidencia desechable previa): migraciones 0004+0005 y carrera de concurrencia 1 efecto; **revalidar** en entorno/CI objetivo con `POOLAR_TEST_POSTGRES_URL`.
-- Gaps conocidos: matriz exhaustiva por todas las acciones/endpoints, PG/CI verde con secretos gestionados, consentimientos/RGPD operativo para datos reales.
+- Local without PG (2026-11-10): **171 passed, 7 skipped, 1 xfailed** (SQLite). Phase 0/governance and resumption suites covered.
+- Prior disposable-PG evidence: migrations 0004+0005 and single-effect concurrency race; **revalidate** in target/CI environment with `POOLAR_TEST_POSTGRES_URL`.
+- Known gaps: exhaustive matrix across all actions/endpoints, green CI/PG with managed secrets, operational consent/GDPR for real data.
 
-## Restricciones
+## Constraints
 
-- No producción, no impacto verificado sin evidencia.
-- No relajar aislamiento/HITL para conveniencia; no integrar módulos externos con autoridad de ejecución.
+- Not production; no verified impact without evidence.
+- Do not relax isolation/HITL for convenience; do not grant execution authority to external modules.
