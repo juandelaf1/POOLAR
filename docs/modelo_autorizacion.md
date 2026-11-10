@@ -1,88 +1,55 @@
-# Modelo de Autorización — Poolar v0.6
+# Modelo de Autorización — POOLAR
 
-Estado: **definido en código y documentado; no verificado con usuario real**.
-Referencia: `docs/vision_y_proposito.md`; `docs/modelo_problemas_colectivos.md`.
-Fecha: 28 de octubre de 2026
+> Actualizado: 2026-11-10. Estado: **implementado parcialmente y en evolución (dev/Fase 0), no verificado con usuario real ni producción**.  
+> Referencias: `GOBERNANZA_POOLAR.md`, `docs/modelo_problemas_colectivos.md`, `BOUNDARIES.md`, `src/core/agent_harness/approvals.py`, `src/main.py`.
 
----
+## Principios
 
-## Principio
+- **Mínimo privilegio y fail-closed:** falta contexto/permiso/scope/evidencia ⇒ denegar o no ejecutar.
+- **Aislamiento por ámbito:** organización (`organizacion_id`), individuo/personal (`persona_id`/actor personal), sin fuga cross-tenant ni cross-persona.
+- **Separación de funciones:** proponente no autoaprueba/ejecuta; retiro propio seguro permitido sin ejecución cuando la política lo autoriza.
+- **POOLAR conserva autoridad:** HITL/decisión/ejecución gobernada en POOLAR; módulos externos/CASE solo proponen.
+- **Datos y privacidad:** `synthetic_pilot` por defecto; sin PII innecesaria en respuestas/logs/exports; consentimiento/procedencia requeridos para datos reales.
 
-No se asume que pertenecer a una organización concede acceso ilimitado a todos los problemas, necesidades o iniciativas. Cada entidad (Persona, Organización) tiene un contexto de participación explícito, y los permisos se derivan de ese contexto, no de la simple posesión de un `id`.
+## Actores y autenticación
 
-En el MVP:
-- **Persona independiente (`tipo = individuo`)**: puede crear necesidades propias, participar en problemas colectivos donde esté relacionada por evidencia o participación previa, ofrecer conocimiento o recursos propios, y consultar decisiones e iniciativas donde participe o sea responsable.
-- **Organización (`tipo = organizacion`)**: crea recursos como propietaria; sus usuarios operativos (`OperationalUser`) actúan en su nombre. Un problema colectivo creado por la organización puede incluir necesidades vinculadas a ella y a personas relacionadas (previa validación explícita del flujo de consentimiento pendiente).
+| Actor | Autenticación | Contexto típico |
+|---|---|---|
+| Usuario de organización | `POST /auth/token` (JWT, PBKDF2-SHA256) | `tipo=organizacion`, `organizacion_id`, rol operativo |
+| Persona/individuo | `POST /personas/registro` + `POST /auth/token` | `tipo=individuo`, `persona_id`/ámbito personal |
+| Sistema/automatización | Política explícita | Solo rutas auto-aprobadas y trazables |
 
----
+`POOLAR_SECRET_KEY` obligatoria (fail-safe si falta). Tokens sin contexto ambiguo.
 
-## Matriz de permisos (resumen operativo)
+## Matriz resumida (dominio y HITL)
 
-| Acción | Persona independiente (`individuo`) | Usuario de organización (`organizacion`) | Observaciones / limitaciones actuales |
-|---|---|---|---|
-| Registrar identidad | Sí (registro individual pendiente en endpoint) | Sí (mediante `POST /organizaciones`) | Registro individual requiere `Persona.hashed_password`; no se expone en DTO público. |
-| Autenticarse (`/auth/token`) | Sí, si tiene `email` + `hashed_password` en `Persona` | Sí, con `email` + `hashed_password` en `OperationalUser` | La autenticación individual está implementada a nivel de datos (`auth.py` actualiza `get_current_user`), pero no hay endpoint público de registro individual aún. |
-| Crear necesidad (`POST /necesidades`) | Sí, con `organizacion_id` = `None`, `persona_id` = propio | Sí, con `organizacion_id` = propio | Se requiere `visibilidad` explícita; por defecto `privada`. |
-| Leer necesidad ajena (`GET /necesidades`) | Solo `compartible` o `publica` | Solo propias + `compartible`/`publica` | No se expone `responsable_id` ni datos sensibles en DTO público. |
-| Crear Problema Colectivo (`POST /problemas-colectivos`) | Sí, con evidencia sintética obligatoria (`origen_datos` = `synthetic_pilot`) | Sí, igual restricción | El cliente no puede fijar `validado`; solo `detectado`. |
-| Consultar problema (`GET /problemas-colectivos`) | Solo si es participante o responsable del problema | Solo si es participante, responsable o miembro de la organización responsable | No confirma existencia de problemas inaccesibles (404 único). |
-| Asociar necesidad a problema | Solo necesidades accesibles (`privada` si es propia, `compartible`/`publica` si es ajena con permiso implícito) | Igual | Se rechaza explícitamente (`404`) si no tiene acceso. |
-| Participar en problema (agregar persona/org) | Solo si la persona ya está relacionada con una necesidad del problema (no hay invitación independiente aún) | Igual restricción para organizaciones | Limitación documentada: falta flujo de consentimiento/invitación independiente. |
-| Cambiar estado (`POST .../estado`) | Solo el responsable o la organización propietaria del problema | Solo organización propietaria (si el problema tiene `organizacion_id`) | Requiere evidencia para pasar a `validado`. |
-| Crear iniciativa (`POST /iniciativas`) | Solo si es responsable de la iniciativa o pertenece a la organización de la necesidad vinculada | Solo la organización responsable (`responsable_id` = `org_id`) | La persona independiente aún no puede ser `responsable_id` de una iniciativa; pendiente de extensión mínima. |
-| Crear decisión (`POST /decisiones`) | Solo si pertenece al contexto responsable de la iniciativa | Igual | Requiere `responsable_decision` explícito. |
-| Consultar decisión (`GET ...`) | Incluido en flujo; no hay endpoint específico de lectura individual aún | Igual | La lectura es a través del flujo de iniciativa. |
-| Exportar (`/exportar/*`) | Solo datos propios (necesidades de la organización para contexto organizativo; para individuo pendiente de implementación completa) | Solo datos propios | Datos sintéticos etiquetados (`synthetic`: true). |
-| Registrar evento (`POST /eventos`) | Sí, solo sobre entidades accesibles (`problema_colectivo`, `iniciativa`, `necesidad`, `decision`) | Igual | No se registra contraseña, token ni datos personales en `dato_anterior`/`dato_nuevo`. |
+| Capacidad | Individuo (ámbito propio/personal) | Miembro/observador org | Gestor/coordinador/responsable/aprobador/admin org | Notas |
+|---|---|---|---|---|
+| Registrar/auth | Sí (registro y token) | Sí (según alta/token org) | Sí | Credenciales en JSON body |
+| Crear/leer necesidades | Propias y accesibles según visibilidad/scope | Propias org + accesibles (`compartible/publica`) según reglas | En scope org | No exponer datos sensibles en DTO público |
+| Problema colectivo / iniciativa / decisión | Según participación/responsabilidad y gobernanza | Según pertenencia/scope/rol | Según rol y scope | Algunas acciones pasan por evaluación/HITL |
+| Ver solicitud HITL | Sí, si está en su scope (propia/personal) | Sí, si está en scope (lectura) | Sí, en scope | Fuera de scope: ocultar/denegar (404/403 según endpoint) |
+| Aprobar/ejecutar HITL | **No** autoaprobación; terceros **no** sin autoridad explícita (fail-closed) | No | Sí, en scope, no propia | `approve()` autorizado ejecuta handler y registra resultado |
+| Rechazar HITL | Retiro propio permitido (sin ejecución) | No gestión | Sí, en scope | Proponente no autoaprueba |
+| Reintento/cierre `fallida_reintentable` | Según política (retiro propio si aplica) | No | Sí, en scope, no propia | Idempotente: sin duplicar efecto |
 
----
+*La matriz exacta por endpoint/acción se valida en código y tests (`tests/test_fase0_*`, `tests/test_p03_http_governance.py`, etc.); completar cobertura exhaustiva es parte del cierre Fase 0.*
 
-## Notas sobre el flujo individual pendiente
+## Flujo HITL (implementado)
 
-- **Endpoint de registro individual** (`POST /personas/registro`): no implementado en esta iteración. El modelo de datos (`Persona.hashed_password`, `rol = individuo`, `email`) lo soporta; la limitación es de endpoint, no de dominio.
-- **Responsable de iniciativa (`responsable_id`)**: actualmente se restringe a la organización (`org_id`). La persona independiente podría ser responsable si se extiende la validación de `responsable_tipo`; no se implementó para evitar ampliar el alcance sin pruebas de integración completas.
-- **Invitación de participantes**: el modelo soporta la asociación N:M (`problema_participantes_persona`, `problema_participantes_organizacion`), pero la autorización requiere que la persona esté relacionada con una necesidad asociada al problema. Un flujo independiente de invitación (sin necesidad previa) está pendiente y documentado en `docs/riesgos_pendientes.md`.
+`pendiente` → (aprobación autorizada) → `ejecutando` → `ejecutada`  
+`pendiente` → (rechazo/retiro autorizado) → `rechazada`  
+falla de handler → rollback → `fallida_reintentable` → reintento/cierre autorizado  
+`ejecutada` → terminal (idempotente, sin duplicar efecto)  
+`expirada`/terminal → no aprobar ni ejecutar.
 
----
+## Evidencia y verificación
 
-## Riesgos documentados
+- Local sin PG (2026-11-10): **171 passed, 7 skipped, 1 xfailed** (SQLite). Suite Fase 0/gobernanza y resumption cubiertas.
+- PG real (evidencia desechable previa): migraciones 0004+0005 y carrera de concurrencia 1 efecto; **revalidar** en entorno/CI objetivo con `POOLAR_TEST_POSTGRES_URL`.
+- Gaps conocidos: matriz exhaustiva por todas las acciones/endpoints, PG/CI verde con secretos gestionados, consentimientos/RGPD operativo para datos reales.
 
-- `docs/riesgos_pendientes.md` actualizado con:
-  - P0 (`Anexo_Risk`): confirmado; no integrado.
-  - P1 (`EnRuta`): confirmado; `SECRET_KEY` requiere entorno.
-  - Autorización individual: implementada en datos (`Persona` con `hashed_password`) y en `auth.py`, pero pendiente de endpoint público completo (`POST /personas/registro`) y de flujo completo de iniciativa con `responsable_tipo = individuo`.
-  - Migración PostgreSQL: pendiente (`tests/test_problema_colectivo.py` tiene `test_migracion_postgresql` con `skipif` si `POOLAR_TEST_POSTGRES_URL` no está configurada).
-  - Datos sintéticos: obligatorio (`origen_datos = synthetic_pilot`). El piloto real requiere proceso de consentimiento y licencia verificada.
-  - No producción: no se afirma impacto verificado ni impacto real.
+## Restricciones
 
----
-
-## Pruebas y resultados
-
-- Última ejecución: **30 passed, 1 skipped** (`tests/test_problema_colectivo.py`).
-- `tests/test_auth_isolation.py`: 3 passed (token expiration, hash, synthetic tag).
-- `tests/conftest.py`: configuración de base efímera con `POOLAR_SECRET_KEY` y `DATABASE_URL` locales; sin credenciales reales.
-- Nuevas pruebas de seguridad añadidas:
-  - `test_rechaza_necesidad_inexistente`
-  - `test_no_puede_ver_problema_de_otra_org`
-  - `test_no_puede_incorporar_organizacion_sin_relacion`
-  - `test_no_puede_cambiar_estado_de_problema_ajeno`
-  - `test_sin_duplicados_en_relaciones`
-  - `test_privacidad_necesidades_asociadas`
-  - `test_flujo_completo_necesidad_problema_iniciativa`
-
----
-
-## Estado de PostgreSQL
-
-- Servicio PostgreSQL: **no disponible en esta iteración**.
-- Prueba de integración (`test_migracion_postgresql`): marcada con `skipif` (`POOLAR_TEST_POSTGRES_URL`).
-- Migración SQLite (`002_problemas_colectivos.sqlite.sql`) validada con `sqlite3` y `pytest`.
-- Dependencias (`psycopg2-binary`) presentes en `requirements.txt`; no se ejecutan sin servicio.
-- Recomendación: ejecutar `tests/` con `POOLAR_TEST_POSTGRES_URL=postgresql://...` cuando el servicio esté disponible para validar integridad N:M y restricciones (`ON DELETE CASCADE`, `CHECK`) en PostgreSQL.
-
----
-
-## Pasos para reproducir el flujo individual completo (documentado)
-
-Nota: el registro individual (`POST /personas/registro`) no está implementado como endpoint público en esta iteración, pero el flujo es reproducible manualmente con datos sintéticos a través de `Persona` en la base de datos y la autenticación con `email` + `hashed_password`. El diseño del modelo (`Persona.hashed_password`, `rol = individuo`, `email`) lo soporta.
+- No producción, no impacto verificado sin evidencia.
+- No relajar aislamiento/HITL para conveniencia; no integrar módulos externos con autoridad de ejecución.
