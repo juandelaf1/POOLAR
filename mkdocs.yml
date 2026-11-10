@@ -17,6 +17,7 @@ nav:
       - Visión y propósito: vision_y_proposito.md
       - Hoja de ruta: hoja_de_ruta.md
       - Riesgos pendientes: riesgos_pendientes.md
+      - Analytics y lakehouse: ANALYTICS_LAKEHOUSE.md
   - ADRs y decisiones:
       - Agent harness: adr_agent_harness.md
       - LangGraph/CrewAI: adr_langgraph_crewai.md

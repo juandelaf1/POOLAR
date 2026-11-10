@@ -24,6 +24,7 @@
 - [modelo_autorizacion.md](modelo_autorizacion.md) · [modelo_problemas_colectivos.md](modelo_problemas_colectivos.md) · [registro_individual.md](registro_individual.md)
 - [vision_y_proposito.md](vision_y_proposito.md) · [hoja_de_ruta.md](hoja_de_ruta.md) · [riesgos_pendientes.md](riesgos_pendientes.md)
 - [cat_herramientas.md](cat_herramientas.md) · [decisiones_tecnicas.md](decisiones_tecnicas.md) · [consentimiento.md](consentimiento.md) · [accesibilidad_wcag.md](accesibilidad_wcag.md)
+- [ANALYTICS_LAKEHOUSE.md](ANALYTICS_LAKEHOUSE.md) — medallion/raw-staging-marts, DuckDB/dbt stubs, lakehouse estratégico (Basin/R2/Iceberg)
 - Demo: [escenario_logistica.md](demo/escenario_logistica.md)
 
 ## Archivo (histórico)
