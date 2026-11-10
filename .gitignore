@@ -10,8 +10,16 @@ __pycache__/
 dist/
 build/
 analytics/local/
+*.duckdb
 profiles.yml
 !analytics/dbt/profiles.yml.example
+!analytics/dbt/profiles.yml
+
+# dbt local artifacts
+analytics/dbt/target/
+analytics/dbt/logs/
+analytics/dbt/.user.yml
+dbt_packages/
 
 # Frontend (web/)
 web/node_modules/

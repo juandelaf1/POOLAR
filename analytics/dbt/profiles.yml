@@ -1,0 +1,13 @@
+# Local reproducible profile for dbt-duckdb (no secrets).
+# Run from repo root:
+#   python -m dbt run --project-dir analytics/dbt --profiles-dir analytics/dbt
+poolar_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "analytics/local/dbt_analytics.duckdb"
+      schema: main
+      threads: 4
+      extensions:
+        - json
