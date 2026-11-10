@@ -1,23 +1,19 @@
 # ADR: LangGraph vs CrewAI
 
-## Estado
-Aceptado (LangGraph como primera opción, CrewAI como alternativa a evaluar).
+> Updated: 2026-11-10. Status: **proposed/preferred direction (not adopted by default)**. External orchestrators are evaluated only when a demonstrated need exists.
 
-## Decisión
-Utilizar LangGraph como orquestador principal para flujos de agentes. Mantener CrewAI como alternativa a evaluar únicamente si un requisito concreto no se resuelve con LangGraph.
+## Decision
 
-## Razones
-- LangGraph proporciona estado persistente, recuperación después de fallos, ejecución de varios pasos y aprobaciones humanas (checkpoints).
-- Poolar necesita estado, pasos deterministas, checkpoints y puntos explícitos de revisión humana.
-- CrewAI es útil para equipos de agentes, pero no sustituye las herramientas operativas del dominio.
-- La lógica de dominio, los contratos de herramientas y las pruebas deben ser independientes del framework.
+Prefer **LangGraph** as the primary candidate for durable agent workflow orchestration if/when needed. Keep **CrewAI** as an alternative to evaluate only for specific requirements not well served by LangGraph. No mandatory adoption in current Phase 0.
 
-## Consecuencias
-- Los flujos de LangGraph se implementarán como módulos separados (no en el núcleo de dominio).
-- El estado de LangGraph no es la autoridad definitiva sobre las entidades de Poolar Core.
-- La autorización se verifica de nuevo en cada operación del dominio.
-- Reevaluar CrewAI solo si un requisito específico no se resuelve con LangGraph.
+## Rationale
 
-## Alternativas descartadas
-- CrewAI: descartado para la primera iteración por redundancia con LangGraph y mayor complejidad de agentes.
-- Framework propio: descartado por complejidad y falta de soporte de persistencia.
+- LangGraph can support persistent state, checkpoints, multi-step flows, and human review points.
+- POOLAR requires deterministic steps, explicit HITL/governance, and re-validation of authorization at domain operations.
+- Domain logic, tool contracts, and tests must remain framework-independent; POOLAR governance remains authoritative.
+
+## Consequences
+
+- Any orchestration integration must live outside/around the core domain and must not bypass HITL, scoping, or audit controls.
+- Framework state is not the source of truth for POOLAR core entities.
+- Re-evaluate alternatives only against concrete, evidenced needs.

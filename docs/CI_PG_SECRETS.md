@@ -1,12 +1,14 @@
-# CI: validación PostgreSQL real (Fase 0)
+# CI: Real PostgreSQL Validation (Phase 0)
 
-El workflow `.github/workflows/fase0-check.yml` ejecuta SQLite siempre. El job `fase0-pg-real` está **deshabilitado (`if: false`)**.
+> Updated: 2026-11-10. Status: **documented; PG CI job disabled by default**.
 
-Para habilitarlo en GitHub Actions **sin exponer credenciales**:
-1. Crear secretos de repositorio/entorno (Settings → Secrets and variables → Actions):
-   - `POOLAR_SECRET_KEY_TEST` (clave solo pruebas)
-   - `POOLAR_TEST_POSTGRES_URL` (Postgres desechable/CI, `postgresql+psycopg2://...?...sslmode=require`)
-2. Cambiar `if: false` por la condición deseada (p. ej. `if: github.event_name == 'workflow_dispatch'` o un entorno protegido).
-3. El job ejecuta `alembic upgrade head` y `tests/test_fase0_p04_concurrency_pg.py`.
+The workflow `.github/workflows/fase0-check.yml` always runs the SQLite suite. The `fase0-pg-real` job is **disabled (`if: false`)**.
 
-**Nunca** commitear `.env`, URLs con contraseña ni tokens. Usar bases desechables para pruebas de carrera.
+To enable it in GitHub Actions **without exposing credentials**:
+1. Create repository/environment secrets (Settings → Secrets and variables → Actions):
+   - `POOLAR_SECRET_KEY_TEST` (test-only key)
+   - `POOLAR_TEST_POSTGRES_URL` (disposable/CI PostgreSQL, e.g. `postgresql+psycopg2://...?...sslmode=require`)
+2. Replace `if: false` with the desired condition (e.g. `workflow_dispatch` or a protected environment).
+3. The job runs `alembic upgrade head` and PG-specific tests (e.g. `tests/test_fase0_p04_concurrency_pg.py`).
+
+**Never** commit `.env`, credentialed URLs, or tokens. Use disposable databases for concurrency/race tests. Revalidate PG evidence in the target CI environment.

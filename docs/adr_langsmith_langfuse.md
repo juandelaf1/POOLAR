@@ -1,23 +1,19 @@
-# ADR: LangSmith vs Langfuse para observabilidad de IA
+# ADR: LangSmith vs Langfuse for AI Observability
 
-## Estado
-Aceptado (OpenTelemetry como base, Langfuse autogestionado como plataforma principal).
+> Updated: 2026-11-10. Status: **proposed/preferred direction (not adopted by default)**. Adopt only when observability needs are demonstrated and privacy/ops constraints are met.
 
-## Decisión
-Utilizar OpenTelemetry como base de instrumentación y Langfuse autogestionado como plataforma principal de observabilidad de IA.
+## Decision
 
-## Razones
-- Langfuse autogestionado favorece la autonomía, la inspección y el control de los datos (alineado con la visión de Poolar).
-- OpenTelemetry proporciona trazas y métricas estándar, intercambiables.
-- LangSmith facilita el desarrollo y evaluación de flujos, pero depende de un proveedor externo.
-- La privacidad y el control de datos son prioritarios para un proyecto de cooperación abierta.
+Prefer **OpenTelemetry** as the instrumentation baseline and **self-hosted Langfuse** as the primary candidate platform for AI/LLM observability if adopted. **LangSmith** remains an optional development/evaluation tool where acceptable, not the default for sensitive environments.
 
-## Consecuencias
-- Traces y métricas se envían a Langfuse autogestionado (configurable por entorno).
-- El envío a LangSmith se desactiva por defecto.
-- Las trazas de desarrollo no contienen contraseñas, tokens ni datos personales innecesarios.
-- Se define qué datos pueden salir del entorno, qué se redacta y cómo se desactiva la telemetría.
+## Rationale
 
-## Alternativas descartadas
-- LangSmith: descartado como principal por dependencia de proveedor externo.
-- Solo OpenTelemetry sin plataforma: insuficiente para evaluación de prompts y costes.
+- Self-hosted observability better aligns with data control, privacy, and autonomy goals.
+- OpenTelemetry provides portable traces/metrics.
+- External SaaS observability must be evaluated against data egress, redaction, and governance requirements.
+
+## Consequences (if adopted)
+
+- Telemetry must be environment-configurable and **disabled by default** in sensitive contexts.
+- Traces/logs must not include secrets, tokens, or unnecessary PII; define redaction and data egress policies.
+- Keep implementation optional and decoupled from core domain/HITL logic. Re-evaluate based on concrete needs.
