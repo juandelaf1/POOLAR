@@ -20,18 +20,25 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture(autouse=True)
 def _register_test_handlers():
-    """Handlers no-op para tools genéricas usadas en tests de persistencia (approve ejecuta handler)."""
+    """Handlers no-op para tools genéricas usadas en tests de persistencia (approve ejecuta handler). Restaura estado."""
     from src.core.agent_harness.handlers import RESUMABLE_HANDLERS
 
     def _noop(session, inputs):
         return {"ok": True, "inputs": inputs}
 
     names = ("t", "test_tool", "test_op", "op_sensible")
+    prev = {n: RESUMABLE_HANDLERS.get(n) for n in names}
+    added = []
     for name in names:
-        RESUMABLE_HANDLERS.setdefault(name, _noop)
+        if name not in RESUMABLE_HANDLERS:
+            RESUMABLE_HANDLERS[name] = _noop
+            added.append(name)
     yield
-    for name in names:
+    for name in added:
         RESUMABLE_HANDLERS.pop(name, None)
+    for name, fn in prev.items():
+        if fn is not None and name not in RESUMABLE_HANDLERS:
+            RESUMABLE_HANDLERS[name] = fn
 
 
 def _org_p01():

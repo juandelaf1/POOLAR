@@ -17,17 +17,25 @@ from src.core.ports import AutomationRoute  # noqa: E402
 
 @pytest.fixture(autouse=True)
 def _register_scope_test_handlers():
-    """Handlers no-op para tools aprobadas en estos tests (approve ejecuta handler)."""
+    """Handlers no-op para tools aprobadas en estos tests (approve ejecuta handler). Restaura estado previo."""
     from src.core.agent_harness.handlers import RESUMABLE_HANDLERS
 
     def _noop(session, inputs):
         return {"ok": True, "inputs": inputs}
 
-    for name in ("test_tool", "create_problema_colectivo", "create_iniciativa", "create_decision", "create_decision_for_initiative", "cambiar_estado_problema_colectivo"):
-        RESUMABLE_HANDLERS.setdefault(name, _noop)
+    names = ("test_tool", "create_problema_colectivo", "create_iniciativa", "create_decision", "create_decision_for_initiative", "cambiar_estado_problema_colectivo")
+    prev = {n: RESUMABLE_HANDLERS.get(n) for n in names}
+    added = []
+    for name in names:
+        if name not in RESUMABLE_HANDLERS:
+            RESUMABLE_HANDLERS[name] = _noop
+            added.append(name)
     yield
-    for name in ("test_tool", "create_problema_colectivo", "create_iniciativa", "create_decision", "create_decision_for_initiative", "cambiar_estado_problema_colectivo"):
+    for name in added:
         RESUMABLE_HANDLERS.pop(name, None)
+    for name, fn in prev.items():
+        if fn is not None and name not in RESUMABLE_HANDLERS:
+            RESUMABLE_HANDLERS[name] = fn
 
 
 @pytest.fixture
