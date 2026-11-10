@@ -1,67 +1,73 @@
-# POOLAR — Benchmark estratégico, arquitectura de bien común, accesibilidad, seguridad y sostenibilidad
+# POOLAR — Strategic Benchmark, Common-Good Architecture, Accessibility, Security, and Sustainability
 
-**Fecha de consulta de fuentes externas:** 2026-11-09.  
-**Estado del documento:** registrado en repo a solicitud del usuario. Análisis de arquitectura/estrategia (no implementación).  
-**Restricciones aplicadas en la sesión de origen:** no se modificó el repositorio durante el análisis; no se ejecutaron commits/PR; no se reejecutaron pruebas.
+> Updated: 2026-11-10 (English translation/progressive alignment). Original analysis date/reference: **2026-11-09**.  
+> **Status:** strategy/architecture analysis recorded in repo (not implementation). Claims are labeled by evidence type where applicable.
 
-## Verificación del estado POOLAR (referencia, 2026-11-09)
+## POOLAR status snapshot (reference, 2026-11-09)
 
-| Elemento | Estado observado |
+| Item | Observed state |
 |---|---|
-| Repo local | `C:\Users\JUAN\Desktop\Proyectos\Trama_Abierta\poolar` |
-| Rama / HEAD | `fase0-gobernanza` / `9ddc834096d1bd86e39f9ef32d6ffbf61452f32f` |
-| CI definido | `ci.yml` (PG16, migraciones, backend sin e2e, e2e Playwright) y `fase0-check.yml` (SQLite; `fase0-pg-real` `if:false`) — **ejecución verde remota no verificada** |
-| Evidencia histórica (no reejecutada) | Núcleo HITL/gobernanza con avances; suite canónica Fase 0+capacidad 104 passed; backend sin E2E 174 passed / 1 xfailed / 7 failed por sensibilidad PG; Fase 0 no cerrada formalmente |
+| Local repo | `C:\Users\JUAN\Desktop\Proyectos\Trama_Abierta\poolar` |
+| Branch / HEAD (at analysis time) | `fase0-gobernanza` / `9ddc834...` |
+| CI defined | `ci.yml` (PG16, migrations, backend excluding e2e, Playwright e2e) and `fase0-check.yml` (SQLite; `fase0-pg-real` `if:false`) — **remote green run not verified** |
+| Historical evidence (not rerun) | HITL/governance core advanced; canonical Phase 0+capability suite 104 passed (historical); Phase 0 not formally closed |
 
-## 1. Resumen ejecutivo
-Existe un espacio potencial, pero **no validado empíricamente**, para una infraestructura abierta de cooperación que conecte *necesidad → capacidades/recursos → iniciativa → decisión HITL → compromiso → ejecución → aprendizaje* con gobernanza humana fuerte, portabilidad y diseño para comunidades con pocos recursos. El hueco plausible no es “tener más objetos”, sino combinar: núcleo común interoperable + gobernanza/autorización humana verificable + privacidad/consentimiento + portabilidad real + uso esencial gratuito orientado a comunidades sin presupuesto + operación progresiva en baja conectividad + módulos especializados conectables sin doble autoridad.
+## 1. Executive summary
 
-## 2. Mapa competitivo (resumen)
+There is a potential, but **not empirically validated**, space for an open cooperation infrastructure connecting *need → capabilities/resources → initiative → HITL decision → commitment → execution → learning* with strong human governance, portability, and design for low-resource communities. The plausible gap is not “more objects”, but combining: interoperable common core + verifiable human governance/authorization + privacy/consent + real portability + essential free use for communities without budget + progressive operation in low-connectivity contexts + connectable specialized modules without dual authority.
 
-| Tipo | Proyecto | Relación | Evidencia (2026-11-09) |
+## 2. Competitive map (summary)
+
+| Type | Project | Relation | Evidence (2026-11-09) |
 |---|---|---|---|
-| Competidor conceptual directo | **Armillaria / Innovation Exchange** | People/Projects/Organisations/Opportunities/Issues/Needs/Offers; matching, procedencia/fork, permisos/revisión/scoring/reporting/export declarados; precios publicados; **open source/self-host no verificado** | https://armillaria.io/, https://armillaria.io/exchange — DECLARADA/VERIFICADA en web |
-| Referente organizativo | **Commonhood** | Sitio público insuficiente para verificar plataforma software comparable | https://www.commonhood.org/ — NO VERIFICADO |
-| Gobernanza/participación | **Decidim** | Procesos participativos; AGPL; autoalojable | decidim.org, GitHub decidim/decidim — VERIFICADA |
-| Decisión deliberativa | **Loomio** | Discusiones/decisiones; AGPL; SaaS + self-host | loomio.com/pricing, GitHub loomio/loomio — VERIFICADA |
-| Estándar/ontología | **ValueFlows** | Vocabulario agentes/recursos/compromisos/eventos/flujos | valueflo.ws — VERIFICADA |
-| Framework | **hREA** | Implementación Holochain alineada con ValueFlows/REA | GitHub h-REA/hREA — PARCIAL |
-| Vertical alimentación | **Open Food Network** | Marketplace cadena corta; AGPL; instancias locales | openfoodnetwork.org, GitHub — VERIFICADA |
-| Vertical logística | **CoopCycle** | Logística cooperativa; licencia Coopyleft (uso condicionado) | coopcycle.org, GitHub — VERIFICADA con restricción |
-| Finanzas/fiscal hosting | **Open Collective** | Gestión financiera colaborativa/transparencia; ecosistema OFiCo | opencollective.com, GitHub — PARCIAL |
-| Campo/offline | **KoboToolbox** | Recolección datos/terreno; componentes AGPL | kobotoolbox.org, GitHub kpi — PARCIAL/VERIFICADA |
-| Crisis/crowdsourcing | **Ushahidi** | Reportes/mapas/API; AGPL | ushahidi.com, GitHub platform — VERIFICADA |
-| Verticales compras | **Karakolas, WeGrocery** | Búsqueda rápida sin evidencia verificable suficiente | NO VERIFICADO |
+| Direct conceptual competitor | **Armillaria / Innovation Exchange** | People/Projects/Organisations/Opportunities/Issues/Needs/Offers; matching, provenance/fork, permissions/review/scoring/reporting/export declared; pricing published; **open source/self-host not verified** | armillaria.io — declared/verified on web |
+| Organizational reference | **Commonhood** | Insufficient public evidence to verify comparable software platform | commonhood.org — not verified |
+| Governance/participation | **Decidim** | Participatory processes; AGPL; self-hostable | decidim.org, GitHub — verified |
+| Deliberative decision | **Loomio** | Discussions/decisions; AGPL; SaaS + self-host | loomio.com, GitHub — verified |
+| Standard/ontology | **ValueFlows** | Vocabulary for agents/resources/commitments/events/flows | valueflo.ws — verified |
+| Framework | **hREA** | Holochain implementation aligned with ValueFlows/REA | GitHub — partial |
+| Food vertical | **Open Food Network** | Short supply-chain marketplace; AGPL; local instances | openfoodnetwork.org — verified |
+| Logistics vertical | **CoopCycle** | Cooperative logistics; Coopyleft license (conditional use) | coopcycle.org — verified with restriction |
+| Finance/fiscal hosting | **Open Collective** | Collaborative finance/transparency; OFiCo ecosystem | opencollective.com — partial |
+| Field/offline data | **KoboToolbox** | Data/field collection; AGPL components | kobotoolbox.org — partial/verified |
+| Crisis/crowdsourcing | **Ushahidi** | Reports/maps/API; AGPL | ushahidi.com — verified |
+| Purchasing verticals | **Karakolas, WeGrocery** | Quick search, insufficient verifiable evidence | not verified |
 
-## 3. Lecciones clave
-- **Armillaria:** modelo de dominio/matching/procedencia/configuración útil; diferenciarse por apertura, HITL verificable, soberanía de datos y diseño low-resource.
-- **Decidim/Loomio:** integrar deliberación/decisión madura, no reconstruir.
-- **ValueFlows:** referencia semántica para recursos/compromisos/eventos.
-- **OFN/CoopCycle/Open Collective:** verticales/finanzas a integrar cuando aplique.
-- **Kobo/Ushahidi:** patrones de captura en campo/offline parcial y riesgos Do No Harm.
+## 3. Key lessons
 
-## 4. Matriz CORE / MODULE / CONNECTOR / SEPARATE (síntesis)
-| Capacidad | Decisión |
+- **Armillaria:** useful domain/matching/provenance/configuration model; differentiate through openness, verifiable HITL, data sovereignty, and low-resource design.
+- **Decidim/Loomio:** integrate mature deliberation/decision tools rather than rebuild.
+- **ValueFlows:** semantic reference for resources/commitments/events.
+- **OFN/CoopCycle/Open Collective:** integrate verticals/finance where applicable.
+- **Kobo/Ushahidi:** field capture/partial-offline patterns and Do No Harm risks.
+
+## 4. CORE / MODULE / CONNECTOR / SEPARATE matrix (summary)
+
+| Capability | Decision |
 |---|---|
-| Identidad, orgs, membresías, roles/permisos, HITL/políticas | **CORE** |
-| Necesidades, ofertas, capacidades, recursos, problemas, oportunidades, iniciativas, propuestas/decisiones/approvals | **CORE** |
-| Compromisos/ejecución (modelo) | **CORE** + operativa específica en **MODULE** |
-| Auditoría, procedencia, consentimiento, export, aprendizaje base | **CORE** (+ analytics separado) |
-| Matching/scoring explicable | **MODULE** inicial interno/servicio; posibles conectores |
-| Compras, logística, banco recursos, ayuda mutua, emergencias (operativa) | **MODULE** o **CONNECTOR** según vertical |
-| Finanzas/fiscal hosting, deliberación ciudadana compleja, logística/marketplaces maduros | **CONNECTOR / SEPARATE** |
+| Identity, orgs, memberships, roles/permissions, HITL/policies | **CORE** |
+| Needs, offers, capabilities, resources, problems, opportunities, initiatives, proposals/decisions/approvals | **CORE** |
+| Commitments/execution (model) | **CORE** + specific operations in **MODULE** |
+| Audit, provenance, consent, export, base learning | **CORE** (+ separated analytics) |
+| Explainable matching/scoring | **MODULE** initially (internal/service); possible connectors |
+| Procurement, logistics, resource bank, mutual aid, emergencies (operations) | **MODULE** or **CONNECTOR** by vertical |
+| Finance/fiscal hosting, complex civic deliberation, mature logistics/marketplaces | **CONNECTOR / SEPARATE** |
 
-## 5. Seguridad, accesibilidad y offline (requisitos de diseño)
-- **Seguridad:** identidad progresiva y proporcional al riesgo (sin KYC universal excluyente), RBAC/ABAC, aislamiento org/tenant, rate limiting, moderación/reporte/apelación, protección de vulnerables/menores, auditoría sin sobre-recolección, módulos/adaptadores *proposal-only* sin autoridad de ejecución sensible.
-- **Accesibilidad:** objetivo WCAG 2.2 AA, móvil, teclado/lector, lectura fácil, i18n, participación asistida.
-- **Offline progresivo:** borradores/cola local idempotente para acciones de bajo riesgo; sync explícita y resolución de conflictos; **nunca** offline para approvals/decisiones vinculantes, cambios de permisos o acciones sensibles.
-- **Do No Harm / DPG:** referencias de diseño; no reclamar certificación sin evaluación.
+## 5. Security, accessibility, and offline (design requirements)
 
-## 6. Sostenibilidad (misión de bien común)
-Modelo recomendado: **híbrido** (subvenciones/fondos públicos/filantropía + pagos institucionales por hosting/soporte/implantación + nodos comunitarios). Esenciales gratuitos (código, uso, APIs base, export). **Prohibido como modelo principal:** venta de datos, publicidad conductual, pay-per-seat en esenciales, lock-in.
+- **Security:** progressive identity proportional to risk (no universally exclusionary KYC), RBAC/ABAC, org/tenant isolation, rate limiting, moderation/report/appeal, protection for vulnerable groups/minors, audit without over-collection, modules/adapters *proposal-only* with no sensitive execution authority.
+- **Accessibility:** target WCAG 2.2 AA, mobile, keyboard/screen reader, plain language, i18n, assisted participation.
+- **Progressive offline:** drafts/local idempotent queue for low-risk actions; explicit sync/conflict resolution; **never** offline for approvals/binding decisions, permission changes, or sensitive actions.
+- **Do No Harm / DPG:** design references; do not claim certification without evaluation.
 
-## 7. Decisiones estratégicas (resumen)
-1. Cerrar Fase 0 y hardening authz/PG/CI/RGPD. 2. Licencia open source clara + export/self-host. 3. Dominio canónico Core (alineable con ValueFlows/Armillaria). 4. Un piloto acotado con comunidad real. 5. Sostenibilidad/gobernanza anticaptura + identidad progresiva.
+## 6. Sustainability (common-good mission)
 
-## 8. Limitaciones de evidencia
-Mezcla de **VERIFICADA** (repos/licencias públicas consultadas, estado local POOLAR), **DECLARADA** (claims de producto/precios/casos), **HISTÓRICA** (tests POOLAR previos no reejecutados), e **HIPÓTESIS/DESCONOCIDA** (nicho, costes, licencias no confirmadas, Karakolas/WeGrocery). Armillaria: open source/self-host **no verificado**.
+Recommended: **hybrid** model (grants/public/philanthropic funds + institutional payments for hosting/support/implementation + community nodes). Essentials free (code, use, base APIs, export). **Not allowed as primary model:** data sales, behavioral advertising, pay-per-seat for essentials, lock-in.
+
+## 7. Strategic decisions (summary)
+
+1. Close Phase 0 and harden authz/PG/CI/GDPR controls. 2. Clear open-source license + export/self-host. 3. Canonical Core domain (alignable with ValueFlows/Armillaria). 4. One scoped pilot with a real community. 5. Sustainability/anti-capture governance + progressive identity.
+
+## 8. Evidence limitations
+
+Mix of **VERIFIED** (public repos/licenses consulted, local POOLAR state), **DECLARED** (product/pricing/case claims), **HISTORICAL** (prior POOLAR tests not rerun), and **HYPOTHESIS/UNKNOWN** (niche, costs, unconfirmed licenses, Karakolas/WeGrocery). Armillaria open source/self-host **not verified**.
